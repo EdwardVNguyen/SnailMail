@@ -98,3 +98,18 @@
   gap: 8rem;
 }
 
+.section3 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.section3 h2 {
+  text-align: center;
+}
+
+.section3 .items {
+  display: flex;
+  gap: 8rem;
+}

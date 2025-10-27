@@ -6,13 +6,16 @@ import Home from './pages/Home';
 import LoginOrSignUp from './pages/LogInOrSignUp';
 import CustomerPage from './pages/CustomerPage';
 import EmployeePage from './pages/EmployeePage';
+import CourierPage from './pages/CourierPage';
 import ManagerPage from './pages/ManagerPage';
 
 import UserProfile from './pages/UserProfile';
 import UserShipping from './pages/UserShipping';
 import UserTrackPackage from './pages/UserTrackPackage';
+import CreateShipment from './pages/CreateShipment';
+import ElectronicShop from './pages/ElectronicShop';
+import MovePackages from './pages/MovePackages';
 
-const Shipping = lazy( () => import('./pages/Shipping'));
 const Tracking = lazy( () => import('./pages/Tracking'));
 const About = lazy( () => import('./pages/About'));
 const Support = lazy( () => import('./pages/Support'));
@@ -32,7 +35,6 @@ const App = () => {
   useEffect( () => {
     if (location.pathname === "/"              ||
         location.pathname === "/loginorsignup" ||
-        location.pathname === "/shipping"      ||
         location.pathname === "/tracking"      
         ) {
       setAuth(false);
@@ -48,7 +50,7 @@ const App = () => {
         <Routes>
           {/* non-protected routes */}
           <Route path="/" element={<Home/>} />
-          <Route path="/shipping" element={<Shipping/>} />
+          <Route path="/createShipment" element={<CreateShipment/>} />
           <Route path="/tracking" element={<Tracking/>} />
           <Route path="/about" element={<About/>} />
           <Route path="/support" element={<Support/>} />
@@ -66,10 +68,13 @@ const App = () => {
           <Route element={<PrivateRoutes auth={auth} />}>
             <Route path='/customerPage' element={<CustomerPage globalAuthId={globalAuthId}/>} />
             <Route path='/employeePage' element={<EmployeePage globalAuthId={globalAuthId}/>} />
+            <Route path='/courierPage' element={<CourierPage globalAuthId={globalAuthId}/>} />
             <Route path='/managerPage' element={<ManagerPage globalAuthId={globalAuthId}/>} />
             <Route path='/userProfile' element={<UserProfile/>} />
             <Route path='/userShipping' element={<UserShipping globalAuthId={globalAuthId}/>} />
             <Route path='/userTrackPackage' element={<UserTrackPackage/>} />
+            <Route path='/ecommercePage' element={<ElectronicShop/>} />
+            <Route path='/movePackages' element={<MovePackages globalAuthId={globalAuthId}/>} />
           </Route>
     
         </Routes>

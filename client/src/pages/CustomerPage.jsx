@@ -28,7 +28,7 @@ const CustomerPage = ( {globalAuthId }) => {
             <em className="accountID"> Account ID: {customerInfo?.customer.customer_id}</em>
             <div className="viewProfile">  View my <span onClick={ () => navigate('/userProfile') }> profile </span> </div>
           </div>
-          <div className="profileImg"> img placeholder</div>
+          <div className="nearestPostOffice"> Post Office Near You</div>
         </div>
         <div className="tracker">
           <b> Tracking ID </b>
@@ -41,7 +41,8 @@ const CustomerPage = ( {globalAuthId }) => {
       <div className="quickLinks">
         Quick Links
       </div>
-    </div>
+
+      </div>
   );
 };
 

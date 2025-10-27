@@ -92,26 +92,26 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
     // data - convert json code into javascript object
     const response = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
                                    method: 'POST',
-                                   headers: {'Content-Type': 'application/json' }, 
+                                   headers: {'Content-Type': 'application/json' },
                                    body: JSON.stringify({ email, password })
                                   });
-    const data = await response.json(); 
+    const data = await response.json();
 
     // navigate to home page if success, alert about wrong credentials otherwise
     if (data.success) {
+      // Set all auth state before navigation
+      setGlobalAccountType(data.account_type);
+      setGlobalAuthId(data.auth_id);
       setAuth(true);
+
       // send to different page depending on user credentials
       if (data.account_type === 'individual' || data.account_type === 'prime' || data.account_type === 'business') {
-        setGlobalAccountType(data.account_type);
-        setGlobalAuthId(data.auth_id);
         navigate('/customerPage');
-      } else if (data.account_type === 'clerk' || data.account_type === 'courier') {
-        setGlobalAccountType(data.account_type);
-        setGlobalAuthId(data.auth_id);
+      } else if (data.account_type === 'clerk') {
         navigate('/employeePage');
+      } else if (data.account_type === 'courier') {
+        navigate('/courierPage');
       } else if (data.account_type === 'manager') {
-        setGlobalAccountType(data.account_type);
-        setGlobalAuthId(data.auth_id);
         navigate('/managerPage');
       } else {
         setAuth(false);

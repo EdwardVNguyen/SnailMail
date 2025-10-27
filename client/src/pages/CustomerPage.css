@@ -52,7 +52,15 @@
   padding: 30px;
   box-sizing: border-box;
   box-shadow: 2px 2px 5px 2px #ddd;
-
-
 }
+
+.customerPageContainer .subContainer1 .profile .profileLeft .viewProfile span{ 
+  color: #3C467B;
+  cursor: pointer;
+}
+
+.customerPageContainer .subContainer1 .profile .profileLeft .viewProfile span:hover{ 
+color: #636CCB;
+}
+
 

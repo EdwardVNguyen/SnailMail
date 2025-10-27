@@ -1,0 +1,30 @@
+.support-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 4rem 10rem;
+
+  background: #fdfdfd;
+  border: 1px solid #eee;
+  padding: 30px;
+  box-sizing: border-box;
+  box-shadow: 2px 2px 5px 2px #ddd;
+
+}
+
+.FAQ-wrapper {
+  width: 75%;
+}
+
+.question {
+    margin-bottom: 10px;
+}
+
+.qText {
+    margin-bottom: 5px;
+    font-size: 20px;
+}
+
+.aText {
+    margin-left: 4%;
+}
