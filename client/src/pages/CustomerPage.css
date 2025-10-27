@@ -1,0 +1,58 @@
+.customerPageContainer {
+  margin-top: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 50px;
+}
+
+.customerPageContainer .subContainer1 {
+  display: flex;
+  justify-content: space-evenly;
+  width: 100%;
+}
+
+.customerPageContainer .subContainer1 .profile {
+  display: flex;
+  padding: 40px;
+  justify-content: space-between;
+  width: 500px;
+
+  background: #fdfdfd;
+  border: 1px solid #eee;
+  padding: 30px;
+  box-sizing: border-box;
+  box-shadow: 2px 2px 5px 2px #ddd;
+
+}
+
+.customerPageContainer .subContainer1 .profile .profileLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.customerPageContainer .subContainer1 .profile .profileLeft .icon {
+  font-size: 25px;
+}
+.customerPageContainer .subContainer1 .profile .profileLeft .accountID {
+  font-weight: lighter;
+  font-size: 15px;
+}
+.customerPageContainer .subContainer1 .tracker {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px;
+  width: 500px;
+  gap: 10px;
+
+  background: #fdfdfd;
+  border: 1px solid #eee;
+  padding: 30px;
+  box-sizing: border-box;
+  box-shadow: 2px 2px 5px 2px #ddd;
+
+
+}
+

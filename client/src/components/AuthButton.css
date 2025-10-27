@@ -1,0 +1,33 @@
+/* From Uiverse.io by alexmaracinaru */ 
+.AuthButton {
+  margin-top: -0.75rem;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all 0.2s;
+  padding: 10px 25px;
+  border-radius: 100px;
+  background: #3C467B;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  color: white;
+}
+
+.AuthButton:hover {
+  background: #50589C;
+}
+
+.AuthButton > svg {
+  width: 34px;
+  margin-left: 10px;
+  transition: transform 0.3s ease-in-out;
+}
+
+.AuthButton:hover svg {
+  transform: translateX(5px);
+}
+
+.AuthButton:active {
+  transform: scale(0.95);
+}
