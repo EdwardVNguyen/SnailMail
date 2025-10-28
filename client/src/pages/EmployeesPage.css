@@ -1,0 +1,48 @@
+.employee-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.employee-form-field {
+  display: flex;
+  flex-direction: column;
+  min-height: 75px;
+}
+
+.employee-form-field label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.employee-form-field input,
+.employee-form-field select {
+  width: 100%;
+  padding: 8px;
+  fontSize: 14px;
+  box-sizing: border-box;
+  font-family: inherit;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.employee-form-field input[type="date"] {
+  height: 34px;
+  line-height: 1;
+}
+
+.employee-form-field select {
+  height: 34px;
+  appearance: auto;
+}
+
+.employee-form-field small {
+  color: #666;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.required-asterisk {
+  color: red;
+}

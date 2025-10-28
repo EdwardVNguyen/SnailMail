@@ -1,0 +1,48 @@
+.facility-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.facility-form-field {
+  display: flex;
+  flex-direction: column;
+  min-height: 75px;
+}
+
+.facility-form-field label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.facility-form-field input,
+.facility-form-field select {
+  width: 100%;
+  padding: 8px;
+  fontSize: 14px;
+  box-sizing: border-box;
+  font-family: inherit;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.facility-form-field input[type="time"] {
+  height: 34px;
+  line-height: 1;
+}
+
+.facility-form-field select {
+  height: 34px;
+  appearance: auto;
+}
+
+.facility-form-field small {
+  color: #666;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.required-asterisk {
+  color: red;
+}
