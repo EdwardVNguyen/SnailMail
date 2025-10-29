@@ -11,6 +11,7 @@ export const getEmployeesController = async (req, res) => {
     // Parse query parameters
     const queryObject = url.parse(req.url, true).query;
     const role = queryObject.role;
+    const status = queryObject.status;
 
     let query = `
       SELECT
@@ -30,10 +31,25 @@ export const getEmployeesController = async (req, res) => {
     `;
 
     let params = [];
+    let conditions = [];
 
     if (role && role !== 'all') {
-      query += ' WHERE e.account_type = ?';
+      conditions.push('e.account_type = ?');
       params.push(role);
+    }
+
+    if (status && status !== 'all') {
+      if (status === 'active') {
+        conditions.push('e.account_type != ?');
+        params.push('archived');
+      } else if (status === 'archived') {
+        conditions.push('e.account_type = ?');
+        params.push('archived');
+      }
+    }
+
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
     }
 
     query += ' ORDER BY e.employee_id ASC';

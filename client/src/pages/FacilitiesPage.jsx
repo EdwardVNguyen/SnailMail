@@ -30,10 +30,12 @@ const FacilitiesPage = ({ globalAuthId }) => {
 
   // Edit Facilities state
   const [typeFilter, setTypeFilter] = useState('all'); // 'all', 'warehouse', 'post_office'
-  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'inactive'
+  const [statusFilter, setStatusFilter] = useState('active'); // 'all', 'active', 'inactive'
   const [facilities, setFacilities] = useState([]);
   const [loadingFacilities, setLoadingFacilities] = useState(false);
   const [safetyLock, setSafetyLock] = useState(true); // Safety lock for ID editing
+  const [deleteMode, setDeleteMode] = useState(false); // Toggle delete mode
+  const [deletingFacilityId, setDeletingFacilityId] = useState(null); // Track which facility is being deleted
 
   const [nextFacilityId, setNextFacilityId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -272,6 +274,52 @@ const FacilitiesPage = ({ globalAuthId }) => {
     }
   };
 
+  // Handle archive facility
+  const handleDeleteFacility = async (facilityId) => {
+    // Prevent multiple clicks
+    if (deletingFacilityId === facilityId) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to DELETE facility ID ${facilityId}?\n\nThis action cannot be undone!`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingFacilityId(facilityId);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/deleteFacility`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          facilityId: facilityId,
+          deletedBy: authId
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Facility deleted successfully!');
+        fetchFacilities();
+      }
+      else {
+        alert('Error deleting facility: ' + data.message);
+      }
+    }
+    catch (err) {
+      console.error('Error deleting facility:', err);
+      alert('Error deleting facility.');
+    }
+    finally {
+      setDeletingFacilityId(null);
+    }
+  };
+
   // Column definitions for AG Grid
   const columnDefs = [
     { field: 'facility_id', headerName: 'ID', sortable: true, filter: true, editable: !safetyLock, width: 100 },
@@ -301,7 +349,7 @@ const FacilitiesPage = ({ globalAuthId }) => {
     { field: 'street_name', headerName: 'Street', sortable: true, filter: true, editable: true, flex: 1.5 },
     { field: 'city_name', headerName: 'City', sortable: true, filter: true, editable: true, width: 150 },
     { field: 'state_name', headerName: 'State', sortable: true, filter: true, editable: true, width: 80 },
-    { field: 'zip_code', headerName: 'Zip', sortable: true, filter: true, editable: true, width: 100 },
+    { field: 'zip_code', headerName: 'Zip', sortable: true, filter: true, editable: true, width: 100 }
   ];
 
   return (
@@ -611,11 +659,73 @@ const FacilitiesPage = ({ globalAuthId }) => {
                 {safetyLock ? 'ID cannot be edited' : 'ID can be edited'}
               </div>
             </div>
+
+            {/* Delete Mode Toggle */}
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                Delete Mode:
+              </label>
+              <button
+                onClick={() => setDeleteMode(!deleteMode)}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  backgroundColor: deleteMode ? '#dc3545' : 'white',
+                  color: deleteMode ? 'white' : '#333',
+                  border: '2px solid #dc3545',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  minWidth: '120px',
+                  boxSizing: 'border-box'
+                }}
+              >
+                {deleteMode ? 'Enabled' : 'Disabled'}
+              </button>
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                {deleteMode ? 'Delete mode active' : 'Delete mode inactive'}
+              </div>
+            </div>
           </div>
 
           {loadingFacilities ? (
             <div style={{ textAlign: 'center', padding: '40px', fontSize: '18px' }}>
               Loading facilities...
+            </div>
+          ) : deleteMode ? (
+            /* Archive Table */
+            <div>
+              <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '5px', color: '#856404' }}>
+                <strong>Delete Mode:</strong> Double-click any row to delete that facility
+              </div>
+              <div className="ag-theme-alpine" style={{ height: 500, width: "100%" }}>
+                <AgGridReact
+                  rowData={facilities}
+                  columnDefs={columnDefs}
+                  defaultColDef={{
+                    sortable: true,
+                    filter: true,
+                    editable: false
+                  }}
+                  getRowId={getRowId}
+                  onRowDoubleClicked={(params) => handleDeleteFacility(params.data.facility_id)}
+                  rowClass="archive-mode-row"
+                  getRowStyle={(params) => {
+                    if (deletingFacilityId === params.data.facility_id) {
+                      return {
+                        backgroundColor: '#f8d7da',
+                        opacity: 0.6,
+                        cursor: 'not-allowed',
+                        pointerEvents: 'none'
+                      };
+                    }
+                  }}
+                  readOnlyEdit={true}
+                  suppressClickEdit={true}
+                  pagination={true}
+                  paginationPageSize={20}
+                />
+              </div>
             </div>
           ) : (
             <div className="ag-theme-alpine" style={{ height: 500, width: "100%" }}>

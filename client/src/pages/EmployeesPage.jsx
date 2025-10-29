@@ -34,9 +34,12 @@ const EmployeesPage = ({ globalAuthId }) => {
 
   // Edit Employees state
   const [roleFilter, setRoleFilter] = useState('all'); // 'all', 'manager', 'clerk', 'courier'
+  const [statusFilter, setStatusFilter] = useState('active'); // 'all', 'active', 'archived'
   const [employees, setEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [safetyLock, setSafetyLock] = useState(true); // Safety lock for ID and SSN editing
+  const [deleteMode, setDeleteMode] = useState(false); // Toggle delete mode
+  const [deletingEmployeeId, setDeletingEmployeeId] = useState(null); // Track which employee is being deleted
 
   // Format SSN with dashes as user types
   const handleSsnChange = (e) => {
@@ -102,14 +105,22 @@ const EmployeesPage = ({ globalAuthId }) => {
 
       return () => clearTimeout(timeoutId);
     }
-  }, [activeTab, roleFilter]);
+  }, [activeTab, roleFilter, statusFilter]);
 
   const fetchEmployees = async () => {
     setLoadingEmployees(true);
     try {
-      const url = roleFilter === 'all'
-        ? `${import.meta.env.VITE_API_URL}/getEmployees`
-        : `${import.meta.env.VITE_API_URL}/getEmployees?role=${roleFilter}`;
+      let url = `${import.meta.env.VITE_API_URL}/getEmployees?`;
+      const params = [];
+
+      if (roleFilter !== 'all') {
+        params.push(`role=${roleFilter}`);
+      }
+      if (statusFilter !== 'all') {
+        params.push(`status=${statusFilter}`);
+      }
+
+      url += params.join('&');
 
       const response = await fetch(url);
       const data = await response.json();
@@ -281,7 +292,7 @@ const EmployeesPage = ({ globalAuthId }) => {
           cityName,
           stateName,
           zipCode,
-          phoneNumber: phoneNumber || null,
+          phoneNumber: phoneNumber ? phoneNumber.replace(/\D/g, '') : null,
           birthDate: birthDate || null,
           salary: salary ? parseFloat(salary) : null,
           ethnicity: ethnicity || null,
@@ -331,6 +342,52 @@ const EmployeesPage = ({ globalAuthId }) => {
     }
   };
 
+  // Handle archive employee
+  const handleDeleteEmployee = async (employeeId) => {
+    // Prevent multiple clicks
+    if (deletingEmployeeId === employeeId) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to DELETE employee ID ${employeeId}?\n\nThis action cannot be undone!`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingEmployeeId(employeeId);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/deleteEmployee`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          employeeId: employeeId,
+          deletedBy: authId
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Employee deleted successfully!');
+        fetchEmployees();
+      }
+      else {
+        alert('Error deleting employee: ' + data.message);
+      }
+    }
+    catch (err) {
+      console.error('Error deleting employee:', err);
+      alert('Error deleting employee.');
+    }
+    finally {
+      setDeletingEmployeeId(null);
+    }
+  };
+
   // Column definitions for AG Grid
   const columnDefs = [
     { field: 'employee_id', headerName: 'ID', sortable: true, filter: true, editable: !safetyLock, width: 100 },
@@ -346,7 +403,7 @@ const EmployeesPage = ({ globalAuthId }) => {
     { field: 'email', headerName: 'Email', sortable: true, filter: true, editable: true, flex: 1.5 },
     { field: 'phone_number', headerName: 'Phone', sortable: true, filter: true, editable: true, width: 150 },
     { field: 'salary', headerName: 'Salary', sortable: true, filter: true, editable: true, width: 120 },
-    { field: 'employee_ssn', headerName: 'SSN', sortable: true, filter: true, editable: !safetyLock, width: 130 },
+    { field: 'employee_ssn', headerName: 'SSN', sortable: true, filter: true, editable: !safetyLock, width: 130 }
   ];
 
   return (
@@ -652,6 +709,22 @@ const EmployeesPage = ({ globalAuthId }) => {
               </select>
             </div>
 
+            {/* Status Filter Dropdown */}
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                Filter by Status:
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                style={{ padding: '8px', fontSize: '14px', minWidth: '200px' }}
+              >
+                <option value="all">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="archived">Archived</option>
+              </select>
+            </div>
+
             {/* Safety Lock Toggle */}
             <div>
               <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
@@ -678,11 +751,73 @@ const EmployeesPage = ({ globalAuthId }) => {
                 {safetyLock ? 'ID & SSN cannot be edited' : 'ID & SSN can be edited'}
               </div>
             </div>
+
+            {/* Delete Mode Toggle */}
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                Delete Mode:
+              </label>
+              <button
+                onClick={() => setDeleteMode(!deleteMode)}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  backgroundColor: deleteMode ? '#dc3545' : 'white',
+                  color: deleteMode ? 'white' : '#333',
+                  border: '2px solid #dc3545',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  minWidth: '120px',
+                  boxSizing: 'border-box'
+                }}
+              >
+                {deleteMode ? 'Enabled' : 'Disabled'}
+              </button>
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                {deleteMode ? 'Delete mode active' : 'Delete mode inactive'}
+              </div>
+            </div>
           </div>
 
           {loadingEmployees ? (
             <div style={{ textAlign: 'center', padding: '40px', fontSize: '18px' }}>
               Loading employees...
+            </div>
+          ) : deleteMode ? (
+            /* Archive Table */
+            <div>
+              <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '5px', color: '#856404' }}>
+                <strong>Delete Mode:</strong> Double-click any row to delete that employee
+              </div>
+              <div className="ag-theme-alpine" style={{ height: 500, width: "100%" }}>
+                <AgGridReact
+                  rowData={employees}
+                  columnDefs={columnDefs}
+                  defaultColDef={{
+                    sortable: true,
+                    filter: true,
+                    editable: false
+                  }}
+                  getRowId={getRowId}
+                  onRowDoubleClicked={(params) => handleDeleteEmployee(params.data.employee_id)}
+                  rowClass="archive-mode-row"
+                  getRowStyle={(params) => {
+                    if (deletingEmployeeId === params.data.employee_id) {
+                      return {
+                        backgroundColor: '#f8d7da',
+                        opacity: 0.6,
+                        cursor: 'not-allowed',
+                        pointerEvents: 'none'
+                      };
+                    }
+                  }}
+                  readOnlyEdit={true}
+                  suppressClickEdit={true}
+                  pagination={true}
+                  paginationPageSize={20}
+                />
+              </div>
             </div>
           ) : (
             <div className="ag-theme-alpine" style={{ height: 500, width: "100%" }}>
