@@ -27,7 +27,7 @@ const UserShipping = ( {globalAuthId }) => {
       navigate('/userProfile');
     }
     const navigateCreateShipment = () => {
-        navigate('/createShipment');
+        navigate('/userCreateShipment');
     }
     const navigateEShop = () => {
       navigate('/ecommercePage');

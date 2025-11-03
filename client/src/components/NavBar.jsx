@@ -41,7 +41,7 @@ const NavBar = () => {
           </li>
 
           <li>
-            <NavLink to="/createShipment">Shipping</NavLink> 
+            <NavLink to="/createPackage">Shipping</NavLink> 
           </li>
           <li>
             <NavLink to="/tracking">Tracking</NavLink> 
