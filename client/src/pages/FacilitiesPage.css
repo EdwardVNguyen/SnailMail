@@ -1,39 +1,70 @@
+/* Form Container and Card */
+.facility-form-container {
+  margin-bottom: 20px;
+}
+
+.facility-form-card {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Form Section */
+.facility-form-section {
+  padding: 30px;
+}
+
+.facility-form-section h2 {
+  font-size: 20px;
+  color: #495057;
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #3C467B;
+}
+
 .facility-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  gap: 20px;
 }
 
 .facility-form-field {
   display: flex;
   flex-direction: column;
-  min-height: 75px;
 }
 
 .facility-form-field label {
   display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #495057;
+  font-size: 14px;
 }
 
 .facility-form-field input,
 .facility-form-field select {
   width: 100%;
-  padding: 8px;
-  fontSize: 14px;
+  padding: 12px;
+  font-size: 16px;
   box-sizing: border-box;
   font-family: inherit;
-  border: 1px solid #ccc;
+  border: 2px solid #ced4da;
   border-radius: 4px;
+  transition: border-color 0.3s;
+}
+
+.facility-form-field input:focus,
+.facility-form-field select:focus {
+  outline: none;
+  border-color: #3C467B;
 }
 
 .facility-form-field input[type="time"] {
-  height: 34px;
   line-height: 1;
 }
 
 .facility-form-field select {
-  height: 34px;
   appearance: auto;
 }
 
@@ -45,6 +76,63 @@
 
 .required-asterisk {
   color: red;
+}
+
+/* Form Actions - Centered Submit Button */
+.facility-form-actions {
+  padding: 30px;
+  text-align: center;
+  border-top: 1px solid #e9ecef;
+  margin-top: 10px;
+}
+
+.facility-submit-button {
+  padding: 15px 50px;
+  font-size: 18px;
+  font-weight: 600;
+  background-color: #3C467B;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(60, 70, 123, 0.2);
+}
+
+.facility-submit-button:hover:not(:disabled) {
+  background-color: #50589C;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(60, 70, 123, 0.3);
+}
+
+.facility-submit-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Edit Section */
+.facility-edit-container {
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  max-width: 100%;
+  width: 100%;
+}
+
+/* Override parent container max-width for edit pages */
+.create-package-container:has(.facility-edit-container) {
+  max-width: 1400px;
+}
+
+.facility-edit-header {
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #3C467B;
+  font-size: 20px;
+  color: #495057;
 }
 
 /* Archive mode row hover effect */

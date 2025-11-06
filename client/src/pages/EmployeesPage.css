@@ -1,39 +1,70 @@
+/* Form Container and Card */
+.employee-form-container {
+  margin-bottom: 20px;
+}
+
+.employee-form-card {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Form Section */
+.employee-form-section {
+  padding: 30px;
+}
+
+.employee-form-section h2 {
+  font-size: 20px;
+  color: #495057;
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #3C467B;
+}
+
 .employee-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  gap: 20px;
 }
 
 .employee-form-field {
   display: flex;
   flex-direction: column;
-  min-height: 75px;
 }
 
 .employee-form-field label {
   display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #495057;
+  font-size: 14px;
 }
 
 .employee-form-field input,
 .employee-form-field select {
   width: 100%;
-  padding: 8px;
-  fontSize: 14px;
+  padding: 12px;
+  font-size: 16px;
   box-sizing: border-box;
   font-family: inherit;
-  border: 1px solid #ccc;
+  border: 2px solid #ced4da;
   border-radius: 4px;
+  transition: border-color 0.3s;
+}
+
+.employee-form-field input:focus,
+.employee-form-field select:focus {
+  outline: none;
+  border-color: #3C467B;
 }
 
 .employee-form-field input[type="date"] {
-  height: 34px;
   line-height: 1;
 }
 
 .employee-form-field select {
-  height: 34px;
   appearance: auto;
 }
 
@@ -45,6 +76,63 @@
 
 .required-asterisk {
   color: red;
+}
+
+/* Form Actions - Centered Submit Button */
+.employee-form-actions {
+  padding: 30px;
+  text-align: center;
+  border-top: 1px solid #e9ecef;
+  margin-top: 10px;
+}
+
+.employee-submit-button {
+  padding: 15px 50px;
+  font-size: 18px;
+  font-weight: 600;
+  background-color: #3C467B;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(60, 70, 123, 0.2);
+}
+
+.employee-submit-button:hover:not(:disabled) {
+  background-color: #50589C;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(60, 70, 123, 0.3);
+}
+
+.employee-submit-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Edit Section */
+.employee-edit-container {
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  max-width: 100%;
+  width: 100%;
+}
+
+/* Override parent container max-width for edit pages */
+.create-package-container:has(.employee-edit-container) {
+  max-width: 1400px;
+}
+
+.employee-edit-header {
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #3C467B;
+  font-size: 20px;
+  color: #495057;
 }
 
 /* Archive mode row hover effect */

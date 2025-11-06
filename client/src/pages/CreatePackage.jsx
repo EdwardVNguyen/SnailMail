@@ -135,7 +135,7 @@ const CreatePackage = () => {
           
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="senderFirstName">First Name *</label>
+              <label htmlFor="senderFirstName">First Name <span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 id="senderFirstName"
@@ -159,7 +159,7 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="senderLastName">Last Name *</label>
+              <label htmlFor="senderLastName">Last Name <span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 id="senderLastName"
@@ -173,7 +173,7 @@ const CreatePackage = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="senderEmail">Email *</label>
+              <label htmlFor="senderEmail">Email <span className="required-asterisk">*</span></label>
               <input
                 type="email"
                 id="senderEmail"
@@ -203,7 +203,7 @@ const CreatePackage = () => {
           <h2>Sender Address</h2>
           
           <div className="form-group">
-            <label htmlFor="senderStreet">Street Address *</label>
+            <label htmlFor="senderStreet">Street Address <span className="required-asterisk">*</span></label>
             <input
               type="text"
               id="senderStreet"
@@ -216,7 +216,7 @@ const CreatePackage = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="senderCity">City *</label>
+              <label htmlFor="senderCity">City <span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 id="senderCity"
@@ -228,7 +228,7 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="senderState">State *</label>
+              <label htmlFor="senderState">State <span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 id="senderState"
@@ -242,7 +242,7 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="senderZipCode">ZIP Code *</label>
+              <label htmlFor="senderZipCode">ZIP Code <span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 id="senderZipCode"
@@ -262,7 +262,7 @@ const CreatePackage = () => {
           <h2>Recipient Information</h2>
           
           <div className="form-group">
-            <label htmlFor="recipientName">Full Name *</label>
+            <label htmlFor="recipientName">Full Name <span className="required-asterisk">*</span></label>
             <input
               type="text"
               id="recipientName"
@@ -275,7 +275,7 @@ const CreatePackage = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="recipientEmail">Email *</label>
+              <label htmlFor="recipientEmail">Email <span className="required-asterisk">*</span></label>
               <input
                 type="email"
                 id="recipientEmail"
@@ -305,7 +305,7 @@ const CreatePackage = () => {
           <h2>Recipient Address</h2>
           
           <div className="form-group">
-            <label htmlFor="recipientStreet">Street Address *</label>
+            <label htmlFor="recipientStreet">Street Address <span className="required-asterisk">*</span></label>
             <input
               type="text"
               id="recipientStreet"
@@ -318,7 +318,7 @@ const CreatePackage = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="recipientCity">City *</label>
+              <label htmlFor="recipientCity">City <span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 id="recipientCity"
@@ -330,7 +330,7 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="recipientState">State *</label>
+              <label htmlFor="recipientState">State <span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 id="recipientState"
@@ -344,7 +344,7 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="recipientZipCode">ZIP Code *</label>
+              <label htmlFor="recipientZipCode">ZIP Code <span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 id="recipientZipCode"
@@ -365,7 +365,7 @@ const CreatePackage = () => {
           
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="packageType">Package Type *</label>
+              <label htmlFor="packageType">Package Type <span className="required-asterisk">*</span></label>
               <select
                 id="packageType"
                 name="packageType"
@@ -381,7 +381,7 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="weight">Weight (kg) *</label>
+              <label htmlFor="weight">Weight (kg) <span className="required-asterisk">*</span></label>
               <input
                 type="number"
                 id="weight"
@@ -397,7 +397,7 @@ const CreatePackage = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="length">Length (cm) *</label>
+              <label htmlFor="length">Length (cm) <span className="required-asterisk">*</span></label>
               <input
                 type="number"
                 id="length"
@@ -410,7 +410,7 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="width">Width (cm) *</label>
+              <label htmlFor="width">Width (cm) <span className="required-asterisk">*</span></label>
               <input
                 type="number"
                 id="width"
@@ -423,7 +423,7 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="height">Height (cm) *</label>
+              <label htmlFor="height">Height (cm) <span className="required-asterisk">*</span></label>
               <input
                 type="number"
                 id="height"

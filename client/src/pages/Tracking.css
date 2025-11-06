@@ -12,11 +12,11 @@
 
 /* Search Section */
 .tracking-search-section {
-  background-color: #f8f9fa;
+  background-color: white;
   padding: 30px;
-  border-radius: 8px;
+  border-radius: 12px;
   margin-bottom: 30px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .tracking-form {
@@ -37,24 +37,27 @@
 }
 
 .tracking-input:focus {
-  border-color: #007bff;
+  border-color: #3C467B;
 }
 
 .tracking-button {
   padding: 12px 30px;
   font-size: 16px;
   font-weight: 600;
-  background-color: #007bff;
+  background-color: #3C467B;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
   white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(60, 70, 123, 0.2);
 }
 
 .tracking-button:hover:not(:disabled) {
-  background-color: #0056b3;
+  background-color: #50589C;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(60, 70, 123, 0.3);
 }
 
 .tracking-button:disabled {
@@ -67,7 +70,7 @@
   background-color: #f8d7da;
   color: #721c24;
   padding: 12px 20px;
-  border-radius: 4px;
+  border-radius: 8px;
   margin-bottom: 20px;
   border: 1px solid #f5c6cb;
   text-align: center;
@@ -97,11 +100,11 @@
 }
 
 .package-summary {
-  background-color: #f8f9fa;
+  background-color: white;
   padding: 30px;
-  border-radius: 8px;
+  border-radius: 12px;
   margin-bottom: 30px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .tracking-number-display {
@@ -124,18 +127,26 @@
 
 .status-section {
   margin: 25px 0;
+  text-align: left;
 }
 
 .status {
   color: #28a745;
   text-transform: uppercase;
-  font-size: 28px;
-  margin-bottom: 10px;
+  font-size: 36px;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  padding: 0;
+  text-align: left;
+  display: block;
+  width: 100%;
 }
 
 .destination {
   color: #6c757d;
   font-size: 16px;
+  margin: 0;
+  text-align: left;
 }
 
 .package-info-grid {
@@ -176,9 +187,9 @@
   width: 100%;
   border-collapse: collapse;
   background-color: white;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .history-table th {

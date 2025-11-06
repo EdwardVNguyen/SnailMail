@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './UserShipping.css';
 import './EmployeesPage.css';
+import './CreatePackage.css';
 
 import { AgGridReact } from 'ag-grid-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
@@ -10,6 +12,7 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 const EmployeesPage = ({ globalAuthId }) => {
   const authId = globalAuthId;
+  const navigate = useNavigate();
 
   // Tab state
   const [activeTab, setActiveTab] = useState('add'); // 'add' or 'edit'
@@ -407,55 +410,60 @@ const EmployeesPage = ({ globalAuthId }) => {
   ];
 
   return (
-    <div style={{ marginTop: '30px', width: '100%', padding: '20px' }}>
-      <div style={{ width: '100%', maxWidth: '1400px', margin: '0 auto' }}>
-        <div className="userShippingTop">
-          <div className="userShippingDesc">
-            Employees <span>Manage employee information</span>
-          </div>
-        </div>
+    <div className="create-package-container">
+      <div className="package-header">
+        <h1>Employees</h1>
+        <button onClick={() => navigate('/managerPage')} className="back-button">
+          ← Back to Manager
+        </button>
+      </div>
 
-        {/* Tab Navigation */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-          <button
-            onClick={() => setActiveTab('add')}
-            style={{
-              padding: '10px 20px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              backgroundColor: activeTab === 'add' ? '#50589C' : '#e0e0e0',
-              color: activeTab === 'add' ? 'white' : '#333',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            Add Employee
-          </button>
-          <button
-            onClick={() => setActiveTab('edit')}
-            style={{
-              padding: '10px 20px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              backgroundColor: activeTab === 'edit' ? '#50589C' : '#e0e0e0',
-              color: activeTab === 'edit' ? 'white' : '#333',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            Edit Employees
-          </button>
-        </div>
+      {/* Separator Line */}
+      <div style={{ borderTop: '1px solid #e9ecef', marginBottom: '20px' }}></div>
+
+      {/* Tab Navigation */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+        <button
+          onClick={() => setActiveTab('add')}
+          style={{
+            padding: '10px 30px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            backgroundColor: activeTab === 'add' ? '#50589C' : '#e0e0e0',
+            color: activeTab === 'add' ? 'white' : '#333',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            minWidth: '160px'
+          }}
+        >
+          Add Employee
+        </button>
+        <button
+          onClick={() => setActiveTab('edit')}
+          style={{
+            padding: '10px 30px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            backgroundColor: activeTab === 'edit' ? '#50589C' : '#e0e0e0',
+            color: activeTab === 'edit' ? 'white' : '#333',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            minWidth: '160px'
+          }}
+        >
+          Edit Employees
+        </button>
+      </div>
 
         {/* Add Employee Section */}
         {activeTab === 'add' && (
-        <div style={{ padding: '20px', border: '1px solid rgba(0,0,0,0.2)', marginBottom: '20px' }}>
-          <h2 style={{ marginTop: 0, marginBottom: '20px', color: '#50589C' }}>Add Employee</h2>
-
-          <form onSubmit={handleSubmit}>
-            <div className="employee-form-grid">
+        <div className="employee-form-container">
+          <form onSubmit={handleSubmit} className="employee-form-card">
+            <div className="employee-form-section">
+              <h2>Add Employee</h2>
+              <div className="employee-form-grid">
               {/* Employee ID */}
               <div className="employee-form-field">
                 <label>
@@ -664,32 +672,26 @@ const EmployeesPage = ({ globalAuthId }) => {
                 />
               </div>
             </div>
+            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                marginTop: '20px',
-                padding: '12px 30px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                backgroundColor: loading ? '#ccc' : '#50589C',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: loading ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {loading ? 'Adding Employee...' : 'Add Employee'}
-            </button>
+            {/* Submit Button */}
+            <div className="employee-form-actions">
+              <button
+                type="submit"
+                disabled={loading}
+                className="employee-submit-button"
+              >
+                {loading ? 'Adding Employee...' : 'Add Employee'}
+              </button>
+            </div>
           </form>
         </div>
         )}
 
         {/* Edit Employees Section */}
         {activeTab === 'edit' && (
-        <div style={{ padding: '20px', border: '1px solid rgba(0,0,0,0.2)', marginBottom: '20px' }}>
-          <h2 style={{ marginTop: 0, marginBottom: '20px', color: '#50589C' }}>Edit Employees</h2>
+        <div className="employee-edit-container">
+          <h2 className="employee-edit-header">Edit Employees</h2>
 
           <div style={{ display: 'flex', gap: '20px', marginBottom: '15px', alignItems: 'flex-start' }}>
             {/* Role Filter Dropdown */}
@@ -841,7 +843,6 @@ const EmployeesPage = ({ globalAuthId }) => {
           </p>
         </div>
         )}
-      </div>
     </div>
   );
 };

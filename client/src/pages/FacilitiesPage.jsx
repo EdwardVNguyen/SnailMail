@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './UserShipping.css';
 import './FacilitiesPage.css';
+import './CreatePackage.css';
 
 import { AgGridReact } from 'ag-grid-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
@@ -10,6 +12,7 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 const FacilitiesPage = ({ globalAuthId }) => {
   const authId = globalAuthId;
+  const navigate = useNavigate();
 
   // Tab state
   const [activeTab, setActiveTab] = useState('add'); // 'add' or 'edit'
@@ -353,54 +356,59 @@ const FacilitiesPage = ({ globalAuthId }) => {
   ];
 
   return (
-    <div style={{ marginTop: '30px', width: '100%', padding: '20px' }}>
-      <div style={{ width: '100%', maxWidth: '1400px', margin: '0 auto' }}>
-        <div className="userShippingTop">
-          <div className="userShippingDesc">
-            Facilities <span>Manage facility information</span>
-          </div>
-        </div>
+    <div className="create-package-container">
+      <div className="package-header">
+        <h1>Facilities</h1>
+        <button onClick={() => navigate('/managerPage')} className="back-button">
+          ← Back to Manager
+        </button>
+      </div>
 
-        {/* Tab Navigation */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-          <button
-            onClick={() => setActiveTab('add')}
-            style={{
-              padding: '10px 20px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              backgroundColor: activeTab === 'add' ? '#50589C' : '#e0e0e0',
-              color: activeTab === 'add' ? 'white' : '#333',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            Add Facility
-          </button>
-          <button
-            onClick={() => setActiveTab('edit')}
-            style={{
-              padding: '10px 20px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              backgroundColor: activeTab === 'edit' ? '#50589C' : '#e0e0e0',
-              color: activeTab === 'edit' ? 'white' : '#333',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            Edit Facilities
-          </button>
-        </div>
+      {/* Separator Line */}
+      <div style={{ borderTop: '1px solid #e9ecef', marginBottom: '20px' }}></div>
 
-        {/* Add Facility Section */}
-        {activeTab === 'add' && (
-        <div style={{ padding: '20px', border: '1px solid rgba(0,0,0,0.2)', marginBottom: '20px' }}>
-          <h2 style={{ marginTop: 0, marginBottom: '20px', color: '#50589C' }}>Add Facility</h2>
+      {/* Tab Navigation */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+        <button
+          onClick={() => setActiveTab('add')}
+          style={{
+            padding: '10px 30px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            backgroundColor: activeTab === 'add' ? '#50589C' : '#e0e0e0',
+            color: activeTab === 'add' ? 'white' : '#333',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            minWidth: '160px'
+          }}
+        >
+          Add Facility
+        </button>
+        <button
+          onClick={() => setActiveTab('edit')}
+          style={{
+            padding: '10px 30px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            backgroundColor: activeTab === 'edit' ? '#50589C' : '#e0e0e0',
+            color: activeTab === 'edit' ? 'white' : '#333',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            minWidth: '160px'
+          }}
+        >
+          Edit Facilities
+        </button>
+      </div>
 
-          <form onSubmit={handleSubmit}>
+      {/* Add Facility Section */}
+      {activeTab === 'add' && (
+      <div className="facility-form-container">
+        <form onSubmit={handleSubmit} className="facility-form-card">
+          <div className="facility-form-section">
+            <h2>Add Facility</h2>
             <div className="facility-form-grid">
               {/* Facility ID */}
               <div className="facility-form-field">
@@ -573,32 +581,26 @@ const FacilitiesPage = ({ globalAuthId }) => {
                 />
               </div>
             </div>
+          </div>
 
+          {/* Submit Button */}
+          <div className="facility-form-actions">
             <button
               type="submit"
               disabled={loading}
-              style={{
-                marginTop: '20px',
-                padding: '12px 30px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                backgroundColor: loading ? '#ccc' : '#50589C',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: loading ? 'not-allowed' : 'pointer'
-              }}
+              className="facility-submit-button"
             >
               {loading ? 'Adding Facility...' : 'Add Facility'}
             </button>
-          </form>
-        </div>
-        )}
+          </div>
+        </form>
+      </div>
+      )}
 
         {/* Edit Facilities Section */}
         {activeTab === 'edit' && (
-        <div style={{ padding: '20px', border: '1px solid rgba(0,0,0,0.2)', marginBottom: '20px' }}>
-          <h2 style={{ marginTop: 0, marginBottom: '20px', color: '#50589C' }}>Edit Facilities</h2>
+        <div className="facility-edit-container">
+          <h2 className="facility-edit-header">Edit Facilities</h2>
 
           <div style={{ display: 'flex', gap: '20px', marginBottom: '15px', alignItems: 'flex-start' }}>
             {/* Type Filter Dropdown */}
@@ -749,7 +751,6 @@ const FacilitiesPage = ({ globalAuthId }) => {
           </p>
         </div>
         )}
-      </div>
     </div>
   );
 };

@@ -80,11 +80,12 @@ const UserTrackPackage = ({ globalAuthId }) => {
 
   return (
     <div className="tracking-container">
-      <button onClick={() => navigate('/customer')} className="back-button">
-        ← Back to Dashboard
-      </button>
-      
-      <h1>Package Tracking</h1>
+      <div className="tracking-header">
+        <h1>Package Tracking</h1>
+        <button onClick={() => navigate('/customerPage')} className="back-button">
+          ← Back to Dashboard
+        </button>
+      </div>
 
       {/* Search Form */}
       <div className="tracking-search-section">

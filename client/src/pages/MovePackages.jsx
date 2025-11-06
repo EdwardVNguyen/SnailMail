@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from 'react-router-dom';
-import './UserShipping.css'
+import './MovePackages.css';
 
 import { AgGridReact } from 'ag-grid-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
@@ -195,21 +195,24 @@ const MovePackages = ( {globalAuthId} ) => {
   ];
 
   return (
-    <div style={{ marginTop: '30px', width: '100%', padding: '20px' }}>
-      <div style={{ width: '100%', maxWidth: '1400px', margin: '0 auto' }}>
-        <div className="userShippingTop">
-          <div className="userShippingDesc">
-            Move Packages <span>Create tracking events between facilities</span>
-          </div>
+    <div className="move-packages-container">
+      <div className="move-packages-header">
+        <div>
+          <h1>Move Packages</h1>
+          <p>Create tracking events between facilities</p>
         </div>
+        <button onClick={() => navigate('/courierPage')} className="back-button">
+          ← Back to Courier
+        </button>
+      </div>
 
-        {/* Step 1: Select Current Facility */}
-        <div style={{ padding: '20px', border: '1px solid rgba(0,0,0,0.2)', marginBottom: '10px' }}>
-          <h3>Step 1: Select Current Facility Location</h3>
+      {/* Step 1: Select Current Facility */}
+      <div className="step-card">
+        <h3>Step 1: Select Current Facility Location</h3>
+        <div className="form-field">
           <select
             value={currentFacility}
             onChange={(e) => setCurrentFacility(e.target.value)}
-            style={{ width: '100%', padding: '10px', fontSize: '16px' }}
           >
             <option value="">-- Select a facility --</option>
             {facilities.map(facility => (
@@ -219,11 +222,13 @@ const MovePackages = ( {globalAuthId} ) => {
             ))}
           </select>
         </div>
+      </div>
 
-        {/* Step 2: Display Packages Table with Checkboxes */}
-        {currentFacility && (
-          <>
-            <div style={{ padding: '10px', border: '1px solid rgba(0,0,0,0.2)', marginBottom: '10px' }}>
+      {/* Step 2: Display Packages Table with Checkboxes */}
+      {currentFacility && (
+        <>
+          <div className="packages-grid-container">
+            <div className="packages-grid-header">
               <h3>Step 2: Select Packages to Move</h3>
               <p>Selected: {selectedPackages.length} package(s)</p>
             </div>
@@ -242,20 +247,18 @@ const MovePackages = ( {globalAuthId} ) => {
                 }}
               />
             </div>
+          </div>
 
-            {/* Step 3: Select Destination and Travel Time */}
-            <div style={{ padding: '20px', border: '1px solid rgba(0,0,0,0.2)', marginTop: '10px' }}>
-              <h3>Step 3: Set Destination and Travel Time</h3>
+          {/* Step 3: Select Destination and Travel Time */}
+          <div className="step-card">
+            <h3>Step 3: Set Destination and Travel Time</h3>
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Destination Facility:
-                </label>
-                <select
-                  value={destinationFacility}
-                  onChange={(e) => setDestinationFacility(e.target.value)}
-                  style={{ width: '100%', padding: '10px', fontSize: '16px' }}
-                >
+            <div className="form-field">
+              <label>Destination Facility:</label>
+              <select
+                value={destinationFacility}
+                onChange={(e) => setDestinationFacility(e.target.value)}
+              >
                   <option value="">-- Select destination facility --</option>
                   <option value="drop-off">Drop-off (Final Delivery)</option>
                   {facilities
@@ -265,68 +268,51 @@ const MovePackages = ( {globalAuthId} ) => {
                         {facility.facility_name} ({facility.facility_type})
                       </option>
                     ))}
-                </select>
-              </div>
+              </select>
+            </div>
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Tracking Event Status:
-                </label>
-                <select
-                  value={eventStatus}
-                  onChange={(e) => setEventStatus(e.target.value)}
-                  style={{ width: '100%', padding: '10px', fontSize: '16px' }}
-                >
+            <div className="form-field">
+              <label>Tracking Event Status:</label>
+              <select
+                value={eventStatus}
+                onChange={(e) => setEventStatus(e.target.value)}
+              >
                   <option value="pre-shipment">Pre-Shipment</option>
                   <option value="in transit">In Transit</option>
                   <option value="out for delivery">Out for Delivery</option>
                   <option value="delivered">Delivered</option>
-                </select>
-              </div>
+              </select>
+            </div>
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Estimated Travel Time (hours):
-                </label>
-                <input
-                  type="number"
-                  value={travelTime}
-                  onChange={(e) => setTravelTime(e.target.value)}
-                  placeholder="e.g., 2.5"
-                  min="0"
-                  step="0.5"
-                  style={{ padding: '10px', fontSize: '16px' }}
-                />
-              </div>
+            <div className="form-field">
+              <label>Estimated Travel Time (hours):</label>
+              <input
+                type="number"
+                value={travelTime}
+                onChange={(e) => setTravelTime(e.target.value)}
+                placeholder="e.g., 2.5"
+                min="0"
+                step="0.5"
+              />
+            </div>
 
-              <button
-                onClick={handleMovePackages}
-                disabled={selectedPackages.length === 0 || !destinationFacility || !travelTime}
-                style={{
-                  width: '100%',
-                  padding: '15px',
-                  fontSize: '18px',
-                  fontWeight: 'bold',
-                  backgroundColor: selectedPackages.length > 0 && destinationFacility && travelTime ? '#50589C' : '#ccc',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: selectedPackages.length > 0 && destinationFacility && travelTime ? 'pointer' : 'not-allowed'
-                }}
-              >
+            <button
+              onClick={handleMovePackages}
+              disabled={selectedPackages.length === 0 || !destinationFacility || !travelTime}
+              className="move-packages-submit"
+            >
                 Create Tracking Events ({selectedPackages.length} package{selectedPackages.length !== 1 ? 's' : ''})
               </button>
             </div>
-          </>
-        )}
+        </>
+      )}
 
-        {loading && <div style={{ textAlign: 'center', padding: '20px' }}>Loading packages...</div>}
-        {!currentFacility && !loading && (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-            Please select a current facility location to view packages
-          </div>
-        )}
-      </div>
+      {loading && <div className="loading-message">Loading packages...</div>}
+      {!currentFacility && !loading && (
+        <div className="empty-message">
+          Please select a current facility location to view packages
+        </div>
+      )}
     </div>
   );
 };

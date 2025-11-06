@@ -120,7 +120,7 @@ const CreateShipment = ({ globalAuthId }) => {
           <h2>Recipient Information</h2>
           
           <div className="form-group">
-            <label htmlFor="recipientName">Full Name *</label>
+            <label htmlFor="recipientName">Full Name <span className="required-asterisk">*</span></label>
             <input
               type="text"
               id="recipientName"
@@ -133,7 +133,7 @@ const CreateShipment = ({ globalAuthId }) => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="recipientEmail">Email *</label>
+              <label htmlFor="recipientEmail">Email <span className="required-asterisk">*</span></label>
               <input
                 type="email"
                 id="recipientEmail"
@@ -163,7 +163,7 @@ const CreateShipment = ({ globalAuthId }) => {
           <h2>Recipient Address</h2>
           
           <div className="form-group">
-            <label htmlFor="recipientStreet">Street Address *</label>
+            <label htmlFor="recipientStreet">Street Address <span className="required-asterisk">*</span></label>
             <input
               type="text"
               id="recipientStreet"
@@ -176,7 +176,7 @@ const CreateShipment = ({ globalAuthId }) => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="recipientCity">City *</label>
+              <label htmlFor="recipientCity">City <span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 id="recipientCity"
@@ -188,7 +188,7 @@ const CreateShipment = ({ globalAuthId }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="recipientState">State *</label>
+              <label htmlFor="recipientState">State <span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 id="recipientState"
@@ -202,7 +202,7 @@ const CreateShipment = ({ globalAuthId }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="recipientZipCode">ZIP Code *</label>
+              <label htmlFor="recipientZipCode">ZIP Code <span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 id="recipientZipCode"
@@ -223,7 +223,7 @@ const CreateShipment = ({ globalAuthId }) => {
           
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="packageType">Package Type *</label>
+              <label htmlFor="packageType">Package Type <span className="required-asterisk">*</span></label>
               <select
                 id="packageType"
                 name="packageType"
@@ -239,7 +239,7 @@ const CreateShipment = ({ globalAuthId }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="weight">Weight (kg) *</label>
+              <label htmlFor="weight">Weight (kg) <span className="required-asterisk">*</span></label>
               <input
                 type="number"
                 id="weight"
@@ -255,7 +255,7 @@ const CreateShipment = ({ globalAuthId }) => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="length">Length (cm) *</label>
+              <label htmlFor="length">Length (cm) <span className="required-asterisk">*</span></label>
               <input
                 type="number"
                 id="length"
@@ -268,7 +268,7 @@ const CreateShipment = ({ globalAuthId }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="width">Width (cm) *</label>
+              <label htmlFor="width">Width (cm) <span className="required-asterisk">*</span></label>
               <input
                 type="number"
                 id="width"
@@ -281,7 +281,7 @@ const CreateShipment = ({ globalAuthId }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="height">Height (cm) *</label>
+              <label htmlFor="height">Height (cm) <span className="required-asterisk">*</span></label>
               <input
                 type="number"
                 id="height"

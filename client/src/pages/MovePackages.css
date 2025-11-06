@@ -1,0 +1,173 @@
+/* Move Packages Container */
+.move-packages-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 100px 20px 40px 20px;
+}
+
+/* Header */
+.move-packages-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.move-packages-header h1 {
+  font-size: 28px;
+  color: #333;
+  margin: 0;
+}
+
+.move-packages-header p {
+  font-size: 16px;
+  color: #666;
+  margin: 5px 0 0 0;
+}
+
+.back-button {
+  padding: 10px 20px;
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.back-button:hover {
+  background-color: #e0e0e0;
+}
+
+/* Step Cards */
+.step-card {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  margin-bottom: 20px;
+}
+
+.step-card h3 {
+  font-size: 20px;
+  color: #495057;
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #3C467B;
+}
+
+.step-card p {
+  color: #666;
+  margin-bottom: 15px;
+}
+
+/* Form Fields */
+.form-field {
+  margin-bottom: 20px;
+}
+
+.form-field label {
+  display: block;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.form-field select,
+.form-field input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 2px solid #ced4da;
+  border-radius: 4px;
+  transition: border-color 0.3s;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.form-field select:focus,
+.form-field input:focus {
+  outline: none;
+  border-color: #3C467B;
+}
+
+/* AG Grid Container */
+.packages-grid-container {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.packages-grid-header {
+  margin-bottom: 15px;
+}
+
+.packages-grid-header h3 {
+  font-size: 20px;
+  color: #495057;
+  margin-top: 0;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #3C467B;
+}
+
+.packages-grid-header p {
+  color: #666;
+  margin: 0;
+}
+
+/* Submit Button */
+.move-packages-submit {
+  width: 100%;
+  padding: 15px 50px;
+  font-size: 18px;
+  font-weight: 600;
+  background-color: #3C467B;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(60, 70, 123, 0.2);
+  margin-top: 20px;
+}
+
+.move-packages-submit:hover:not(:disabled) {
+  background-color: #50589C;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(60, 70, 123, 0.3);
+}
+
+.move-packages-submit:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Loading and Empty States */
+.loading-message,
+.empty-message {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .move-packages-container {
+    padding: 80px 15px 30px 15px;
+  }
+
+  .step-card {
+    padding: 20px;
+  }
+
+  .move-packages-submit {
+    padding: 12px 30px;
+    font-size: 16px;
+  }
+}
