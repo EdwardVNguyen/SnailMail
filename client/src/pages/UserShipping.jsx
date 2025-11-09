@@ -83,7 +83,7 @@ const UserShipping = ( {globalAuthId }) => {
     const dropoff = addressObj ? `${addressObj.address.street_name}, 
                                   ${addressObj.address.city_name}, 
                                   ${addressObj.address.state_name}`
-                                  : "Address not found";
+                                  : "loading...";
 
     return {
       ID: pkg.package_id,

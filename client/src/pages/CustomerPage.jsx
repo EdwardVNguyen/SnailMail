@@ -41,7 +41,7 @@ const CustomerPage = ({ globalAuthId }) => {
     <div className="customerPageContainer">
       {/* Welcome Header */}
       <div className="welcomeSection">
-        <h1>Welcome back, {customerInfo.customer.first_name}!</h1>
+        <h1>Welcome back, {customerInfo.customer.first_name}!</h1> 
         <p>Manage your shipments and track packages all in one place.</p>
       </div>
 

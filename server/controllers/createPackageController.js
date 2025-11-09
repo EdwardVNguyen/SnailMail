@@ -2,15 +2,14 @@ import pool from '../config/database.js';
 import { getJSONRequestBody } from '../utils/getJSONRequestBody.js';
 import { badClientRequest, badServerRequest } from '../utils/badRequest.js';
 import { toNullIfBlank } from '../utils/toNullIfBlank.js';
+import crypto from 'crypto'; // for safer encryption for tracking number
 
-// Generate random alphanumeric tracking number
+// Generate random alphanumeric tracking number 
 const generateTrackingNumber = () => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let tracking_number = 'TRK';
-  for (let i = 0; i < 12; i++) {
-    tracking_number += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return tracking_number;
+  const array = new Uint8Array(12);                                        // will hold random bytes (0-255)
+  crypto.getRandomValues(array);                                           // randomize function 
+  return 'TRK' + Array.from(array, x => chars[x % chars.length]).join(''); // set tracking number by appendin 'TRK' with random char array
 };
 
 export const createPackageController = async (req, res) => {
@@ -23,13 +22,17 @@ export const createPackageController = async (req, res) => {
       senderCity,
       senderState,
       senderZipCode,
-      recipientName,
+      
+      recipientFirstName, 
+      recipientMiddleName,
+      recipientLastName,
       recipientPhone,
       recipientEmail,
       recipientStreet,
       recipientCity,
       recipientState,
       recipientZipCode,
+
       packageType,
       weight,
       length,
@@ -39,6 +42,8 @@ export const createPackageController = async (req, res) => {
   // Parse request body
   try {
     const body = await getJSONRequestBody(req);
+
+    // sender information - derived from a customer relation
     senderFirstName = body.senderFirstName;
     senderMiddleName = body.senderMiddleName;
     senderLastName = body.senderLastName;
@@ -48,13 +53,19 @@ export const createPackageController = async (req, res) => {
     senderCity = body.senderCity;
     senderState = body.senderState;
     senderZipCode = body.senderZipCode;
-    recipientName = body.recipientName;
+    
+    // recipient information - derived from a customer relation
+    recipientFirstName = body.recipientFirstName;
+    recipientMiddleName = body.recipientMiddleName;
+    recipientLastName = body.recipientLastName;
     recipientPhone = body.recipientPhone;
     recipientEmail = body.recipientEmail;
     recipientStreet = body.recipientStreet;
     recipientCity = body.recipientCity;
     recipientState = body.recipientState;
     recipientZipCode = body.recipientZipCode;
+
+    // package type and dimensions
     packageType = body.packageType;
     weight = body.weight;
     length = body.length;
@@ -64,7 +75,7 @@ export const createPackageController = async (req, res) => {
     // Validate required fields
     if (!senderFirstName || !senderLastName || !senderEmail || 
         !senderStreet || !senderCity || !senderState || !senderZipCode ||
-        !recipientName || !recipientEmail || !recipientStreet || 
+        !recipientFirstName || !recipientLastName || !recipientEmail || !recipientStreet || 
         !recipientCity || !recipientState || !recipientZipCode || 
         !packageType || !weight) {
       return badClientRequest(res, { message: 'Missing required fields' });
@@ -79,17 +90,13 @@ export const createPackageController = async (req, res) => {
     await connection.beginTransaction();
 
     // Insert sender address into address table
+    // NOTE: created_by and updated_by is NULL for now, must create guest account then alter table to modify those attributes
     const [senderAddressResult] = await connection.execute(
-      `INSERT INTO address (street_name, city_name, state_name, zip_code, created_by, updated_by)
-       VALUES (?, ?, ?, ?, NULL, NULL)`,
+      `INSERT INTO address (street_name, city_name, state_name, zip_code)
+       VALUES (?, ?, ?, ?)`,
       [senderStreet, senderCity, senderState, senderZipCode]
     );
     const sender_address_id = senderAddressResult.insertId;
-
-    // Create sender full name
-    const sender_full_name = senderMiddleName 
-      ? `${senderFirstName} ${senderMiddleName} ${senderLastName}`
-      : `${senderFirstName} ${senderLastName}`;
 
     // Insert sender as guest customer
     const [senderCustomerResult] = await connection.execute(
@@ -100,10 +107,8 @@ export const createPackageController = async (req, res) => {
         phone_number, 
         account_type, 
         address_id, 
-        auth_id, 
-        created_by, 
-        updated_by
-      ) VALUES (?, ?, ?, ?, 'guest', ?, NULL, NULL, NULL)`,
+        auth_id 
+      ) VALUES (?, ?, ?, ?, 'guest', ?, NULL)`,
       [
         senderFirstName,
         toNullIfBlank(senderMiddleName),
@@ -112,17 +117,38 @@ export const createPackageController = async (req, res) => {
         sender_address_id
       ]
     );
-    const sender_customer_id = senderCustomerResult.insertId;
+    const sender_id = senderCustomerResult.insertId;
 
     // Insert recipient address into address table
     const [recipientAddressResult] = await connection.execute(
-      `INSERT INTO address (street_name, city_name, state_name, zip_code, created_by, updated_by)
-       VALUES (?, ?, ?, ?, NULL, NULL)`,
+      `INSERT INTO address (street_name, city_name, state_name, zip_code)
+       VALUES (?, ?, ?, ?)`,
       [recipientStreet, recipientCity, recipientState, recipientZipCode]
     );
     const recipient_address_id = recipientAddressResult.insertId;
 
-    // Generate unique tracking number
+    // Insert recipient as guest customer
+    const [recipientCustomerResult] = await connection.execute(
+      `INSERT INTO customer (
+        first_name, 
+        middle_name, 
+        last_name, 
+        phone_number, 
+        account_type, 
+        address_id, 
+        auth_id 
+      ) VALUES (?, ?, ?, ?, 'guest', ?, NULL)`,
+      [
+        recipientFirstName,
+        toNullIfBlank(recipientMiddleName),
+        recipientLastName,
+        toNullIfBlank(recipientPhone),
+        recipient_address_id
+      ]
+    );
+    const recipient_id = recipientCustomerResult.insertId;
+
+    // Generate unique tracking number, makes sure there isn't an already existing tracking number
     let tracking_number;
     let is_unique = false;
     
@@ -140,15 +166,8 @@ export const createPackageController = async (req, res) => {
     // Insert package into package table
     await connection.execute(
       `INSERT INTO package (
-        sender_customer_id,
-        sender_name,
-        sender_phone,
-        sender_email,
-        sender_address_id,
-        recipient_name,
-        recipient_phone,
-        recipient_email,
-        recipient_address_id,
+        sender_id,
+        recipient_id,
         package_type,
         weight,
         length,
@@ -158,22 +177,15 @@ export const createPackageController = async (req, res) => {
         tracking_number,
         created_by,
         updated_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'processing', ?, NULL, NULL)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'processing', ?, NULL, NULL)`, 
       [
-        sender_customer_id,
-        sender_full_name,
-        toNullIfBlank(senderPhone),
-        senderEmail,
-        sender_address_id,
-        recipientName,
-        toNullIfBlank(recipientPhone),
-        recipientEmail,
-        recipient_address_id,
+        sender_id,
+        recipient_id,
         packageType,
         weight,
-        toNullIfBlank(length),
-        toNullIfBlank(width),
-        toNullIfBlank(height),
+        length,
+        width,
+        height,
         tracking_number
       ]
     );

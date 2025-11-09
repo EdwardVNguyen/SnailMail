@@ -15,9 +15,8 @@ const Tracking = () => {
   const fetchTrackingData = async (tracking_num) => {
     setIsLoading(true);
     setError('');
-    
     try {
-      const response = await fetch(`http://localhost:8000/tracking/${tracking_num}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/${tracking_num}`);
       const data = await response.json();
       if (data.success) {
         setTrackingData(data);

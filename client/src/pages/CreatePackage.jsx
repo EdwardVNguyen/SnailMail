@@ -16,14 +16,18 @@ const CreatePackage = () => {
     senderCity: '',
     senderState: '',
     senderZipCode: '',
-    recipientName: '',
+
+    recipientFirstName: '',
+    recipientMiddleName: '',
+    recipientLastName: '',
     recipientPhone: '',
     recipientEmail: '',
     recipientStreet: '',
     recipientCity: '',
     recipientState: '',
     recipientZipCode: '',
-    packageType: 'parcel',
+
+    packageType: 'parcel', // package type is parcel by default
     weight: '',
     length: '',
     width: '',
@@ -52,7 +56,7 @@ const CreatePackage = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('http://localhost:8000/createPackage', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/createPackage`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -76,13 +80,17 @@ const CreatePackage = () => {
           senderCity: '',
           senderState: '',
           senderZipCode: '',
-          recipientName: '',
+
+          recipientFirstName: '',
+          recipientMiddleName: '',
+          recipientLastName: '',
           recipientPhone: '',
           recipientEmail: '',
           recipientStreet: '',
           recipientCity: '',
           recipientState: '',
           recipientZipCode: '',
+
           packageType: 'parcel',
           weight: '',
           length: '',
@@ -261,16 +269,42 @@ const CreatePackage = () => {
         <div className="form-section">
           <h2>Recipient Information</h2>
           
-          <div className="form-group">
-            <label htmlFor="recipientName">Full Name *</label>
-            <input
-              type="text"
-              id="recipientName"
-              name="recipientName"
-              value={formData.recipientName}
-              onChange={handleInputChange}
-              required
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="recipientFirstName">First Name *</label>
+              <input
+                type="text"
+                id="recipientFirstName"
+                name="recipientFirstName"
+                value={formData.recipientFirstName}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="senderMiddleName">Middle Name</label>
+              <input
+                type="text"
+                id="recipientMiddleName"
+                name="recipientMiddleName"
+                value={formData.recipientMiddleName}
+                onChange={handleInputChange}
+                placeholder="Optional"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="recipientLastName">Last Name *</label>
+              <input
+                type="text"
+                id="recipientLastName"
+                name="recipientLastName"
+                value={formData.recipientLastName}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
           </div>
 
           <div className="form-row">
