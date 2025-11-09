@@ -12,9 +12,13 @@ import ManagerPage from './pages/ManagerPage';
 import UserProfile from './pages/UserProfile';
 import UserShipping from './pages/UserShipping';
 import UserTrackPackage from './pages/UserTrackPackage';
-import CreateShipment from './pages/CreateShipment';
+import CreatePackage from './pages/CreatePackage';
+import UserCreateShipment from './pages/UserCreateShipment';
 import ElectronicShop from './pages/ElectronicShop';
 import MovePackages from './pages/MovePackages';
+import ReportPage from './pages/ReportPage';
+import EmployeesPage from './pages/EmployeesPage';
+import FacilitiesPage from './pages/FacilitiesPage';
 
 const Tracking = lazy( () => import('./pages/Tracking'));
 const About = lazy( () => import('./pages/About'));
@@ -50,7 +54,7 @@ const App = () => {
         <Routes>
           {/* non-protected routes */}
           <Route path="/" element={<Home/>} />
-          <Route path="/createShipment" element={<CreateShipment/>} />
+          <Route path="/createPackage" element={<CreatePackage />} />
           <Route path="/tracking" element={<Tracking/>} />
           <Route path="/about" element={<About/>} />
           <Route path="/support" element={<Support/>} />
@@ -70,11 +74,16 @@ const App = () => {
             <Route path='/employeePage' element={<EmployeePage globalAuthId={globalAuthId}/>} />
             <Route path='/courierPage' element={<CourierPage globalAuthId={globalAuthId}/>} />
             <Route path='/managerPage' element={<ManagerPage globalAuthId={globalAuthId}/>} />
-            <Route path='/userProfile' element={<UserProfile/>} />
+            <Route path='/userProfile' element={<UserProfile />} />
             <Route path='/userShipping' element={<UserShipping globalAuthId={globalAuthId}/>} />
-            <Route path='/userTrackPackage' element={<UserTrackPackage/>} />
+            <Route path='/userTrackPackage' element={<UserTrackPackage globalAuthId={globalAuthId} />} />
+            <Route path='/userTrackPackage/:trackingNumber' element={<UserTrackPackage globalAuthId={globalAuthId} />} />
             <Route path='/ecommercePage' element={<ElectronicShop/>} />
             <Route path='/movePackages' element={<MovePackages globalAuthId={globalAuthId}/>} />
+            <Route path='/reportPage' element={<ReportPage globalAuthId={globalAuthId}/>} />
+            <Route path='/employeesPage' element={<EmployeesPage globalAuthId={globalAuthId}/>} />
+            <Route path='/facilitiesPage' element={<FacilitiesPage globalAuthId={globalAuthId}/>} />
+            <Route path="/userCreateShipment" element={<UserCreateShipment globalAuthId={globalAuthId}/>} />
           </Route>
     
         </Routes>

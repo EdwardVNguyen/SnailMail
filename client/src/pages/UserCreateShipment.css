@@ -1,4 +1,4 @@
-.create-package-container {
+.create-shipment-container {
   max-width: 900px;
   margin: -30px auto;
   margin-bottom: 20px;
@@ -43,15 +43,6 @@
   border-radius: 4px;
 }
 
-.save-notice {
-  color: #856404;
-  background-color: #fff3cd;
-  padding: 10px;
-  border-radius: 4px;
-  margin: 15px 0;
-  border: 1px solid #ffeeba;
-}
-
 .track-button {
   margin-top: 15px;
   padding: 10px 20px;
@@ -78,7 +69,7 @@
 }
 
 /* Form Styling */
-.package-form {
+.shipment-form {
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -166,11 +157,11 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .create-package-container {
+  .create-shipment-container {
     padding: 80px 15px 30px 15px;
   }
 
-  .package-header {
+  .shipment-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
@@ -184,33 +175,4 @@
   .form-section {
     padding: 20px;
   }
-}
-
-.form-container {
-    max-width: fit-content;
-    display: flex;
-    flex-direction: column;
-    margin: auto;
-    padding: 20px;
-    align-items: center;
-}
-
-form {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-button [type="submit"] {
-    max-width: fit-content;
-    margin: auto;
-}
-
-button [type="submit"]:hover {
-    cursor: grabbing;
-    
-}
-
-button [type="submit"]:focus {
-    cursor: grabbing;
 }

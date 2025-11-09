@@ -73,7 +73,7 @@ npm install
 ### Run frontend and backend to run web application
 
 cd server
-npm run dev
+node --env-file .env server.js
 
 cd client
 npm run dev

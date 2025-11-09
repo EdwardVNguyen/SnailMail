@@ -4,6 +4,16 @@ import { getAddressDataController } from '../controllers/getAddressDataControlle
 import { getFacilitiesController } from '../controllers/getFacilitiesController.js'
 import { getPackagesByFacilityController } from '../controllers/getPackagesByFacilityController.js'
 import { getEmployeeIdController } from '../controllers/getEmployeeIdController.js'
+import { getNextEmployeeIdController } from '../controllers/getNextEmployeeIdController.js'
+import { getEmployeesController } from '../controllers/getEmployeesController.js'
+import { checkEmployeeUniquenessController } from '../controllers/checkEmployeeUniquenessController.js'
+import { getNextFacilityIdController } from '../controllers/getNextFacilityIdController.js'
+import { checkFacilityUniquenessController } from '../controllers/checkFacilityUniquenessController.js'
+import { getProblemsReportController } from '../controllers/getProblemsReportController.js'
+import { getFacilityBacklogReportController } from '../controllers/getFacilityBacklogReportController.js'
+import { getDeliveryTimeReportController } from '../controllers/getDeliveryTimeReportController.js'
+import { getCourierPerformanceReportController } from '../controllers/getCourierPerformanceReportController.js'
+import {trackingController} from '../controllers/trackingController.js';
 
 export const handleGetRequest = (req, res) => {
 
@@ -25,6 +35,58 @@ export const handleGetRequest = (req, res) => {
   // get employee_id from auth_id
   } else if ( req.url.startsWith('/getEmployeeId')) {
     return getEmployeeIdController(req, res)
+  // get next available employee_id
+  } else if ( req.url.startsWith('/getNextEmployeeId')) {
+    return getNextEmployeeIdController(req, res)
+  // get all employees or filter by role
+  } else if ( req.url.startsWith('/getEmployees')) {
+    return getEmployeesController(req, res)
+  // check employee ID or SSN uniqueness
+  } else if ( req.url.startsWith('/checkEmployeeUniqueness')) {
+    return checkEmployeeUniquenessController(req, res)
+  // get next available facility_id
+  } else if ( req.url.startsWith('/getNextFacilityId')) {
+    return getNextFacilityIdController(req, res)
+  // check facility ID uniqueness
+  }
+  else if ( req.url.startsWith('/checkFacilityUniqueness')) {
+    return checkFacilityUniquenessController(req, res)
+  } 
+  // get problem packages report
+  else if ( req.url.startsWith('/getProblemsReport')) {
+    return getProblemsReportController(req, res)
+  }
+  // get facility backlog report
+  else if ( req.url.startsWith('/getFacilityBacklogReport')) {
+    return getFacilityBacklogReportController(req, res)
+  }
+  // get delivery time report
+  else if ( req.url.startsWith('/getDeliveryTimeReport')) {
+    return getDeliveryTimeReportController(req, res)
+  }
+  // get courier performance report
+  else if ( req.url.startsWith('/getCourierPerformanceReport')) {
+    return getCourierPerformanceReportController(req, res)
+  }
+  // get problem packages report
+  else if ( req.url.startsWith('/getProblemsReport')) {
+    return getProblemsReportController(req, res)
+  }
+  // get facility backlog report
+  else if ( req.url.startsWith('/getFacilityBacklogReport')) {
+    return getFacilityBacklogReportController(req, res)
+  }
+  // get delivery time report
+  else if ( req.url.startsWith('/getDeliveryTimeReport')) {
+    return getDeliveryTimeReportController(req, res)
+  }
+  // get courier performance report
+  else if ( req.url.startsWith('/getCourierPerformanceReport')) {
+    return getCourierPerformanceReportController(req, res)
+  }
+  // get tracking info for a package
+  else if (req.url.startsWith('/tracking')) {
+        return trackingController(req, res);
   }
   // if an api call is made to a url that isn't any of the above, return 404
   else {

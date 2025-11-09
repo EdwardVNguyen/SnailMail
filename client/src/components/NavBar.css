@@ -39,6 +39,7 @@ ul {
 
 .signInOrLogIn {
   display: flex;
+  align-items: center;
 }
 
 .profileIcon {

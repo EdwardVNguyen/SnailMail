@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 
 .env
+.vercel
+db_ver5.sql
