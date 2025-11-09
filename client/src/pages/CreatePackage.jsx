@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+import StateSelect from '../components/StateSelect';
 import './CreatePackage.css';
 
 const CreatePackage = () => {
@@ -110,12 +112,6 @@ const CreatePackage = () => {
 
   return (
     <div className="create-package-container">
-      <div className="package-header">
-        <h1>Create New Package</h1>
-        <button onClick={() => navigate('/')} className="back-button">
-          ← Back to Home
-        </button>
-      </div>
 
       {/* Success Message */}
       {success && (
@@ -198,6 +194,9 @@ const CreatePackage = () => {
                 type="tel"
                 id="senderPhone"
                 name="senderPhone"
+                maxLength={10}
+                minLength={10}
+                pattern="[0-9]*"
                 value={formData.senderPhone}
                 onChange={handleInputChange}
                 placeholder="Optional"
@@ -237,17 +236,13 @@ const CreatePackage = () => {
 
             <div className="form-group">
               <label htmlFor="senderState">State *</label>
-              <input
-                type="text"
-                id="senderState"
-                name="senderState"
+              <StateSelect
                 value={formData.senderState}
                 onChange={handleInputChange}
-                maxLength="2"
-                placeholder="e.g., NY"
-                required
+                id="senderState"
+                name="senderState"
               />
-            </div>
+             </div>
 
             <div className="form-group">
               <label htmlFor="senderZipCode">ZIP Code *</label>
@@ -255,6 +250,8 @@ const CreatePackage = () => {
                 type="text"
                 id="senderZipCode"
                 name="senderZipCode"
+                maxLength={5}
+                minLength={5}
                 value={formData.senderZipCode}
                 onChange={handleInputChange}
                 pattern="[0-9]{5}"
@@ -326,6 +323,9 @@ const CreatePackage = () => {
                 type="tel"
                 id="recipientPhone"
                 name="recipientPhone"
+                maxLength={10}
+                minLength={10}
+                pattern="[0-9]*"
                 value={formData.recipientPhone}
                 onChange={handleInputChange}
                 placeholder="Optional"
@@ -365,15 +365,11 @@ const CreatePackage = () => {
 
             <div className="form-group">
               <label htmlFor="recipientState">State *</label>
-              <input
-                type="text"
-                id="recipientState"
-                name="recipientState"
+              <StateSelect
                 value={formData.recipientState}
                 onChange={handleInputChange}
-                maxLength="2"
-                placeholder="e.g., NY"
-                required
+                id="recipientState"
+                name="recipientState"
               />
             </div>
 
@@ -383,6 +379,8 @@ const CreatePackage = () => {
                 type="text"
                 id="recipientZipCode"
                 name="recipientZipCode"
+                maxLength={5}
+                minLength={5}
                 value={formData.recipientZipCode}
                 onChange={handleInputChange}
                 pattern="[0-9]{5}"

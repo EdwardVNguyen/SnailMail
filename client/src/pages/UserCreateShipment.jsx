@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './UserCreateShipment.css';
 
+import StateSelect from '../components/StateSelect';
+
 const CreateShipment = ({ globalAuthId }) => {
   const navigate = useNavigate();
 
@@ -93,12 +95,6 @@ const CreateShipment = ({ globalAuthId }) => {
 
   return (
     <div className="create-shipment-container">
-      <div className="shipment-header">
-        <h1>Create New Shipment</h1>
-        <button onClick={() => navigate('/customerPage')} className="back-button">
-          ← Back to Dashboard
-        </button>
-      </div>
 
       {/* Success Message */}
       {success && (
@@ -119,7 +115,6 @@ const CreateShipment = ({ globalAuthId }) => {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="shipment-form">
-        {/* Recipient Information Section */}
           
       {/* Recipient Information Section */}
         <div className="form-section">
@@ -184,6 +179,9 @@ const CreateShipment = ({ globalAuthId }) => {
                 id="recipientPhone"
                 name="recipientPhone"
                 value={formData.recipientPhone}
+                maxLength={10}
+                minLength={10}
+                pattern="[0-9]*"
                 onChange={handleInputChange}
                 placeholder="Optional"
               />
@@ -222,15 +220,11 @@ const CreateShipment = ({ globalAuthId }) => {
 
             <div className="form-group">
               <label htmlFor="recipientState">State *</label>
-              <input
-                type="text"
-                id="recipientState"
-                name="recipientState"
+              <StateSelect
                 value={formData.recipientState}
                 onChange={handleInputChange}
-                maxLength="2"
-                placeholder="e.g., NY"
-                required
+                id="recipientState"
+                name="recipientState"
               />
             </div>
 
@@ -243,6 +237,8 @@ const CreateShipment = ({ globalAuthId }) => {
                 value={formData.recipientZipCode}
                 onChange={handleInputChange}
                 pattern="[0-9]{5}"
+                maxLength={5}
+                minLength={5}
                 placeholder="12345"
                 required
               />

@@ -1,20 +1,8 @@
 .create-shipment-container {
   max-width: 900px;
-  margin: 0 auto;
+  margin: -30px auto;
+  margin-bottom: 20px;
   padding: 100px 20px 40px 20px;
-}
-
-.shipment-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-
-.shipment-header h1 {
-  font-size: 28px;
-  color: #333;
-  margin: 0;
 }
 
 .back-button {
