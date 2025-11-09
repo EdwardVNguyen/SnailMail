@@ -47,30 +47,6 @@ export const trackingController = async (req, res) => {
         }
         const package_data = package_results[0];
 
-        if (authId) {
-            //Get the logged-in user's email
-            const [auth_results] = await connection.execute(`SELECT email FROM authentication WHERE auth_id = ?`,
-                [authId]);
-                if (auth_results.length === 0) {
-                    res.statusCode = 403;
-                    res.setHeader('Content-Type', 'application/json');
-                    res.end(JSON.stringify({ success: false, message: 'Unauthorized access' }));
-                    return;
-                }
-                const user_email = auth_results[0].email;
-        
-                // Check if user's email matches sender_email
-                if (package_data.sender_email.toLowerCase() !== user_email.toLowerCase()) {
-                    res.statusCode = 403;
-                    res.setHeader('Content-Type', 'application/json');
-                    res.end(JSON.stringify({ 
-                        success: false, 
-                        message: 'You can only track packages you sent' 
-                    }));
-                    return;
-                }
-        }
-
         //get tracking events from database
         const tracking_sql = `
             SELECT 

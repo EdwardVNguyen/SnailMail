@@ -124,7 +124,7 @@ const UserTrackPackage = ({ globalAuthId }) => {
             <div className="package-info-grid">
               <div className="info-item">
                 <span className="info-label">Recipient:</span>
-                <span className="info-value">{trackingData.package.recipient_name}</span>
+                <span className="info-value">{trackingData.package.first_name}, {trackingData.package.last_name}</span>
               </div>
               <div className="info-item">
                 <span className="info-label">Address:</span>
@@ -134,7 +134,7 @@ const UserTrackPackage = ({ globalAuthId }) => {
               </div>
               <div className="info-item">
                 <span className="info-label">Package Type:</span>
-                <span className="info-value">{trackingData.package.package_type}</span>
+                <span className="info-value">{String(trackingData.package.package_type).charAt(0).toUpperCase() + String(trackingData.package.package_type).slice(1)}</span>
               </div>
               <div className="info-item">
                 <span className="info-label">Weight:</span>

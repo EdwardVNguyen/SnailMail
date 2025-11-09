@@ -68,7 +68,7 @@ const UserShipping = ( {globalAuthId }) => {
     return {
       ID: pkg.package_id,
       Recipient: `${pkg.first_name + ' ' + pkg.last_name}`,
-      DropoffAddress: `${pkg.street_name + ' ' + pkg.city_name + ' ' + pkg.state_name + ' ' + pkg.zip_code}`,
+      DropoffAddress: `${pkg.street_name + ', ' + pkg.city_name + ', ' + pkg.state_name + ', ' + pkg.zip_code}`,
       Type: pkg.package_type,
       Weight: pkg.weight,
       Dimensions: `${Math.round(pkg.length)}x${Math.round(pkg.width)}x${Math.round(pkg.height)}`,
