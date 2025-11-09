@@ -9,9 +9,9 @@ export const getCustomerPackageDataController = async (req, res) => {
     // Get authId from query or body (e.g. /getCustomerPackageData?authId=5)
     const url = parse(req.url, true);
     const authId = url.query.authId;
-    const page = Number(url.query.page) || 1; // what page the user wants
+    const page = Number(url.query.page) || 1;    // what page the user wants
     const limit = Number(url.query.limit) || 15; // how many items per page
-    const offset = (page - 1) * limit; // how many items to skip in SQL
+    const offset = (page - 1) * limit;           // how many items to skip in SQL
 
     if (!authId) {
       return badClientRequest(res, 'authId is required');
@@ -20,7 +20,7 @@ export const getCustomerPackageDataController = async (req, res) => {
     // Fetch total count (for knowing how many pages exist)
     const [countResult] = await connection.execute(
       `SELECT COUNT(*) AS total FROM package p
-       JOIN customer c ON p.sender_customer_id = c.customer_id
+       JOIN customer c ON p.sender_id = c.customer_id
        WHERE c.auth_id = ?`,
       [authId]
     );
@@ -31,19 +31,33 @@ export const getCustomerPackageDataController = async (req, res) => {
     const [rows] = await connection.execute(
       `
       SELECT 
-        p.package_id, p.sender_name, p.sender_email, p.sender_address_id,
-        p.recipient_name, p.recipient_email, p.recipient_address_id,
-        p.package_type, p.weight, p.length, p.width, p.height,
-        p.package_status, p.created_at, p.last_updated
+        p.package_id, 
+        p.package_type, 
+        p.weight, 
+        p.length, 
+        p.width, 
+        p.height,
+        p.package_status, 
+        p.created_at, 
+        p.last_updated,
+
+        r.first_name,
+        r.last_name,
+
+        ra.street_name,
+        ra.city_name,
+        ra.state_name,
+        ra.zip_code
       FROM package p
-      JOIN customer c ON p.sender_customer_id = c.customer_id
-      WHERE c.auth_id = ?
+      INNER JOIN customer s on p.sender_id = s.customer_id
+      INNER JOIN customer r ON p.recipient_id = r.customer_id
+      INNER JOIN address ra ON r.address_id = ra.address_id
+      WHERE s.auth_id = ?
       ORDER BY p.created_at DESC
       LIMIT ${limit} OFFSET ${offset};
       `,
       [authId]
     );
-    
 
     // return empty array if no packages are found
     res.statusCode = 200;

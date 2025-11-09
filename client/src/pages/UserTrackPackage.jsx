@@ -18,7 +18,7 @@ const UserTrackPackage = ({ globalAuthId }) => {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/tracking/${tracking_num}?authId=${globalAuthId}`
+      `${import.meta.env.VITE_API_URL}/tracking/${tracking_num}?authId=${globalAuthId}`
       );
       const data = await response.json();
       

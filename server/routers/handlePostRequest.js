@@ -54,7 +54,7 @@ export const handlePostRequest= (req, res) => {
     return deleteFacilityController(req, res)
   }
   // create new shipment
-  else if (req.url.startsWith('/userCreateShipment')) {
+  else if (req.url.startsWith('/createShipment')) {
     return createShipmentController(req, res)
   }
   // create package for guest users

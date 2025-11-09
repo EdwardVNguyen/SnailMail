@@ -7,7 +7,9 @@ const CreateShipment = ({ globalAuthId }) => {
 
   // Form state
   const [formData, setFormData] = useState({
-    recipientName: '',
+    recipientFirstName: '',
+    recipientMiddleName: '',
+    recipientLastName: '',
     recipientPhone: '',
     recipientEmail: '',
     recipientStreet: '',
@@ -44,7 +46,7 @@ const CreateShipment = ({ globalAuthId }) => {
 
     try {
       console.log('Submitting shipment with data:', { authId: globalAuthId, ...formData });
-      const response = await fetch('http://localhost:8000/userCreateShipment', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/createShipment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -63,7 +65,9 @@ const CreateShipment = ({ globalAuthId }) => {
         setTrackingNumber(data.tracking_number);
         // Reset form
         setFormData({
-          recipientName: '',
+          recipientFirstName: '',
+          recipientMiddleName: '',
+          recipientLastName: '',
           recipientPhone: '',
           recipientEmail: '',
           recipientStreet: '',
@@ -116,20 +120,49 @@ const CreateShipment = ({ globalAuthId }) => {
       {/* Form */}
       <form onSubmit={handleSubmit} className="shipment-form">
         {/* Recipient Information Section */}
+          
+      {/* Recipient Information Section */}
         <div className="form-section">
           <h2>Recipient Information</h2>
           
-          <div className="form-group">
-            <label htmlFor="recipientName">Full Name *</label>
-            <input
-              type="text"
-              id="recipientName"
-              name="recipientName"
-              value={formData.recipientName}
-              onChange={handleInputChange}
-              required
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="recipientFirstName">First Name *</label>
+              <input
+                type="text"
+                id="recipientFirstName"
+                name="recipientFirstName"
+                value={formData.recipientFirstName}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="senderMiddleName">Middle Name</label>
+              <input
+                type="text"
+                id="recipientMiddleName"
+                name="recipientMiddleName"
+                value={formData.recipientMiddleName}
+                onChange={handleInputChange}
+                placeholder="Optional"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="recipientLastName">Last Name *</label>
+              <input
+                type="text"
+                id="recipientLastName"
+                name="recipientLastName"
+                value={formData.recipientLastName}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
           </div>
+
 
           <div className="form-row">
             <div className="form-group">
