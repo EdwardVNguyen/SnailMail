@@ -20,21 +20,24 @@ export const trackingController = async (req, res) => {
     }
     let connection;
     try {
-        console.log('about to query db')
         connection = await pool.getConnection();
 
         //get package details from database
         const package_sql = `
             SELECT 
-                p.*,
-                a.street_name,
-                a.city_name,
-                a.state_name,
-                a.zip_code
+              p.*,
+              a.street_name,
+              a.city_name,
+              a.state_name,
+              a.zip_code,
+              c.first_name,
+              c.last_name
             FROM package p
-            LEFT JOIN address a ON p.recipient_address_id = a.address_id
+            LEFT JOIN customer c ON p.recipient_id = c.customer_id
+            LEFT JOIN address a ON c.address_id = a.address_id
             WHERE p.tracking_number = ?
         `;
+
         const [package_results] = await connection.execute(package_sql, [trackingNumber]);
         if (package_results.length === 0) {
             res.statusCode = 404;
