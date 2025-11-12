@@ -75,7 +75,7 @@ const App = () => {
             <Route path='/courierPage' element={<CourierPage globalAuthId={globalAuthId}/>} />
             <Route path='/courierDelivery' element={<CourierDeliveryPage globalAuthId={globalAuthId}/>} />
             <Route path='/managerPage' element={<ManagerPage globalAuthId={globalAuthId}/>} />
-            <Route path='/userProfile' element={<UserProfile />} />
+            <Route path='/userProfile' element={<UserProfile globalAuthId={globalAuthId}/>} />
             <Route path='/userShipping' element={<UserShipping globalAuthId={globalAuthId}/>} />
             <Route path='/userTrackPackage' element={<UserTrackPackage globalAuthId={globalAuthId} />} />
             <Route path='/userTrackPackage/:trackingNumber' element={<UserTrackPackage globalAuthId={globalAuthId} />} />

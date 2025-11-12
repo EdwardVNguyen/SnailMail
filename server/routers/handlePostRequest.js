@@ -10,6 +10,9 @@ import { updateFacilityController } from '../controllers/updateFacilityControlle
 import { deleteFacilityController } from '../controllers/deleteFacilityController.js'
 import { createShipmentController } from '../controllers/createShipmentController.js'
 import { createPackageController } from '../controllers/createPackageController.js'
+import { updateCustomerController } from '../controllers/updateCustomerController.js'
+import { updateSecurityController } from '../controllers/updateSecurityController.js'
+import { updateAccountTypeController } from '../controllers/updateAccountTypeController.js'
 
 export const handlePostRequest= (req, res) => {
 
@@ -60,6 +63,18 @@ export const handlePostRequest= (req, res) => {
   // create package for guest users
   else if (req.url.startsWith('/createPackage')) {
     return createPackageController(req, res)
+  }
+  // update customer contact information
+  else if (req.url.startsWith('/updateCustomer')) {
+    return updateCustomerController(req, res)
+  }
+  // update security (email/password)
+  else if (req.url.startsWith('/updateSecurity')) {
+    return updateSecurityController(req, res)
+  }
+  // update account type
+  else if (req.url.startsWith('/updateAccountType')) {
+    return updateAccountTypeController(req, res)
   }
   // if an api call is made to a url that isn't any of the above, return 404
   else {
