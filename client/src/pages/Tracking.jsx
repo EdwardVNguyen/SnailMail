@@ -15,9 +15,8 @@ const Tracking = () => {
   const fetchTrackingData = async (tracking_num) => {
     setIsLoading(true);
     setError('');
-    
     try {
-      const response = await fetch(`http://localhost:8000/tracking/${tracking_num}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/tracking/${tracking_num}`);
       const data = await response.json();
       if (data.success) {
         setTrackingData(data);
@@ -110,7 +109,7 @@ const Tracking = () => {
             <div className="package-info-grid">
               <div className="info-item">
                 <span className="info-label">Recipient:</span>
-                <span className="info-value">{trackingData.package.recipient_name}</span>
+                <span className="info-value">{trackingData.package.first_name}, {trackingData.package.last_name}</span>
               </div>
               <div className="info-item">
                 <span className="info-label">Address:</span>
@@ -120,7 +119,7 @@ const Tracking = () => {
               </div>
               <div className="info-item">
                 <span className="info-label">Package Type:</span>
-                <span className="info-value">{trackingData.package.package_type}</span>
+                <span className="info-value"> {String(trackingData.package.package_type).charAt(0).toUpperCase() + String(trackingData.package.package_type).slice(1)}</span>
               </div>
               <div className="info-item">
                 <span className="info-label">Weight:</span>

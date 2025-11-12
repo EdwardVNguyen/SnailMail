@@ -13,7 +13,6 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 const UserShipping = ( {globalAuthId }) => {
     const [packages, setPackages] = useState([]);
-    const [addresses, setAddresses] = useState([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
@@ -28,6 +27,9 @@ const UserShipping = ( {globalAuthId }) => {
     }
     const navigateCreateShipment = () => {
         navigate('/userCreateShipment');
+    }
+    const navigateEShop = () => {
+      navigate('/ecommercePage');
     }
 
     const limit = 12; // number of packages per request
@@ -44,19 +46,6 @@ const UserShipping = ( {globalAuthId }) => {
           setPackages(packageData.packages);
           setTotalPages(packageData.totalPages);
           setPage(pageNum);
-
-          // Now fetch addresses for each package
-          const addressPromises = packageData.packages.map(pkg =>
-            fetch(`${import.meta.env.VITE_API_URL}/getAddressData?addressId=${pkg.recipient_address_id}`)
-              .then(res => res.json())
-              .then(data => ({ packageId: pkg.package_id, address: data.address }))
-          );
-
-          const addressesResults = await Promise.all(addressPromises);
-
-          // Store addresses in state
-          setAddresses(addressesResults);
-
         } else {
           console.error("Failed to fetch packages", packageData.message);
         }
@@ -76,16 +65,10 @@ const UserShipping = ( {globalAuthId }) => {
       
   const rowData = packages.map(pkg => {
     // Find the corresponding address for this package
-    const addressObj = addresses.find(a => a.packageId === pkg.package_id);
-    const dropoff = addressObj ? `${addressObj.address.street_name}, 
-                                  ${addressObj.address.city_name}, 
-                                  ${addressObj.address.state_name}`
-                                  : "Address not found";
-
     return {
       ID: pkg.package_id,
-      Recipient: pkg.recipient_name,
-      DropoffAddress: dropoff,
+      Recipient: `${pkg.first_name + ' ' + pkg.last_name}`,
+      DropoffAddress: `${pkg.street_name + ', ' + pkg.city_name + ', ' + pkg.state_name + ', ' + pkg.zip_code}`,
       Type: pkg.package_type,
       Weight: pkg.weight,
       Dimensions: `${Math.round(pkg.length)}x${Math.round(pkg.width)}x${Math.round(pkg.height)}`,
@@ -143,6 +126,7 @@ const UserShipping = ( {globalAuthId }) => {
         <div/>
         <button className="userShippingBtn"> 📦 Your Shipments </button>
         <button className="userShippingBtn" onClick={navigateCreateShipment}> ✉️  Create Shipment </button>
+        <button className="userShippingBtn" onClick={navigateEShop} > 🛒 E-Shop</button>
         <button className="userShippingBtn" onClick={navigateSettingPage}> ⚙️  Settings </button>
         <button className="userShippingBtn" onClick={navigateSupportPage}> 💬 Help </button>
       </div>

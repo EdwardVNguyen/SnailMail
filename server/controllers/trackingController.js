@@ -20,21 +20,24 @@ export const trackingController = async (req, res) => {
     }
     let connection;
     try {
-        console.log('about to query db')
         connection = await pool.getConnection();
 
         //get package details from database
         const package_sql = `
             SELECT 
-                p.*,
-                a.street_name,
-                a.city_name,
-                a.state_name,
-                a.zip_code
+              p.*,
+              a.street_name,
+              a.city_name,
+              a.state_name,
+              a.zip_code,
+              c.first_name,
+              c.last_name
             FROM package p
-            LEFT JOIN address a ON p.recipient_address_id = a.address_id
+            LEFT JOIN customer c ON p.recipient_id = c.customer_id
+            LEFT JOIN address a ON c.address_id = a.address_id
             WHERE p.tracking_number = ?
         `;
+
         const [package_results] = await connection.execute(package_sql, [trackingNumber]);
         if (package_results.length === 0) {
             res.statusCode = 404;
@@ -43,30 +46,6 @@ export const trackingController = async (req, res) => {
             return;
         }
         const package_data = package_results[0];
-
-        if (authId) {
-            //Get the logged-in user's email
-            const [auth_results] = await connection.execute(`SELECT email FROM authentication WHERE auth_id = ?`,
-                [authId]);
-                if (auth_results.length === 0) {
-                    res.statusCode = 403;
-                    res.setHeader('Content-Type', 'application/json');
-                    res.end(JSON.stringify({ success: false, message: 'Unauthorized access' }));
-                    return;
-                }
-                const user_email = auth_results[0].email;
-        
-                // Check if user's email matches sender_email
-                if (package_data.sender_email.toLowerCase() !== user_email.toLowerCase()) {
-                    res.statusCode = 403;
-                    res.setHeader('Content-Type', 'application/json');
-                    res.end(JSON.stringify({ 
-                        success: false, 
-                        message: 'You can only track packages you sent' 
-                    }));
-                    return;
-                }
-        }
 
         //get tracking events from database
         const tracking_sql = `

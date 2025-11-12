@@ -48,6 +48,7 @@ export const userSignUpController = async (req, res) => {
        VALUES(?, ?)`,
        [email, password]
     )
+    const authentication_id = authentication.insertId;
 
     // insert tuple into address relation
     const [address] = await connection.execute(
@@ -81,6 +82,7 @@ export const userSignUpController = async (req, res) => {
     res.end(JSON.stringify({
             success: true,
             message: 'Sign up successful',
+            auth_id: authentication_id,
     })) 
 
   } catch (error) {
@@ -91,4 +93,3 @@ export const userSignUpController = async (req, res) => {
     connection.release()
   }
 }
-

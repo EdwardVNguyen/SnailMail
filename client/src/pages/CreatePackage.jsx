@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+import StateSelect from '../components/StateSelect';
 import './CreatePackage.css';
 
 const CreatePackage = () => {
@@ -16,14 +18,18 @@ const CreatePackage = () => {
     senderCity: '',
     senderState: '',
     senderZipCode: '',
-    recipientName: '',
+
+    recipientFirstName: '',
+    recipientMiddleName: '',
+    recipientLastName: '',
     recipientPhone: '',
     recipientEmail: '',
     recipientStreet: '',
     recipientCity: '',
     recipientState: '',
     recipientZipCode: '',
-    packageType: 'parcel',
+
+    packageType: 'parcel', // package type is parcel by default
     weight: '',
     length: '',
     width: '',
@@ -52,7 +58,7 @@ const CreatePackage = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('http://localhost:8000/createPackage', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/createPackage`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -76,13 +82,17 @@ const CreatePackage = () => {
           senderCity: '',
           senderState: '',
           senderZipCode: '',
-          recipientName: '',
+
+          recipientFirstName: '',
+          recipientMiddleName: '',
+          recipientLastName: '',
           recipientPhone: '',
           recipientEmail: '',
           recipientStreet: '',
           recipientCity: '',
           recipientState: '',
           recipientZipCode: '',
+
           packageType: 'parcel',
           weight: '',
           length: '',
@@ -102,12 +112,6 @@ const CreatePackage = () => {
 
   return (
     <div className="create-package-container">
-      <div className="package-header">
-        <h1>Create New Package</h1>
-        <button onClick={() => navigate('/')} className="back-button">
-          ← Back to Home
-        </button>
-      </div>
 
       {/* Success Message */}
       {success && (
@@ -135,7 +139,7 @@ const CreatePackage = () => {
           
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="senderFirstName">First Name <span className="required-asterisk">*</span></label>
+              <label htmlFor="senderFirstName">First Name *</label>
               <input
                 type="text"
                 id="senderFirstName"
@@ -159,7 +163,7 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="senderLastName">Last Name <span className="required-asterisk">*</span></label>
+              <label htmlFor="senderLastName">Last Name *</label>
               <input
                 type="text"
                 id="senderLastName"
@@ -173,7 +177,7 @@ const CreatePackage = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="senderEmail">Email <span className="required-asterisk">*</span></label>
+              <label htmlFor="senderEmail">Email *</label>
               <input
                 type="email"
                 id="senderEmail"
@@ -190,6 +194,9 @@ const CreatePackage = () => {
                 type="tel"
                 id="senderPhone"
                 name="senderPhone"
+                maxLength={10}
+                minLength={10}
+                pattern="[0-9]*"
                 value={formData.senderPhone}
                 onChange={handleInputChange}
                 placeholder="Optional"
@@ -203,7 +210,7 @@ const CreatePackage = () => {
           <h2>Sender Address</h2>
           
           <div className="form-group">
-            <label htmlFor="senderStreet">Street Address <span className="required-asterisk">*</span></label>
+            <label htmlFor="senderStreet">Street Address *</label>
             <input
               type="text"
               id="senderStreet"
@@ -216,7 +223,7 @@ const CreatePackage = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="senderCity">City <span className="required-asterisk">*</span></label>
+              <label htmlFor="senderCity">City *</label>
               <input
                 type="text"
                 id="senderCity"
@@ -228,25 +235,23 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="senderState">State <span className="required-asterisk">*</span></label>
-              <input
-                type="text"
-                id="senderState"
-                name="senderState"
+              <label htmlFor="senderState">State *</label>
+              <StateSelect
                 value={formData.senderState}
                 onChange={handleInputChange}
-                maxLength="2"
-                placeholder="e.g., NY"
-                required
+                id="senderState"
+                name="senderState"
               />
-            </div>
+             </div>
 
             <div className="form-group">
-              <label htmlFor="senderZipCode">ZIP Code <span className="required-asterisk">*</span></label>
+              <label htmlFor="senderZipCode">ZIP Code *</label>
               <input
                 type="text"
                 id="senderZipCode"
                 name="senderZipCode"
+                maxLength={5}
+                minLength={5}
                 value={formData.senderZipCode}
                 onChange={handleInputChange}
                 pattern="[0-9]{5}"
@@ -261,21 +266,47 @@ const CreatePackage = () => {
         <div className="form-section">
           <h2>Recipient Information</h2>
           
-          <div className="form-group">
-            <label htmlFor="recipientName">Full Name <span className="required-asterisk">*</span></label>
-            <input
-              type="text"
-              id="recipientName"
-              name="recipientName"
-              value={formData.recipientName}
-              onChange={handleInputChange}
-              required
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="recipientFirstName">First Name *</label>
+              <input
+                type="text"
+                id="recipientFirstName"
+                name="recipientFirstName"
+                value={formData.recipientFirstName}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="senderMiddleName">Middle Name</label>
+              <input
+                type="text"
+                id="recipientMiddleName"
+                name="recipientMiddleName"
+                value={formData.recipientMiddleName}
+                onChange={handleInputChange}
+                placeholder="Optional"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="recipientLastName">Last Name *</label>
+              <input
+                type="text"
+                id="recipientLastName"
+                name="recipientLastName"
+                value={formData.recipientLastName}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="recipientEmail">Email <span className="required-asterisk">*</span></label>
+              <label htmlFor="recipientEmail">Email *</label>
               <input
                 type="email"
                 id="recipientEmail"
@@ -292,6 +323,9 @@ const CreatePackage = () => {
                 type="tel"
                 id="recipientPhone"
                 name="recipientPhone"
+                maxLength={10}
+                minLength={10}
+                pattern="[0-9]*"
                 value={formData.recipientPhone}
                 onChange={handleInputChange}
                 placeholder="Optional"
@@ -305,7 +339,7 @@ const CreatePackage = () => {
           <h2>Recipient Address</h2>
           
           <div className="form-group">
-            <label htmlFor="recipientStreet">Street Address <span className="required-asterisk">*</span></label>
+            <label htmlFor="recipientStreet">Street Address *</label>
             <input
               type="text"
               id="recipientStreet"
@@ -318,7 +352,7 @@ const CreatePackage = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="recipientCity">City <span className="required-asterisk">*</span></label>
+              <label htmlFor="recipientCity">City *</label>
               <input
                 type="text"
                 id="recipientCity"
@@ -330,25 +364,23 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="recipientState">State <span className="required-asterisk">*</span></label>
-              <input
-                type="text"
-                id="recipientState"
-                name="recipientState"
+              <label htmlFor="recipientState">State *</label>
+              <StateSelect
                 value={formData.recipientState}
                 onChange={handleInputChange}
-                maxLength="2"
-                placeholder="e.g., NY"
-                required
+                id="recipientState"
+                name="recipientState"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="recipientZipCode">ZIP Code <span className="required-asterisk">*</span></label>
+              <label htmlFor="recipientZipCode">ZIP Code *</label>
               <input
                 type="text"
                 id="recipientZipCode"
                 name="recipientZipCode"
+                maxLength={5}
+                minLength={5}
                 value={formData.recipientZipCode}
                 onChange={handleInputChange}
                 pattern="[0-9]{5}"
@@ -365,7 +397,7 @@ const CreatePackage = () => {
           
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="packageType">Package Type <span className="required-asterisk">*</span></label>
+              <label htmlFor="packageType">Package Type *</label>
               <select
                 id="packageType"
                 name="packageType"
@@ -381,7 +413,7 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="weight">Weight (kg) <span className="required-asterisk">*</span></label>
+              <label htmlFor="weight">Weight (kg) *</label>
               <input
                 type="number"
                 id="weight"
@@ -397,7 +429,7 @@ const CreatePackage = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="length">Length (cm) <span className="required-asterisk">*</span></label>
+              <label htmlFor="length">Length (cm) *</label>
               <input
                 type="number"
                 id="length"
@@ -410,7 +442,7 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="width">Width (cm) <span className="required-asterisk">*</span></label>
+              <label htmlFor="width">Width (cm) *</label>
               <input
                 type="number"
                 id="width"
@@ -423,7 +455,7 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="height">Height (cm) <span className="required-asterisk">*</span></label>
+              <label htmlFor="height">Height (cm) *</label>
               <input
                 type="number"
                 id="height"

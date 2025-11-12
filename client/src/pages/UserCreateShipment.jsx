@@ -2,12 +2,16 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './UserCreateShipment.css';
 
+import StateSelect from '../components/StateSelect';
+
 const CreateShipment = ({ globalAuthId }) => {
   const navigate = useNavigate();
 
   // Form state
   const [formData, setFormData] = useState({
-    recipientName: '',
+    recipientFirstName: '',
+    recipientMiddleName: '',
+    recipientLastName: '',
     recipientPhone: '',
     recipientEmail: '',
     recipientStreet: '',
@@ -44,7 +48,7 @@ const CreateShipment = ({ globalAuthId }) => {
 
     try {
       console.log('Submitting shipment with data:', { authId: globalAuthId, ...formData });
-      const response = await fetch('http://localhost:8000/userCreateShipment', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/createShipment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -63,7 +67,9 @@ const CreateShipment = ({ globalAuthId }) => {
         setTrackingNumber(data.tracking_number);
         // Reset form
         setFormData({
-          recipientName: '',
+          recipientFirstName: '',
+          recipientMiddleName: '',
+          recipientLastName: '',
           recipientPhone: '',
           recipientEmail: '',
           recipientStreet: '',
@@ -89,12 +95,6 @@ const CreateShipment = ({ globalAuthId }) => {
 
   return (
     <div className="create-shipment-container">
-      <div className="shipment-header">
-        <h1>Create New Shipment</h1>
-        <button onClick={() => navigate('/customerPage')} className="back-button">
-          ← Back to Dashboard
-        </button>
-      </div>
 
       {/* Success Message */}
       {success && (
@@ -115,25 +115,53 @@ const CreateShipment = ({ globalAuthId }) => {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="shipment-form">
-        {/* Recipient Information Section */}
+          
+      {/* Recipient Information Section */}
         <div className="form-section">
           <h2>Recipient Information</h2>
           
-          <div className="form-group">
-            <label htmlFor="recipientName">Full Name <span className="required-asterisk">*</span></label>
-            <input
-              type="text"
-              id="recipientName"
-              name="recipientName"
-              value={formData.recipientName}
-              onChange={handleInputChange}
-              required
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="recipientFirstName">First Name *</label>
+              <input
+                type="text"
+                id="recipientFirstName"
+                name="recipientFirstName"
+                value={formData.recipientFirstName}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="senderMiddleName">Middle Name</label>
+              <input
+                type="text"
+                id="recipientMiddleName"
+                name="recipientMiddleName"
+                value={formData.recipientMiddleName}
+                onChange={handleInputChange}
+                placeholder="Optional"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="recipientLastName">Last Name *</label>
+              <input
+                type="text"
+                id="recipientLastName"
+                name="recipientLastName"
+                value={formData.recipientLastName}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
           </div>
+
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="recipientEmail">Email <span className="required-asterisk">*</span></label>
+              <label htmlFor="recipientEmail">Email *</label>
               <input
                 type="email"
                 id="recipientEmail"
@@ -151,6 +179,9 @@ const CreateShipment = ({ globalAuthId }) => {
                 id="recipientPhone"
                 name="recipientPhone"
                 value={formData.recipientPhone}
+                maxLength={10}
+                minLength={10}
+                pattern="[0-9]*"
                 onChange={handleInputChange}
                 placeholder="Optional"
               />
@@ -163,7 +194,7 @@ const CreateShipment = ({ globalAuthId }) => {
           <h2>Recipient Address</h2>
           
           <div className="form-group">
-            <label htmlFor="recipientStreet">Street Address <span className="required-asterisk">*</span></label>
+            <label htmlFor="recipientStreet">Street Address *</label>
             <input
               type="text"
               id="recipientStreet"
@@ -176,7 +207,7 @@ const CreateShipment = ({ globalAuthId }) => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="recipientCity">City <span className="required-asterisk">*</span></label>
+              <label htmlFor="recipientCity">City *</label>
               <input
                 type="text"
                 id="recipientCity"
@@ -188,21 +219,17 @@ const CreateShipment = ({ globalAuthId }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="recipientState">State <span className="required-asterisk">*</span></label>
-              <input
-                type="text"
-                id="recipientState"
-                name="recipientState"
+              <label htmlFor="recipientState">State *</label>
+              <StateSelect
                 value={formData.recipientState}
                 onChange={handleInputChange}
-                maxLength="2"
-                placeholder="e.g., NY"
-                required
+                id="recipientState"
+                name="recipientState"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="recipientZipCode">ZIP Code <span className="required-asterisk">*</span></label>
+              <label htmlFor="recipientZipCode">ZIP Code *</label>
               <input
                 type="text"
                 id="recipientZipCode"
@@ -210,6 +237,8 @@ const CreateShipment = ({ globalAuthId }) => {
                 value={formData.recipientZipCode}
                 onChange={handleInputChange}
                 pattern="[0-9]{5}"
+                maxLength={5}
+                minLength={5}
                 placeholder="12345"
                 required
               />
@@ -223,7 +252,7 @@ const CreateShipment = ({ globalAuthId }) => {
           
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="packageType">Package Type <span className="required-asterisk">*</span></label>
+              <label htmlFor="packageType">Package Type *</label>
               <select
                 id="packageType"
                 name="packageType"
@@ -239,7 +268,7 @@ const CreateShipment = ({ globalAuthId }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="weight">Weight (kg) <span className="required-asterisk">*</span></label>
+              <label htmlFor="weight">Weight (kg) *</label>
               <input
                 type="number"
                 id="weight"
@@ -255,7 +284,7 @@ const CreateShipment = ({ globalAuthId }) => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="length">Length (cm) <span className="required-asterisk">*</span></label>
+              <label htmlFor="length">Length (cm) *</label>
               <input
                 type="number"
                 id="length"
@@ -268,7 +297,7 @@ const CreateShipment = ({ globalAuthId }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="width">Width (cm) <span className="required-asterisk">*</span></label>
+              <label htmlFor="width">Width (cm) *</label>
               <input
                 type="number"
                 id="width"
@@ -281,7 +310,7 @@ const CreateShipment = ({ globalAuthId }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="height">Height (cm) <span className="required-asterisk">*</span></label>
+              <label htmlFor="height">Height (cm) *</label>
               <input
                 type="number"
                 id="height"
