@@ -14,7 +14,6 @@ import UserShipping from './pages/UserShipping';
 import UserTrackPackage from './pages/UserTrackPackage';
 import CreatePackage from './pages/CreatePackage';
 import UserCreateShipment from './pages/UserCreateShipment';
-import ElectronicShop from './pages/ElectronicShop';
 import MovePackages from './pages/MovePackages';
 import ReportPage from './pages/ReportPage';
 import EmployeesPage from './pages/EmployeesPage';
@@ -80,7 +79,6 @@ const App = () => {
             <Route path='/userShipping' element={<UserShipping globalAuthId={globalAuthId}/>} />
             <Route path='/userTrackPackage' element={<UserTrackPackage globalAuthId={globalAuthId} />} />
             <Route path='/userTrackPackage/:trackingNumber' element={<UserTrackPackage globalAuthId={globalAuthId} />} />
-            <Route path='/ecommercePage' element={<ElectronicShop/>} />
             <Route path='/movePackages' element={<MovePackages globalAuthId={globalAuthId}/>} />
             <Route path='/reportPage' element={<ReportPage globalAuthId={globalAuthId}/>} />
             <Route path='/employeesPage' element={<EmployeesPage globalAuthId={globalAuthId}/>} />
