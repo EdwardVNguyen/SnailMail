@@ -10,6 +10,7 @@ import { updateFacilityController } from '../controllers/updateFacilityControlle
 import { deleteFacilityController } from '../controllers/deleteFacilityController.js'
 import { createShipmentController } from '../controllers/createShipmentController.js'
 import { createPackageController } from '../controllers/createPackageController.js'
+import { markPackagesDeliveredController } from '../controllers/markPackagesDeliveredController.js'
 
 export const handlePostRequest= (req, res) => {
 
@@ -60,6 +61,10 @@ export const handlePostRequest= (req, res) => {
   // create package for guest users
   else if (req.url.startsWith('/createPackage')) {
     return createPackageController(req, res)
+  }
+  // mark packages as delivered
+  else if (req.url.startsWith('/markPackagesDelivered')) {
+    return markPackagesDeliveredController(req, res)
   }
   // if an api call is made to a url that isn't any of the above, return 404
   else {

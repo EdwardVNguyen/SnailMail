@@ -14,6 +14,7 @@ import { getFacilityBacklogReportController } from '../controllers/getFacilityBa
 import { getDeliveryTimeReportController } from '../controllers/getDeliveryTimeReportController.js'
 import { getCourierPerformanceReportController } from '../controllers/getCourierPerformanceReportController.js'
 import {trackingController} from '../controllers/trackingController.js';
+import { getOutForDeliveryPackagesController } from '../controllers/getOutForDeliveryPackagesController.js'
 
 export const handleGetRequest = (req, res) => {
 
@@ -87,6 +88,10 @@ export const handleGetRequest = (req, res) => {
   // get tracking info for a package
   else if (req.url.startsWith('/tracking')) {
         return trackingController(req, res);
+  }
+  // get packages out for delivery from a facility
+  else if (req.url.startsWith('/getOutForDeliveryPackages')) {
+    return getOutForDeliveryPackagesController(req, res)
   }
   // if an api call is made to a url that isn't any of the above, return 404
   else {

@@ -49,9 +49,14 @@ const AuthNavBar = ( {globalAccountType} ) => {
 
           {/* Show Move Packages only for couriers, manager links for managers, other links for non-couriers/non-managers */}
           {globalAccountType === 'courier' ? (
-            <li>
-              <NavLink to="/movePackages">Move Packages</NavLink>
-            </li>
+            <>
+              <li>
+                <NavLink to="/courierDelivery">Deliveries</NavLink>
+              </li>
+              <li>
+                <NavLink to="/movePackages">Move Packages</NavLink>
+              </li>
+            </>
           ) : globalAccountType === 'manager' ? (
             <>
               <li>
