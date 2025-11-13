@@ -22,7 +22,8 @@ const CreateShipment = ({ globalAuthId }) => {
     weight: '',
     length: '',
     width: '',
-    height: ''
+    height: '',
+    facility_id: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,7 +32,6 @@ const CreateShipment = ({ globalAuthId }) => {
   const [trackingNumber, setTrackingNumber] = useState('');
 
   const [facilities, setFacilities] = useState([]);
-  const [selectedFacility, setSelectedFacility] = useState("");
 
   useEffect(() => {
   fetch(`${import.meta.env.VITE_API_URL}/getFacilityForCustomer`)
@@ -102,7 +102,8 @@ const CreateShipment = ({ globalAuthId }) => {
           weight: '',
           length: '',
           width: '',
-          height: ''
+          height: '',
+          facility_id: ''
         });
       } else {
         setError(data.message || 'Failed to create shipment');
@@ -358,8 +359,10 @@ const CreateShipment = ({ globalAuthId }) => {
               <label htmlFor="facilitySelect">Select Facility:</label>
                 <select
                   id="facilitySelect"
-                  value={selectedFacility}
-                  onChange={(e) => setSelectedFacility(e.target.value)}
+                  name="facility_id"
+                  value={formData.facility_id}
+                  onChange={handleInputChange}
+                  required
                 >
                   <option value="">-- Choose a Facility --</option>
                   {facilities.map((facility) => (
@@ -368,7 +371,7 @@ const CreateShipment = ({ globalAuthId }) => {
                     </option>
                   ))}
                 </select>
-            </div>
+           </div>
           </div>
         </div>
 
