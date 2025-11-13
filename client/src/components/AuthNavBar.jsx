@@ -56,6 +56,9 @@ const AuthNavBar = ( {globalAccountType} ) => {
               <li>
                 <NavLink to="/movePackages">Move Packages</NavLink>
               </li>
+              <li>
+                <NavLink to="/courierPackage">Packages</NavLink>
+              </li>
             </>
           ) : globalAccountType === 'manager' ? (
             <>

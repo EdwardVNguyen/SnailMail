@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState , useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './UserCreateShipment.css';
 
@@ -322,7 +322,31 @@ const CreateShipment = ({ globalAuthId }) => {
               />
             </div>
           </div>
+
+
+
+
         </div>
+
+        <div className="form-section">
+          <h2>Drop Off Location</h2>
+        
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="length">Facility Drop Off *</label>
+              <input
+                type="number"
+                id="length"
+                name="length"
+                value={formData.length}
+                onChange={handleInputChange}
+                step="0.01"
+                min="0"
+              />
+            </div>
+          </div>
+        </div>
+
 
         {/* Submit Button */}
         <div className="form-actions">
