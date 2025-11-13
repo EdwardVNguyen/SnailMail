@@ -30,6 +30,28 @@ const CreateShipment = ({ globalAuthId }) => {
   const [success, setSuccess] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState('');
 
+  const [facilities, setFacilities] = useState([]);
+  const [selectedFacility, setSelectedFacility] = useState("");
+
+  useEffect(() => {
+  fetch(`${import.meta.env.VITE_API_URL}/getFacilityForCustomer`)
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("Facility API Response:", data);
+      // Make sure it's an array before setting
+      if (data.success && Array.isArray(data.facilities)) {
+        setFacilities(data.facilities);
+      } else {
+        console.error("Unexpected API response:", data);
+        setFacilities([]); // fallback to empty array
+      }
+    })
+    .catch((err) => {
+      console.error("Error loading facilities:", err);
+      setFacilities([]); // also fallback on error
+    });
+  }, []);
+  
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -333,16 +355,19 @@ const CreateShipment = ({ globalAuthId }) => {
         
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="length">Facility Drop Off *</label>
-              <input
-                type="number"
-                id="length"
-                name="length"
-                value={formData.length}
-                onChange={handleInputChange}
-                step="0.01"
-                min="0"
-              />
+              <label htmlFor="facilitySelect">Select Facility:</label>
+                <select
+                  id="facilitySelect"
+                  value={selectedFacility}
+                  onChange={(e) => setSelectedFacility(e.target.value)}
+                >
+                  <option value="">-- Choose a Facility --</option>
+                  {facilities.map((facility) => (
+                    <option key={facility.facility_id} value={facility.facility_id}>
+                      {facility.facility_name}
+                    </option>
+                  ))}
+                </select>
             </div>
           </div>
         </div>
