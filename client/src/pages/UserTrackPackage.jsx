@@ -80,8 +80,7 @@ const UserTrackPackage = ({ globalAuthId }) => {
 
   return (
     <div className="tracking-container">
-      <h1>Package Tracking</h1>
-
+      <h1> Track Your Packages </h1>
       {/* Search Form */}
       <div className="tracking-search-section">
         <form onSubmit={handleSubmit} className="tracking-form">

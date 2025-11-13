@@ -78,6 +78,9 @@ const AuthNavBar = ( {globalAccountType} ) => {
                 <NavLink to="/userShipping">Your Shipments</NavLink>
               </li>
               <li>
+                <NavLink to="/userCreateShipment"> Create Shipments</NavLink>
+              </li>
+              <li>
                 <NavLink to="/userTrackPackage">Tracking</NavLink>
               </li>
             </>
