@@ -29,7 +29,7 @@ const AuthNavBar = ( {globalAccountType} ) => {
             { globalAccountType === 'courier'
             ? <NavLink to="/courierPage" ><img className="homeLogo" src={homeLogo} alt="Courier page"/></NavLink>
             : globalAccountType === 'clerk'
-            ? <NavLink to="/employeePage" ><img className="homeLogo" src={homeLogo} alt="Employee page"/></NavLink>
+            ? <NavLink to="/employeePage" ><img className="homeLogo" src={homeLogo} alt="Clerk page"/></NavLink>
             : globalAccountType === 'manager'
               ? <NavLink to="/managerPage" ><img className="homeLogo" src={homeLogo} alt="Manager page"/></NavLink>
               : <NavLink to="/customerPage" ><img className="homeLogo" src={homeLogo} alt="Customer page"/></NavLink>
@@ -47,7 +47,7 @@ const AuthNavBar = ( {globalAccountType} ) => {
             <NavLink to="/support">Support</NavLink>
           </li>
 
-          {/* Show Move Packages only for couriers, manager links for managers, other links for non-couriers/non-managers */}
+          {/* Show Move Packages only for couriers, clerk links for clerks, manager links for managers, other links for customers */}
           {globalAccountType === 'courier' ? (
             <>
               <li>
@@ -58,6 +58,18 @@ const AuthNavBar = ( {globalAccountType} ) => {
               </li>
               <li>
                 <NavLink to="/courierPackage">Packages</NavLink>
+              </li>
+            </>
+          ) : globalAccountType === 'clerk' ? (
+            <>
+              <li>
+                <NavLink to="/clerkCourierApproval">Courier Requests</NavLink>
+              </li>
+              <li>
+                <NavLink to="/movePackages">Move Packages</NavLink>
+              </li>
+              <li>
+                <NavLink to="/reportPage">Reports</NavLink>
               </li>
             </>
           ) : globalAccountType === 'manager' ? (

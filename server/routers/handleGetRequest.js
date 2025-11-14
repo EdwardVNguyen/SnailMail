@@ -16,6 +16,9 @@ import { getCourierPerformanceReportController } from '../controllers/getCourier
 import { trackingController } from '../controllers/trackingController.js';
 import { getOutForDeliveryPackagesController } from '../controllers/getOutForDeliveryPackagesController.js'
 import { getFacilityForCustomerController } from '../controllers/getFacilityForCustomerController.js'
+import { getAvailablePackagesController } from '../controllers/getAvailablePackagesController.js'
+import { getMyCourierPackagesController } from '../controllers/getMyCourierPackagesController.js'
+import { getPendingCourierRequestsController } from '../controllers/getPendingCourierRequestsController.js'
 
 export const handleGetRequest = (req, res) => {
 
@@ -96,6 +99,18 @@ export const handleGetRequest = (req, res) => {
   }
   else if (req.url.startsWith('/getFacilityForCustomer')) {
     return getFacilityForCustomerController(req, res);
+  }
+  // get available packages for courier to request
+  else if (req.url.startsWith('/getAvailablePackages')) {
+    return getAvailablePackagesController(req, res);
+  }
+  // get courier's assigned packages
+  else if (req.url.startsWith('/getMyCourierPackages')) {
+    return getMyCourierPackagesController(req, res);
+  }
+  // get pending courier requests (for clerks)
+  else if (req.url.startsWith('/getPendingCourierRequests')) {
+    return getPendingCourierRequestsController(req, res);
   }
   // if an api call is made to a url that isn't any of the above, return 404
   else {
