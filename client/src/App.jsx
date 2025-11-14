@@ -18,7 +18,6 @@ import MovePackages from './pages/MovePackages';
 import ReportPage from './pages/ReportPage';
 import EmployeesPage from './pages/EmployeesPage';
 import FacilitiesPage from './pages/FacilitiesPage';
-import CourierDeliveryPage from './pages/CourierDeliveryPage';
 import CourierPackagePage from './pages/CourierPackagePage';
 import ClerkCourierApprovalPage from './pages/ClerkCourierApprovalPage';
 
@@ -75,7 +74,6 @@ const App = () => {
             <Route path='/customerPage' element={<CustomerPage globalAuthId={globalAuthId}/>} />
             <Route path='/employeePage' element={<EmployeePage globalAuthId={globalAuthId}/>} />
             <Route path='/courierPage' element={<CourierPage globalAuthId={globalAuthId}/>} />
-            <Route path='/courierDelivery' element={<CourierDeliveryPage globalAuthId={globalAuthId}/>} />
             <Route path='/courierPackage' element={<CourierPackagePage globalAuthId={globalAuthId}/>} />
             <Route path='/clerkCourierApproval' element={<ClerkCourierApprovalPage globalAuthId={globalAuthId}/>} />
             <Route path='/managerPage' element={<ManagerPage globalAuthId={globalAuthId}/>} />

@@ -47,15 +47,9 @@ const AuthNavBar = ( {globalAccountType} ) => {
             <NavLink to="/support">Support</NavLink>
           </li>
 
-          {/* Show Move Packages only for couriers, clerk links for clerks, manager links for managers, other links for customers */}
+          {/* Show courier links for couriers, clerk links for clerks, manager links for managers, other links for customers */}
           {globalAccountType === 'courier' ? (
             <>
-              <li>
-                <NavLink to="/courierDelivery">Deliveries</NavLink>
-              </li>
-              <li>
-                <NavLink to="/movePackages">Move Packages</NavLink>
-              </li>
               <li>
                 <NavLink to="/courierPackage">Packages</NavLink>
               </li>
@@ -64,12 +58,6 @@ const AuthNavBar = ( {globalAccountType} ) => {
             <>
               <li>
                 <NavLink to="/clerkCourierApproval">Courier Requests</NavLink>
-              </li>
-              <li>
-                <NavLink to="/movePackages">Move Packages</NavLink>
-              </li>
-              <li>
-                <NavLink to="/reportPage">Reports</NavLink>
               </li>
             </>
           ) : globalAccountType === 'manager' ? (
