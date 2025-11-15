@@ -1,249 +1,128 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './ClerkCourierApprovalPage.css';
 
-const ClerkCourierApprovalPage = ({ globalAuthId }) => {
-  const [pendingRequests, setPendingRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState('');
+const ClerkPackagePage = ({ globalAuthId }) => {
+  const authId = globalAuthId;
+  const navigate = useNavigate();
 
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [facilities, setFacilities] = useState([]);
+  const [selectedFacility, setSelectedFacility] = useState('all');
+
+  // Fetch facilities for filter
   useEffect(() => {
-    if (globalAuthId) {
-      loadPendingRequests();
-    }
-  }, [globalAuthId]);
+    fetchFacilities();
+  }, []);
 
-  const loadPendingRequests = async () => {
-    setLoading(true);
-    setError('');
+  // Fetch packages when facility filter changes
+  useEffect(() => {
+    fetchPackages();
+  }, [selectedFacility]);
+
+  const fetchFacilities = async () => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/getPendingCourierRequests`
-      );
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/getFacilities?status=active`);
       const data = await response.json();
-
       if (data.success) {
-        setPendingRequests(data.requests || []);
-      } else {
-        throw new Error(data.message || 'Failed to fetch pending requests');
+        setFacilities(data.facilities);
       }
     } catch (err) {
-      console.error('Error fetching pending requests:', err);
-      setError('Failed to load pending requests');
+      console.error('Error fetching facilities:', err);
+    }
+  };
+
+  const fetchPackages = async () => {
+    setLoading(true);
+    try {
+      let url = `${import.meta.env.VITE_API_URL}/getPackagesAtFacilities`;
+      if (selectedFacility !== 'all') {
+        url += `?facilityId=${selectedFacility}`;
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.success) {
+        setPackages(data.packages);
+      }
+    } catch (err) {
+      console.error('Error fetching packages:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApprove = async (requestId) => {
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/approveCourierRequest`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            requestId,
-            authId: globalAuthId,
-            destinationType: 'recipient_address'
-          })
-        }
-      );
-
-      const data = await response.json();
-
-      if (data.success) {
-        setSuccessMessage(data.message || 'Request approved successfully!');
-        setPendingRequests(prev => prev.filter(r => r.request_id !== requestId));
-
-        setTimeout(() => setSuccessMessage(''), 5000);
-      } else {
-        alert(data.message || 'Failed to approve request');
-      }
-    } catch (err) {
-      console.error('Error approving request:', err);
-      alert('Error approving request. Please try again.');
-    }
-  };
-
-  const handleOpenRejectModal = (request) => {
-    setSelectedRequest(request);
-    setShowRejectModal(true);
-    setRejectionReason('');
-  };
-
-  const handleCloseRejectModal = () => {
-    setShowRejectModal(false);
-    setSelectedRequest(null);
-    setRejectionReason('');
-  };
-
-  const handleReject = async (e) => {
-    e.preventDefault();
-
-    if (!selectedRequest || !rejectionReason.trim()) {
-      alert('Please provide a rejection reason');
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/rejectCourierRequest`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            requestId: selectedRequest.request_id,
-            authId: globalAuthId,
-            rejectionReason
-          })
-        }
-      );
-
-      const data = await response.json();
-
-      if (data.success) {
-        setSuccessMessage(data.message || 'Request rejected successfully');
-        setPendingRequests(prev => prev.filter(r => r.request_id !== selectedRequest.request_id));
-        handleCloseRejectModal();
-
-        setTimeout(() => setSuccessMessage(''), 5000);
-      } else {
-        alert(data.message || 'Failed to reject request');
-      }
-    } catch (err) {
-      console.error('Error rejecting request:', err);
-      alert('Error rejecting request. Please try again.');
-    }
-  };
-
   return (
-    <div className="clerkApprovalContainer">
-      {/* Header */}
-      <div className="clerkApprovalHeader">
-        <h1>Courier Package Requests</h1>
-        <p>Review and approve/reject courier delivery requests</p>
+    <div className="clerk-package-container">
+      <div className="clerk-header">
+        <h1>Package Management</h1>
+        <button onClick={() => navigate('/clerkPage')} className="back-button">
+          ← Back
+        </button>
       </div>
 
-      {/* Error Message */}
-      {error && <div className="error">{error}</div>}
+      {/* Facility Filter */}
+      <div className="filter-section">
+        <label>Filter by Facility:</label>
+        <select value={selectedFacility} onChange={(e) => setSelectedFacility(e.target.value)}>
+          <option value="all">All Facilities</option>
+          {facilities.map((facility) => (
+            <option key={facility.facility_id} value={facility.facility_id}>
+              {facility.facility_name} ({facility.city_name}, {facility.state_name})
+            </option>
+          ))}
+        </select>
+      </div>
 
-      {/* Success Message */}
-      {successMessage && (
-        <div className="successMessage">{successMessage}</div>
-      )}
-
-      {/* Loading State */}
-      {loading ? (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Loading requests...</p>
-        </div>
-      ) : (
-        <section className="requestsSection">
-          {pendingRequests.length === 0 ? (
-            <p className="emptyState">No pending courier requests at this time.</p>
-          ) : (
-            <div className="requestsGrid">
-              {pendingRequests.map(request => (
-                <div key={request.request_id} className="requestCard">
-                  <div className="requestHeader">
-                    <span className="trackingNumber">{request.tracking_number}</span>
-                    <span className="requestDate">
-                      {new Date(request.request_date).toLocaleDateString()}
-                    </span>
-                  </div>
-
-                  <div className="requestDetails">
-                    <div className="detailSection">
-                      <h4>Package Details</h4>
-                      <p><strong>Type:</strong> {request.package_type}</p>
-                      <p><strong>Weight:</strong> {request.weight} kg</p>
-                      <p><strong>Current Location:</strong> {request.package_facility_name}</p>
-                    </div>
-
-                    <div className="detailSection">
-                      <h4>Courier</h4>
-                      <p><strong>Name:</strong> {request.courier_first_name} {request.courier_last_name}</p>
-                      <p><strong>ID:</strong> {request.courier_id}</p>
-                    </div>
-
-                    <div className="detailSection">
-                      <h4>Destination</h4>
-                      <p><strong>Recipient:</strong> {request.recipient_first_name} {request.recipient_last_name}</p>
-                      <p><strong>Location:</strong> {request.recipient_city}, {request.recipient_state}</p>
-                    </div>
-                  </div>
-
-                  <div className="requestActions">
-                    <button
-                      className="approveButton"
-                      onClick={() => handleApprove(request.request_id)}
-                    >
-                      Approve
-                    </button>
-                    <button
-                      className="rejectButton"
-                      onClick={() => handleOpenRejectModal(request)}
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* Reject Modal */}
-      {showRejectModal && selectedRequest && (
-        <div className="modalOverlay" onClick={handleCloseRejectModal}>
-          <div className="modalContent" onClick={(e) => e.stopPropagation()}>
-            <div className="modalHeader">
-              <h2>Reject Request</h2>
-              <button className="closeButton" onClick={handleCloseRejectModal}>
-                &times;
-              </button>
-            </div>
-
-            <form onSubmit={handleReject}>
-              <div className="formGroup">
-                <label>Package: {selectedRequest.tracking_number}</label>
-                <p className="modalInfo">
-                  Courier: {selectedRequest.courier_first_name} {selectedRequest.courier_last_name}
-                </p>
-              </div>
-
-              <div className="formGroup">
-                <label htmlFor="rejectionReason">Rejection Reason: *</label>
-                <textarea
-                  id="rejectionReason"
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="Explain why this request is being rejected..."
-                  rows="4"
-                  required
-                />
-              </div>
-
-              <div className="modalActions">
-                <button type="button" className="cancelButton" onClick={handleCloseRejectModal}>
-                  Cancel
-                </button>
-                <button type="submit" className="confirmButton rejectConfirmButton">
-                  Confirm Rejection
-                </button>
-              </div>
-            </form>
+      {/* Packages Table */}
+      <div className="packages-section">
+        <h2>Packages at Facilities</h2>
+        {loading ? (
+          <p>Loading packages...</p>
+        ) : packages.length === 0 ? (
+          <p>No packages found.</p>
+        ) : (
+          <div className="table-container">
+            <table className="packages-table">
+              <thead>
+                <tr>
+                  <th>Package ID</th>
+                  <th>Tracking Number</th>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Current Location</th>
+                  <th>Status</th>
+                  <th>Weight (kg)</th>
+                  <th>Courier</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {packages.map((pkg) => (
+                  <tr key={pkg.package_id}>
+                    <td>{pkg.package_id}</td>
+                    <td className="tracking-number">{pkg.tracking_number}</td>
+                    <td>{pkg.sender_name}</td>
+                    <td>{pkg.recipient_name}</td>
+                    <td>{pkg.facility_name || 'Unknown'}</td>
+                    <td>
+                      <span className={`status-badge status-${pkg.package_status}`}>
+                        {pkg.package_status}
+                      </span>
+                    </td>
+                    <td>{pkg.weight}</td>
+                    <td>{pkg.courier_name || 'Not Assigned'}</td>
+                    <td>{new Date(pkg.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
 
-export default ClerkCourierApprovalPage;
+export default ClerkPackagePage;

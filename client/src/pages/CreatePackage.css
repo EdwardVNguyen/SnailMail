@@ -13,13 +13,13 @@
 
 .package-header h1 {
   font-size: 28px;
-  color: #333;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .back-button {
   padding: 10px 20px;
-  background-color: #f0f0f0;
+  background-color: var(--bg-tertiary);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -28,13 +28,13 @@
 }
 
 .back-button:hover {
-  background-color: #e0e0e0;
+  background-color: var(--color-gray-200);
 }
 
 /* Messages */
 .success-message {
-  background-color: #d4edda;
-  border: 1px solid #c3e6cb;
+  background-color: var(--color-success-light);
+  border: 1px solid var(--color-success-border);
   color: #155724;
   padding: 20px;
   border-radius: 8px;
@@ -50,14 +50,14 @@
 .success-message strong {
   font-family: monospace;
   font-size: 18px;
-  background-color: #fff;
+  background-color: var(--color-white);
   padding: 5px 10px;
   border-radius: 4px;
 }
 
 .save-notice {
   color: #856404;
-  background-color: #fff3cd;
+  background-color: var(--color-warning-light);
   padding: 10px;
   border-radius: 4px;
   margin: 15px 0;
@@ -67,8 +67,8 @@
 .track-button {
   margin-top: 15px;
   padding: 10px 20px;
-  background-color: #28a745;
-  color: white;
+  background-color: var(--color-success);
+  color: var(--text-inverse);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -77,7 +77,7 @@
 }
 
 .track-button:hover {
-  background-color: #218838;
+  background-color: var(--color-success-dark);
 }
 
 .error-message {
@@ -91,7 +91,7 @@
 
 /* Form Styling */
 .package-form {
-  background-color: #fff;
+  background-color: var(--color-white);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -111,7 +111,7 @@
   margin-top: 0;
   margin-bottom: 20px;
   padding-bottom: 10px;
-  border-bottom: 2px solid #3C467B;
+  border-bottom: 2px solid var(--color-primary);
 }
 
 .form-group {
@@ -145,7 +145,7 @@
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #3C467B;
+  border-color: var(--color-primary);
 }
 
 .form-row {
@@ -163,8 +163,8 @@
   padding: 15px 50px;
   font-size: 18px;
   font-weight: 600;
-  background-color: #3C467B;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--text-inverse);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -173,7 +173,7 @@
 }
 
 .submit-button:hover:not(:disabled) {
-  background-color: #50589C;
+  background-color: var(--color-primary-light);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(60, 70, 123, 0.3);
 }

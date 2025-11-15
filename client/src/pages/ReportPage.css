@@ -17,13 +17,13 @@
 
 .reportPageHeader h1 {
   font-size: 28px;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 10px;
 }
 
 .reportPageHeader p {
   font-size: 16px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .reportPageContent {
@@ -42,7 +42,7 @@
 }
 
 .reportMenuItem {
-  background: #fff;
+  background: var(--color-white);
   border: 1px solid #eee;
   padding: 20px;
   box-sizing: border-box;
@@ -53,14 +53,14 @@
 }
 
 .reportMenuItem:hover {
-  border-color: #3C467B;
+  border-color: var(--color-primary);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .reportMenuItem.active {
-  background: #3C467B;
-  color: white;
-  border-color: #3C467B;
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  border-color: var(--color-primary);
 }
 
 .menuItemTitle {
@@ -81,7 +81,7 @@
 /* Right side report display */
 .reportDisplay {
   flex: 1;
-  background: #fff;
+  background: var(--color-white);
   border: 1px solid #eee;
   padding: 30px;
   box-sizing: border-box;
@@ -99,18 +99,18 @@
 }
 
 .reportHeader h2 {
-  color: #3C467B;
+  color: var(--color-primary);
   font-size: 26px;
   margin-top: 0;
   margin-bottom: 10px;
 }
 
 .reportHeader p {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 14px;
   margin-bottom: 20px;
   padding-bottom: 10px;
-  border-bottom: 2px solid #3C467B;
+  border-bottom: 2px solid var(--color-primary);
 }
 
 /* Date range selector */
@@ -130,22 +130,22 @@
 .dateInput label {
   font-size: 14px;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .dateInput input[type="date"] {
   padding: 8px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 5px;
   font-size: 14px;
   font-family: inherit;
-  background-color: white;
+  background-color: var(--text-inverse);
   cursor: pointer;
 }
 
 .dateInput input[type="date"]:focus {
   outline: none;
-  border-color: #3C467B;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(60, 70, 123, 0.1);
 }
 
@@ -158,7 +158,7 @@
 }
 
 .statCard {
-  background: #f8f9fa;
+  background: var(--bg-secondary);
   border: 1px solid #dee2e6;
   border-radius: 8px;
   padding: 20px;
@@ -170,32 +170,32 @@
 .statValue {
   font-size: 32px;
   font-weight: bold;
-  color: #3C467B;
+  color: var(--color-primary);
   margin-bottom: 5px;
 }
 
 .statLabel {
   font-size: 14px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 /* Table styling */
 .tableContainer {
   overflow-x: auto;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
 }
 
 .reportTable {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  background: var(--bg-primary);
   font-size: 14px;
 }
 
 .reportTable thead {
-  background: #3C467B;
-  color: white;
+  background: var(--color-primary);
+  color: var(--text-inverse);
 }
 
 .reportTable thead th {
@@ -211,11 +211,11 @@
 }
 
 .reportTable tbody tr:nth-child(even) {
-  background-color: #f8f9fa;
+  background-color: var(--bg-secondary);
 }
 
 .reportTable tbody tr:nth-child(odd) {
-  background-color: white;
+  background-color: var(--text-inverse);
 }
 
 .reportTable tbody tr:hover {
@@ -224,7 +224,7 @@
 
 .reportTable tbody td {
   padding: 12px 15px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 /* Status badges */
@@ -243,38 +243,38 @@
 .status.failed-delivery,
 .status.lost,
 .status.damaged {
-  background-color: #dc3545;
-  color: white;
+  background-color: var(--color-error);
+  color: var(--text-inverse);
 }
 
 .status.critical {
-  background-color: #dc3545;
-  color: white;
+  background-color: var(--color-error);
+  color: var(--text-inverse);
 }
 
 .status.warning {
-  background-color: #ffc107;
-  color: #333;
+  background-color: var(--color-warning);
+  color: var(--text-primary);
 }
 
 .status.normal {
-  background-color: #28a745;
-  color: white;
+  background-color: var(--color-success);
+  color: var(--text-inverse);
 }
 
 .status.excellent {
-  background-color: #28a745;
-  color: white;
+  background-color: var(--color-success);
+  color: var(--text-inverse);
 }
 
 .status.good {
   background-color: #17a2b8;
-  color: white;
+  color: var(--text-inverse);
 }
 
 .status.needs-improvement {
-  background-color: #ffc107;
-  color: #333;
+  background-color: var(--color-warning);
+  color: var(--text-primary);
 }
 
 /* Rate badges */
@@ -289,39 +289,39 @@
 }
 
 .rate.excellent {
-  background-color: #28a745;
-  color: white;
+  background-color: var(--color-success);
+  color: var(--text-inverse);
 }
 
 .rate.good {
   background-color: #17a2b8;
-  color: white;
+  color: var(--text-inverse);
 }
 
 .rate.needs-improvement {
-  background-color: #ffc107;
-  color: #333;
+  background-color: var(--color-warning);
+  color: var(--text-primary);
 }
 
 /* Backlog indicators */
 .backlog-critical {
-  color: #dc3545;
+  color: var(--color-error);
   font-weight: bold;
 }
 
 .backlog-warning {
-  color: #ffc107;
+  color: var(--color-warning);
   font-weight: bold;
 }
 
 .backlog-normal {
-  color: #28a745;
+  color: var(--color-success);
   font-weight: bold;
 }
 
 /* Slow delivery indicator */
 .slow-delivery {
-  color: #dc3545;
+  color: var(--color-error);
   font-weight: bold;
 }
 
@@ -330,7 +330,7 @@
   text-align: center;
   padding: 100px 20px;
   font-size: 18px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 /* Responsive design */

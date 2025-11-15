@@ -11,7 +11,6 @@ export const getEmployeesController = async (req, res) => {
     // Parse query parameters
     const queryObject = url.parse(req.url, true).query;
     const role = queryObject.role;
-    const status = queryObject.status;
 
     let query = `
       SELECT
@@ -20,14 +19,19 @@ export const getEmployeesController = async (req, res) => {
         e.middle_name,
         e.last_name,
         e.account_type,
-        e.phone_number,
-        e.birth_date,
         e.salary,
-        e.ethnicity,
         e.employee_ssn,
-        a.email
+        e.facility_id,
+        f.facility_name,
+        a.email,
+        addr.street_name,
+        addr.city_name,
+        addr.state_name,
+        addr.zip_code
       FROM employee e
       JOIN authentication a ON e.auth_id = a.auth_id
+      JOIN address addr ON e.address_id = addr.address_id
+      JOIN facility f ON e.facility_id = f.facility_id
     `;
 
     let params = [];
@@ -36,16 +40,6 @@ export const getEmployeesController = async (req, res) => {
     if (role && role !== 'all') {
       conditions.push('e.account_type = ?');
       params.push(role);
-    }
-
-    if (status && status !== 'all') {
-      if (status === 'active') {
-        conditions.push('e.account_type != ?');
-        params.push('archived');
-      } else if (status === 'archived') {
-        conditions.push('e.account_type = ?');
-        params.push('archived');
-      }
     }
 
     if (conditions.length > 0) {

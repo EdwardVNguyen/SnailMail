@@ -8,17 +8,20 @@ import { AgGridReact } from 'ag-grid-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import "ag-grid-community/styles/ag-theme-alpine.css";
 
+import { formatSSN, formatPhoneNumber } from '../utils/formatting';
+import { isValidEmail, isValidSSN, isValidZipCode, isValidState, isValidPhone } from '../utils/validation';
+import FilterPanel from '../components/FilterPanel';
+
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const EmployeesPage = ({ globalAuthId }) => {
   const authId = globalAuthId;
   const navigate = useNavigate();
 
-  // Tab state
-  const [activeTab, setActiveTab] = useState('add'); // 'add' or 'edit'
+  // Modal state
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // Form state for Add Employee
-  const [employeeId, setEmployeeId] = useState('');
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -29,146 +32,99 @@ const EmployeesPage = ({ globalAuthId }) => {
   const [cityName, setCityName] = useState('');
   const [stateName, setStateName] = useState('');
   const [zipCode, setZipCode] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [birthDate, setBirthDate] = useState('');
   const [salary, setSalary] = useState('');
-  const [ethnicity, setEthnicity] = useState('');
   const [employeeSsn, setEmployeeSsn] = useState('');
+  const [facilityId, setFacilityId] = useState('');
 
-  // Edit Employees state
-  const [roleFilter, setRoleFilter] = useState('all'); // 'all', 'manager', 'clerk', 'courier'
-  const [statusFilter, setStatusFilter] = useState('active'); // 'all', 'active', 'archived'
+  // Employees grid state
+  const [roleFilter, setRoleFilter] = useState('all');
   const [employees, setEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
-  const [safetyLock, setSafetyLock] = useState(true); // Safety lock for ID and SSN editing
-  const [deleteMode, setDeleteMode] = useState(false); // Toggle delete mode
-  const [deletingEmployeeId, setDeletingEmployeeId] = useState(null); // Track which employee is being deleted
+  const [safetyLock, setSafetyLock] = useState(true);
+  const [deleteMode, setDeleteMode] = useState(false);
+  const [deletingEmployeeId, setDeletingEmployeeId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [facilities, setFacilities] = useState([]);
 
   // Format SSN with dashes as user types
   const handleSsnChange = (e) => {
-    let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-    if (value.length > 9) value = value.slice(0, 9); // Limit to 9 digits
-
-    // Add dashes at appropriate positions
-    if (value.length > 5) {
-      value = value.slice(0, 3) + '-' + value.slice(3, 5) + '-' + value.slice(5);
-    }
-    else if (value.length > 3) {
-      value = value.slice(0, 3) + '-' + value.slice(3);
-    }
-
-    setEmployeeSsn(value);
+    const formatted = formatSSN(e.target.value);
+    setEmployeeSsn(formatted);
   };
 
-  // Format phone number with dashes as user types
-  const handlePhoneChange = (e) => {
-    let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-    if (value.length > 10) value = value.slice(0, 10); // Limit to 10 digits
-
-    // Add dashes at appropriate positions
-    if (value.length > 6) {
-      value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6);
-    }
-    else if (value.length > 3) {
-      value = value.slice(0, 3) + '-' + value.slice(3);
-    }
-
-    setPhoneNumber(value);
-  };
-
-  const [nextEmployeeId, setNextEmployeeId] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  // Fetch the next available employee_id
+  // Fetch facilities on mount
   useEffect(() => {
-    const fetchNextEmployeeId = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/getNextEmployeeId`);
-        const data = await response.json();
-        if (data.success) {
-          setNextEmployeeId(data.nextEmployeeId);
-          setEmployeeId(data.nextEmployeeId.toString());
-        }
-      }
-      catch (err) {
-        console.error('Error fetching next employee ID:', err);
-      }
-    };
-
-    fetchNextEmployeeId();
+    fetchFacilities();
   }, []);
 
-  // Fetch employees when on edit tab (with debouncing)
+  // Fetch employees on mount and when filters change
   useEffect(() => {
-    if (activeTab === 'edit') {
-      // Debounce the fetch to prevent rapid requests
-      const timeoutId = setTimeout(() => {
-        fetchEmployees();
-      }, 300);
+    const timeoutId = setTimeout(() => {
+      fetchEmployees();
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [roleFilter]);
 
-      return () => clearTimeout(timeoutId);
+  const fetchFacilities = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/getFacilities`);
+      const data = await response.json();
+      if (data.success) {
+        setFacilities(data.facilities);
+        // Set default facility if available
+        if (data.facilities.length > 0) {
+          setFacilityId(data.facilities[0].facility_id);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching facilities:', err);
     }
-  }, [activeTab, roleFilter, statusFilter]);
+  };
 
   const fetchEmployees = async () => {
     setLoadingEmployees(true);
     try {
       let url = `${import.meta.env.VITE_API_URL}/getEmployees?`;
       const params = [];
-
       if (roleFilter !== 'all') {
         params.push(`role=${roleFilter}`);
       }
-      if (statusFilter !== 'all') {
-        params.push(`status=${statusFilter}`);
-      }
-
       url += params.join('&');
 
       const response = await fetch(url);
       const data = await response.json();
-
       if (data.success) {
         setEmployees(data.employees);
-      }
-      else {
+      } else {
         console.error('Failed to fetch employees:', data.message);
       }
-    }
-    catch (err) {
+    } catch (err) {
       console.error('Error fetching employees:', err);
-    }
-    finally {
+    } finally {
       setLoadingEmployees(false);
     }
   };
 
-  // AG Grid callback for unique row IDs
   const getRowId = useCallback((params) => {
     return params.data.employee_id.toString();
   }, []);
 
-  // Handle cell value change
   const onCellValueChanged = async (params) => {
     const updatedEmployee = params.data;
     const field = params.colDef.field;
     const newValue = params.newValue;
     const oldValue = params.oldValue;
 
-    // Check if editing ID or SSN (requires uniqueness check)
     if (field === 'employee_id' || field === 'employee_ssn') {
-      // Confirm the change
       const confirmed = window.confirm(
         `Are you sure you want to change ${field === 'employee_id' ? 'Employee ID' : 'SSN'} from ${oldValue} to ${newValue}?\n\nThis will check for uniqueness before applying.`
       );
 
       if (!confirmed) {
-        // Revert the change
         fetchEmployees();
         return;
       }
 
-      // Check uniqueness
       try {
         const checkResponse = await fetch(
           `${import.meta.env.VITE_API_URL}/checkEmployeeUniqueness?field=${field}&value=${newValue}&currentId=${updatedEmployee.employee_id}`
@@ -180,8 +136,7 @@ const EmployeesPage = ({ globalAuthId }) => {
           fetchEmployees();
           return;
         }
-      }
-      catch (err) {
+      } catch (err) {
         console.error('Error checking uniqueness:', err);
         alert('Error checking uniqueness. Change reverted.');
         fetchEmployees();
@@ -202,14 +157,11 @@ const EmployeesPage = ({ globalAuthId }) => {
       });
 
       const data = await response.json();
-
       if (!data.success) {
         alert('Error updating employee: ' + data.message);
-        // Refresh to revert changes
         fetchEmployees();
       }
-    }
-    catch (err) {
+    } catch (err) {
       console.error('Error updating employee:', err);
       alert('Error updating employee.');
       fetchEmployees();
@@ -218,52 +170,33 @@ const EmployeesPage = ({ globalAuthId }) => {
 
   const validateForm = () => {
     // Required fields
-    if (!employeeId || !firstName || !lastName || !accountType || !email || !password ||
-        !streetName || !cityName || !stateName || !zipCode || !employeeSsn) {
+    if (!firstName || !lastName || !accountType || !email || !password ||
+        !streetName || !cityName || !stateName || !zipCode || !employeeSsn || !salary || !facilityId) {
       alert('Please fill in all required fields.');
       return false;
     }
 
     // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!isValidEmail(email)) {
       alert('Please enter a valid email address.');
       return false;
     }
 
-    // SSN validation (format: XXX-XX-XXXX)
-    const ssnRegex = /^\d{3}-\d{2}-\d{4}$/;
-    if (!ssnRegex.test(employeeSsn)) {
-      alert('Please enter SSN in format: XXX-XX-XXXX');
+    // SSN validation
+    if (!isValidSSN(employeeSsn)) {
+      alert('Please enter a valid SSN (XXX-XX-XXXX).');
       return false;
     }
 
-    // Zip code validation (5 digits)
-    const zipRegex = /^\d{5}$/;
-    if (!zipRegex.test(zipCode)) {
+    // Zip code validation
+    if (!isValidZipCode(zipCode)) {
       alert('Please enter a valid 5-digit zip code.');
       return false;
     }
 
-    // State validation (2 uppercase letters)
-    const stateRegex = /^[A-Z]{2}$/;
-    if (!stateRegex.test(stateName)) {
+    // State validation
+    if (!isValidState(stateName)) {
       alert('Please enter a valid 2-letter state code (e.g., TX, CA).');
-      return false;
-    }
-
-    // Phone number validation (optional but if provided must be valid)
-    if (phoneNumber) {
-      const phoneRegex = /^\d{3}-\d{3}-\d{4}$/;
-      if (!phoneRegex.test(phoneNumber)) {
-        alert('Please enter phone number in format: XXX-XXX-XXXX');
-        return false;
-      }
-    }
-
-    // Salary validation (optional but if provided must be positive)
-    if (salary && (isNaN(salary) || parseFloat(salary) < 0)) {
-      alert('Please enter a valid salary amount.');
       return false;
     }
 
@@ -284,7 +217,6 @@ const EmployeesPage = ({ globalAuthId }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          employeeId: parseInt(employeeId),
           firstName,
           middleName: middleName || null,
           lastName,
@@ -295,11 +227,9 @@ const EmployeesPage = ({ globalAuthId }) => {
           cityName,
           stateName,
           zipCode,
-          phoneNumber: phoneNumber ? phoneNumber.replace(/\D/g, '') : null,
-          birthDate: birthDate || null,
-          salary: salary ? parseFloat(salary) : null,
-          ethnicity: ethnicity || null,
+          salary: parseFloat(salary),
           employeeSsn,
+          facilityId: parseInt(facilityId),
           createdBy: authId
         })
       });
@@ -307,7 +237,6 @@ const EmployeesPage = ({ globalAuthId }) => {
       const data = await response.json();
 
       if (data.success) {
-        alert('Employee added successfully!');
         // Reset form
         setFirstName('');
         setMiddleName('');
@@ -319,35 +248,28 @@ const EmployeesPage = ({ globalAuthId }) => {
         setCityName('');
         setStateName('');
         setZipCode('');
-        setPhoneNumber('');
-        setBirthDate('');
         setSalary('');
-        setEthnicity('');
         setEmployeeSsn('');
-        // Fetch new next employee ID
-        const nextIdResponse = await fetch(`${import.meta.env.VITE_API_URL}/getNextEmployeeId`);
-        const nextIdData = await nextIdResponse.json();
-        if (nextIdData.success) {
-          setNextEmployeeId(nextIdData.nextEmployeeId);
-          setEmployeeId(nextIdData.nextEmployeeId.toString());
+        // Reset facility to first one
+        if (facilities.length > 0) {
+          setFacilityId(facilities[0].facility_id);
         }
-      }
-      else {
+
+        alert('Employee added successfully!');
+        setShowAddModal(false);
+        fetchEmployees(); // Refresh the grid
+      } else {
         alert('Error adding employee: ' + data.message);
       }
-    }
-    catch (err) {
+    } catch (err) {
       console.error('Error adding employee:', err);
       alert('Error adding employee.');
-    }
-    finally {
+    } finally {
       setLoading(false);
     }
   };
 
-  // Handle archive employee
   const handleDeleteEmployee = async (employeeId) => {
-    // Prevent multiple clicks
     if (deletingEmployeeId === employeeId) {
       return;
     }
@@ -377,472 +299,322 @@ const EmployeesPage = ({ globalAuthId }) => {
       if (data.success) {
         alert('Employee deleted successfully!');
         fetchEmployees();
-      }
-      else {
+      } else {
         alert('Error deleting employee: ' + data.message);
       }
-    }
-    catch (err) {
+    } catch (err) {
       console.error('Error deleting employee:', err);
       alert('Error deleting employee.');
-    }
-    finally {
+    } finally {
       setDeletingEmployeeId(null);
     }
   };
 
-  // Column definitions for AG Grid
   const columnDefs = [
     { field: 'employee_id', headerName: 'ID', sortable: true, filter: true, editable: !safetyLock, width: 100 },
-    { field: 'first_name', headerName: 'First Name', sortable: true, filter: true, editable: true, flex: 1 },
-    { field: 'middle_name', headerName: 'Middle Name', sortable: true, filter: true, editable: true, flex: 1 },
-    { field: 'last_name', headerName: 'Last Name', sortable: true, filter: true, editable: true, flex: 1 },
-    { field: 'account_type', headerName: 'Role', sortable: true, filter: true, editable: true, width: 120,
+    { field: 'first_name', headerName: 'First Name', sortable: true, filter: true, editable: true, width: 130 },
+    { field: 'middle_name', headerName: 'Middle', sortable: true, filter: true, editable: true, width: 100 },
+    { field: 'last_name', headerName: 'Last Name', sortable: true, filter: true, editable: true, width: 130 },
+    { field: 'account_type', headerName: 'Role', sortable: true, filter: true, editable: true, width: 110,
       cellEditor: 'agSelectCellEditor',
       cellEditorParams: {
         values: ['manager', 'clerk', 'courier']
       }
     },
-    { field: 'email', headerName: 'Email', sortable: true, filter: true, editable: true, flex: 1.5 },
-    { field: 'phone_number', headerName: 'Phone', sortable: true, filter: true, editable: true, width: 150 },
-    { field: 'salary', headerName: 'Salary', sortable: true, filter: true, editable: true, width: 120 },
-    { field: 'employee_ssn', headerName: 'SSN', sortable: true, filter: true, editable: !safetyLock, width: 130 }
+    { field: 'email', headerName: 'Email', sortable: true, filter: true, editable: true, flex: 1 },
+    { field: 'employee_ssn', headerName: 'SSN', sortable: true, filter: true, editable: !safetyLock, width: 130 },
+    { field: 'salary', headerName: 'Salary', sortable: true, filter: true, editable: true, width: 110 },
+    { field: 'facility_id', headerName: 'Facility ID', sortable: true, filter: true, editable: true, width: 100 },
+    { field: 'facility_name', headerName: 'Facility', sortable: true, filter: true, editable: false, width: 150 },
+    { field: 'street_name', headerName: 'Street', sortable: true, filter: true, editable: true, flex: 1 },
+    { field: 'city_name', headerName: 'City', sortable: true, filter: true, editable: true, width: 120 },
+    { field: 'state_name', headerName: 'State', sortable: true, filter: true, editable: true, width: 80 },
+    { field: 'zip_code', headerName: 'Zip', sortable: true, filter: true, editable: true, width: 100 }
   ];
 
   return (
     <div className="create-package-container">
       <div className="package-header">
         <h1>Employees</h1>
-        <button onClick={() => navigate('/managerPage')} className="back-button">
-          ← Back to Manager
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={() => setShowAddModal(true)} className="add-button" style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            backgroundColor: '#3C467B',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}>
+            + Add Employee
+          </button>
+          <button onClick={() => navigate('/managerPage')} className="back-button">
+            ← Back to Manager
+          </button>
+        </div>
       </div>
 
       {/* Separator Line */}
       <div style={{ borderTop: '1px solid #e9ecef', marginBottom: '20px' }}></div>
 
-      {/* Tab Navigation */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-        <button
-          onClick={() => setActiveTab('add')}
-          style={{
-            padding: '10px 30px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            backgroundColor: activeTab === 'add' ? '#50589C' : '#e0e0e0',
-            color: activeTab === 'add' ? 'white' : '#333',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            minWidth: '160px'
-          }}
-        >
-          Add Employee
-        </button>
-        <button
-          onClick={() => setActiveTab('edit')}
-          style={{
-            padding: '10px 30px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            backgroundColor: activeTab === 'edit' ? '#50589C' : '#e0e0e0',
-            color: activeTab === 'edit' ? 'white' : '#333',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            minWidth: '160px'
-          }}
-        >
-          Edit Employees
-        </button>
-      </div>
+      {/* Filter Panel */}
+      <FilterPanel
+        filters={[
+          {
+            label: 'Filter by Role',
+            value: roleFilter,
+            onChange: setRoleFilter,
+            options: [
+              { value: 'all', label: 'All Employees' },
+              { value: 'manager', label: 'Managers' },
+              { value: 'clerk', label: 'Clerks' },
+              { value: 'courier', label: 'Couriers' }
+            ]
+          }
+        ]}
+        toggles={[
+          {
+            label: 'Safety Lock (ID & SSN)',
+            value: safetyLock,
+            onToggle: () => setSafetyLock(!safetyLock),
+            activeText: 'Locked',
+            inactiveText: 'Unlocked',
+            activeColor: '#50589C',
+            helpText: {
+              active: 'ID & SSN cannot be edited',
+              inactive: 'ID & SSN can be edited'
+            }
+          },
+          {
+            label: 'Delete Mode',
+            value: deleteMode,
+            onToggle: () => setDeleteMode(!deleteMode),
+            activeText: 'Enabled',
+            inactiveText: 'Disabled',
+            activeColor: '#dc3545',
+            helpText: {
+              active: 'Delete mode active',
+              inactive: 'Delete mode inactive'
+            }
+          }
+        ]}
+      />
 
-        {/* Add Employee Section */}
-        {activeTab === 'add' && (
-        <div className="employee-form-container">
-          <form onSubmit={handleSubmit} className="employee-form-card">
-            <div className="employee-form-section">
-              <h2>Add Employee</h2>
-              <div className="employee-form-grid">
-              {/* Employee ID */}
-              <div className="employee-form-field">
-                <label>
-                  Employee ID: <span className="required-asterisk">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={employeeId}
-                  onChange={(e) => setEmployeeId(e.target.value)}
-                  placeholder={nextEmployeeId ? `Auto: ${nextEmployeeId}` : 'Loading...'}
-                  required
-                />
-                <small>Auto-calculated, but you can enter your own</small>
-              </div>
-
-              {/* Account Type */}
-              <div className="employee-form-field">
-                <label>
-                  Account Type: <span className="required-asterisk">*</span>
-                </label>
-                <select
-                  value={accountType}
-                  onChange={(e) => setAccountType(e.target.value)}
-                  required
-                >
-                  <option value="clerk">Clerk</option>
-                  <option value="courier">Courier</option>
-                  <option value="manager">Manager</option>
-                </select>
-              </div>
-
-              {/* First Name */}
-              <div className="employee-form-field">
-                <label>
-                  First Name: <span className="required-asterisk">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  required
-                />
-              </div>
-
-              {/* Middle Name */}
-              <div className="employee-form-field">
-                <label>Middle Name:</label>
-                <input
-                  type="text"
-                  value={middleName}
-                  onChange={(e) => setMiddleName(e.target.value)}
-                />
-              </div>
-
-              {/* Last Name */}
-              <div className="employee-form-field">
-                <label>
-                  Last Name: <span className="required-asterisk">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  required
-                />
-              </div>
-
-              {/* Email */}
-              <div className="employee-form-field">
-                <label>
-                  Email: <span className="required-asterisk">*</span>
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-                <small>Must be unique</small>
-              </div>
-
-              {/* Password */}
-              <div className="employee-form-field">
-                <label>
-                  Password: <span className="required-asterisk">*</span>
-                </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-
-              {/* SSN */}
-              <div className="employee-form-field">
-                <label>
-                  SSN (XXX-XX-XXXX): <span className="required-asterisk">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={employeeSsn}
-                  onChange={handleSsnChange}
-                  placeholder="123-45-6789"
-                  required
-                />
-                <small>Must be unique</small>
-              </div>
-
-              {/* Phone Number */}
-              <div className="employee-form-field">
-                <label>Phone Number (XXX-XXX-XXXX):</label>
-                <input
-                  type="text"
-                  value={phoneNumber}
-                  onChange={handlePhoneChange}
-                  placeholder="123-456-7890"
-                />
-              </div>
-
-              {/* Birth Date */}
-              <div className="employee-form-field">
-                <label>Birth Date:</label>
-                <input
-                  type="date"
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
-                />
-              </div>
-
-              {/* Salary */}
-              <div className="employee-form-field">
-                <label>Salary:</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={salary}
-                  onChange={(e) => setSalary(e.target.value)}
-                  placeholder="50000.00"
-                />
-              </div>
-
-              {/* Ethnicity */}
-              <div className="employee-form-field">
-                <label>Ethnicity:</label>
-                <input
-                  type="text"
-                  value={ethnicity}
-                  onChange={(e) => setEthnicity(e.target.value)}
-                />
-              </div>
-
-              {/* Street Name */}
-              <div className="employee-form-field">
-                <label>
-                  Street Address: <span className="required-asterisk">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={streetName}
-                  onChange={(e) => setStreetName(e.target.value)}
-                  required
-                />
-              </div>
-
-              {/* City */}
-              <div className="employee-form-field">
-                <label>
-                  City: <span className="required-asterisk">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={cityName}
-                  onChange={(e) => setCityName(e.target.value)}
-                  required
-                />
-              </div>
-
-              {/* State */}
-              <div className="employee-form-field">
-                <label>
-                  State (2 letters): <span className="required-asterisk">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={stateName}
-                  onChange={(e) => setStateName(e.target.value.toUpperCase())}
-                  placeholder="TX"
-                  maxLength="2"
-                  required
-                />
-              </div>
-
-              {/* Zip Code */}
-              <div className="employee-form-field">
-                <label>
-                  Zip Code (5 digits): <span className="required-asterisk">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={zipCode}
-                  onChange={(e) => setZipCode(e.target.value)}
-                  placeholder="12345"
-                  maxLength="5"
-                  required
-                />
-              </div>
-            </div>
-            </div>
-
-            {/* Submit Button */}
-            <div className="employee-form-actions">
-              <button
-                type="submit"
-                disabled={loading}
-                className="employee-submit-button"
-              >
-                {loading ? 'Adding Employee...' : 'Add Employee'}
-              </button>
-            </div>
-          </form>
+      {/* Employees Grid */}
+      {loadingEmployees ? (
+        <div style={{ textAlign: 'center', padding: '40px', fontSize: '18px' }}>
+          Loading employees...
         </div>
-        )}
-
-        {/* Edit Employees Section */}
-        {activeTab === 'edit' && (
-        <div className="employee-edit-container">
-          <h2 className="employee-edit-header">Edit Employees</h2>
-
-          <div style={{ display: 'flex', gap: '20px', marginBottom: '15px', alignItems: 'flex-start' }}>
-            {/* Role Filter Dropdown */}
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                Filter by Role:
-              </label>
-              <select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                style={{ padding: '8px', fontSize: '14px', minWidth: '200px' }}
-              >
-                <option value="all">All Employees</option>
-                <option value="manager">Managers</option>
-                <option value="clerk">Clerks</option>
-                <option value="courier">Couriers</option>
-              </select>
-            </div>
-
-            {/* Status Filter Dropdown */}
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                Filter by Status:
-              </label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                style={{ padding: '8px', fontSize: '14px', minWidth: '200px' }}
-              >
-                <option value="all">All Statuses</option>
-                <option value="active">Active</option>
-                <option value="archived">Archived</option>
-              </select>
-            </div>
-
-            {/* Safety Lock Toggle */}
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                Safety Lock (ID & SSN):
-              </label>
-              <button
-                onClick={() => setSafetyLock(!safetyLock)}
-                style={{
-                  padding: '8px 16px',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  backgroundColor: safetyLock ? '#50589C' : 'white',
-                  color: safetyLock ? 'white' : '#333',
-                  border: '2px solid #50589C',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  minWidth: '120px',
-                  boxSizing: 'border-box'
-                }}
-              >
-                {safetyLock ? 'Locked' : 'Unlocked'}
-              </button>
-              <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                {safetyLock ? 'ID & SSN cannot be edited' : 'ID & SSN can be edited'}
-              </div>
-            </div>
-
-            {/* Delete Mode Toggle */}
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                Delete Mode:
-              </label>
-              <button
-                onClick={() => setDeleteMode(!deleteMode)}
-                style={{
-                  padding: '8px 16px',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  backgroundColor: deleteMode ? '#dc3545' : 'white',
-                  color: deleteMode ? 'white' : '#333',
-                  border: '2px solid #dc3545',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  minWidth: '120px',
-                  boxSizing: 'border-box'
-                }}
-              >
-                {deleteMode ? 'Enabled' : 'Disabled'}
-              </button>
-              <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                {deleteMode ? 'Delete mode active' : 'Delete mode inactive'}
-              </div>
-            </div>
+      ) : deleteMode ? (
+        <div>
+          <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '5px', color: '#856404' }}>
+            <strong>Delete Mode:</strong> Double-click any row to delete that employee
           </div>
-
-          {loadingEmployees ? (
-            <div style={{ textAlign: 'center', padding: '40px', fontSize: '18px' }}>
-              Loading employees...
-            </div>
-          ) : deleteMode ? (
-            /* Archive Table */
-            <div>
-              <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '5px', color: '#856404' }}>
-                <strong>Delete Mode:</strong> Double-click any row to delete that employee
-              </div>
-              <div className="ag-theme-alpine" style={{ height: 500, width: "100%" }}>
-                <AgGridReact
-                  rowData={employees}
-                  columnDefs={columnDefs}
-                  defaultColDef={{
-                    sortable: true,
-                    filter: true,
-                    editable: false
-                  }}
-                  getRowId={getRowId}
-                  onRowDoubleClicked={(params) => handleDeleteEmployee(params.data.employee_id)}
-                  rowClass="archive-mode-row"
-                  getRowStyle={(params) => {
-                    if (deletingEmployeeId === params.data.employee_id) {
-                      return {
-                        backgroundColor: '#f8d7da',
-                        opacity: 0.6,
-                        cursor: 'not-allowed',
-                        pointerEvents: 'none'
-                      };
-                    }
-                  }}
-                  readOnlyEdit={true}
-                  suppressClickEdit={true}
-                  pagination={true}
-                  paginationPageSize={20}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="ag-theme-alpine" style={{ height: 500, width: "100%" }}>
-              <AgGridReact
-                rowData={employees}
-                columnDefs={columnDefs}
-                defaultColDef={{
-                  sortable: true,
-                  filter: true
-                }}
-                getRowId={getRowId}
-                onCellValueChanged={onCellValueChanged}
-                pagination={true}
-                paginationPageSize={20}
-              />
-            </div>
-          )}
-
-          <p style={{ marginTop: '15px', color: '#666', fontSize: '14px' }}>
-            Double-click on any cell to edit. Press Enter to save changes.
-          </p>
+          <div className="ag-theme-alpine" style={{ height: 'calc(100vh - 350px)', minHeight: '400px', width: "100%" }}>
+            <AgGridReact
+              rowData={employees}
+              columnDefs={columnDefs}
+              defaultColDef={{
+                sortable: true,
+                filter: true,
+                editable: false
+              }}
+              getRowId={getRowId}
+              onRowDoubleClicked={(params) => handleDeleteEmployee(params.data.employee_id)}
+              rowClass="archive-mode-row"
+              getRowStyle={(params) => {
+                if (deletingEmployeeId === params.data.employee_id) {
+                  return {
+                    backgroundColor: '#f8d7da',
+                    opacity: 0.6,
+                    cursor: 'not-allowed',
+                    pointerEvents: 'none'
+                  };
+                }
+              }}
+              readOnlyEdit={true}
+              suppressClickEdit={true}
+              pagination={true}
+              paginationPageSize={20}
+            />
+          </div>
         </div>
-        )}
+      ) : (
+        <div className="ag-theme-alpine" style={{ height: 'calc(100vh - 350px)', minHeight: '400px', width: "100%" }}>
+          <AgGridReact
+            rowData={employees}
+            columnDefs={columnDefs}
+            defaultColDef={{
+              sortable: true,
+              filter: true
+            }}
+            getRowId={getRowId}
+            onCellValueChanged={onCellValueChanged}
+            pagination={true}
+            paginationPageSize={20}
+          />
+        </div>
+      )}
+
+      <p style={{ marginTop: '15px', color: '#666', fontSize: '14px' }}>
+        Double-click on any cell to edit. Press Enter to save changes.
+      </p>
+
+      {/* Add Employee Modal */}
+      {showAddModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowAddModal(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'white',
+              padding: '30px',
+              borderRadius: '8px',
+              maxWidth: '800px',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <h2>Add New Employee</h2>
+            <form onSubmit={handleSubmit} className="employee-form-card">
+              <div className="employee-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                {/* First Name */}
+                <div className="employee-form-field">
+                  <label>First Name: <span className="required-asterisk">*</span></label>
+                  <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                </div>
+
+                {/* Middle Name */}
+                <div className="employee-form-field">
+                  <label>Middle Name:</label>
+                  <input type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
+                </div>
+
+                {/* Last Name */}
+                <div className="employee-form-field">
+                  <label>Last Name: <span className="required-asterisk">*</span></label>
+                  <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                </div>
+
+                {/* Account Type */}
+                <div className="employee-form-field">
+                  <label>Role: <span className="required-asterisk">*</span></label>
+                  <select value={accountType} onChange={(e) => setAccountType(e.target.value)} required>
+                    <option value="clerk">Clerk</option>
+                    <option value="courier">Courier</option>
+                    <option value="manager">Manager</option>
+                  </select>
+                </div>
+
+                {/* Email */}
+                <div className="employee-form-field">
+                  <label>Email: <span className="required-asterisk">*</span></label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+
+                {/* Password */}
+                <div className="employee-form-field">
+                  <label>Password: <span className="required-asterisk">*</span></label>
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                </div>
+
+                {/* SSN */}
+                <div className="employee-form-field">
+                  <label>SSN (XXX-XX-XXXX): <span className="required-asterisk">*</span></label>
+                  <input type="text" value={employeeSsn} onChange={handleSsnChange} placeholder="123-45-6789" maxLength="11" required />
+                </div>
+
+                {/* Salary */}
+                <div className="employee-form-field">
+                  <label>Salary: <span className="required-asterisk">*</span></label>
+                  <input type="number" step="0.01" value={salary} onChange={(e) => setSalary(e.target.value)} required />
+                </div>
+
+                {/* Facility */}
+                <div className="employee-form-field">
+                  <label>Facility: <span className="required-asterisk">*</span></label>
+                  <select value={facilityId} onChange={(e) => setFacilityId(e.target.value)} required>
+                    {facilities.map(facility => (
+                      <option key={facility.facility_id} value={facility.facility_id}>
+                        {facility.facility_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Street */}
+                <div className="employee-form-field" style={{ gridColumn: '1 / -1' }}>
+                  <label>Street Address: <span className="required-asterisk">*</span></label>
+                  <input type="text" value={streetName} onChange={(e) => setStreetName(e.target.value)} required />
+                </div>
+
+                {/* City */}
+                <div className="employee-form-field">
+                  <label>City: <span className="required-asterisk">*</span></label>
+                  <input type="text" value={cityName} onChange={(e) => setCityName(e.target.value)} required />
+                </div>
+
+                {/* State */}
+                <div className="employee-form-field">
+                  <label>State (2 letters): <span className="required-asterisk">*</span></label>
+                  <input type="text" value={stateName} onChange={(e) => setStateName(e.target.value.toUpperCase())} placeholder="TX" maxLength="2" required />
+                </div>
+
+                {/* Zip */}
+                <div className="employee-form-field">
+                  <label>Zip Code (5 digits): <span className="required-asterisk">*</span></label>
+                  <input type="text" value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="12345" maxLength="5" required />
+                </div>
+              </div>
+
+              <div className="modal-actions" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
+                <button type="submit" disabled={loading} style={{
+                  padding: '10px 20px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#3C467B',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.6 : 1
+                }}>
+                  {loading ? 'Adding...' : 'Add Employee'}
+                </button>
+                <button type="button" onClick={() => setShowAddModal(false)} style={{
+                  padding: '10px 20px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer'
+                }}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

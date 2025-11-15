@@ -22,7 +22,7 @@
   font-weight: bold;
   align-self: center;
   margin-left: 10px;
-  color: #50589C;
+  color: var(--color-primary-light);
 }
 .userShippingContainer .userShippingTop .userShippingDesc span{
   font-size: 15px;

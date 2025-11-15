@@ -14,7 +14,6 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
 
   const [street, setStreet] = useState("");
   const [city, setCity] = useState("");
@@ -22,7 +21,6 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
   const [zipCode, setZipCode] = useState("");
 
   const [firstName, setFirstName] = useState("");
-  const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
 
   const [accountType, setAccountType] = useState("");
@@ -71,7 +69,7 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/userSignUp`, {
                                    method: 'POST',
                                    headers: {'Content-Type': 'application/json' },
-                                   body: JSON.stringify( {email, password, phoneNumber, street, city, state, zipCode, firstName, middleName, lastName, accountType })
+                                   body: JSON.stringify( {email, password, street, city, state, zipCode, firstName, lastName, accountType })
                                   });
     const data = await response.json();
 
@@ -185,17 +183,6 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
                        onChange={ (e) => setPassword(e.target.value)}
                        required={true}
                        />
-              <AuthInput type="tel" 
-                       name="phone"
-                       id="phone-1" 
-                       htmlFor="phone-1" 
-                       text="Phone Number - optional" 
-                       maxLength={10}
-                       minLength={10}
-                       pattern="[0-9]*"
-                       value={phoneNumber}
-                       onChange={ (e) => setPhoneNumber(e.target.value)}
-                       />
                 <p className="switch"> Already have an account,
                   <span className="click" onClick={()=>{switchMode("Login")}}> click here </span>
                     to log in!
@@ -269,15 +256,7 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
                        onChange={ (e) => setFirstName(e.target.value)}
                        required={true}
                        />
-              <AuthInput type="text" 
-                       name="middle-name"
-                       id="mname-1" 
-                       htmlFor="mname-1" 
-                       text="Middle Name - optional" 
-                       value={middleName}
-                       onChange={ (e) => setMiddleName(e.target.value)}
-                       />
-              <AuthInput type="text" 
+              <AuthInput type="text"
                        name="last-name"
                        id="lname-1" 
                        htmlFor="lname-1" 

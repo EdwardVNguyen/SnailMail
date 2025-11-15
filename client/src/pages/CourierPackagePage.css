@@ -14,17 +14,17 @@
   align-items: center;
   justify-content: center;
   min-height: 60vh;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .loading-spinner {
   width: 50px;
   height: 50px;
-  border: 5px solid #f3f3f3;
-  border-top: 5px solid #3C467B;
-  border-radius: 50%;
+  border: 5px solid var(--color-gray-100);
+  border-top: 5px solid var(--color-primary);
+  border-radius: var(--radius-full);
   animation: spin 1s linear infinite;
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-xl);
 }
 
 @keyframes spin {
@@ -35,11 +35,11 @@
 /* Page Header */
 .courierPageHeader {
   text-align: center;
-  margin-bottom: 50px;
-  padding: 30px 20px;
-  background: linear-gradient(135deg, #3C467B 0%, #636CCB 100%);
-  border-radius: 12px;
-  color: white;
+  margin-bottom: var(--spacing-5xl);
+  padding: var(--spacing-3xl) var(--spacing-xl);
+  background: var(--gradient-primary);
+  border-radius: var(--radius-xl);
+  color: var(--text-inverse);
 }
 
 .courierPageHeader h1 {
@@ -54,9 +54,9 @@
 }
 
 .packagesSection h2 {
-  font-size: 28px;
-  color: #333;
-  margin-bottom: 25px;
+  font-size: var(--font-3xl);
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-2xl);
 }
 
 .packagesGrid {
@@ -66,56 +66,56 @@
 }
 
 .packageCard {
-  background: white;
-  border-radius: 12px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  padding: 20px;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition-all);
+  padding: var(--spacing-xl);
 }
 
 .packageCard:hover {
   transform: translateY(-5px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  box-shadow: var(--shadow-lg);
 }
 
 .packageHeader {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #3C467B;
+  font-size: var(--font-lg);
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-primary);
 }
 
 .packageDetails {
-  font-size: 14px;
-  color: #666;
-  line-height: 1.5;
-  margin-bottom: 12px;
+  font-size: var(--font-md);
+  color: var(--text-secondary);
+  line-height: var(--line-height-normal);
+  margin-bottom: var(--spacing-md);
 }
 
 .packageStatus {
-  font-weight: 600;
-  color: #3C467B;
+  font-weight: var(--font-semibold);
+  color: var(--color-primary);
 }
 
 /* Action Button */
 .actionButton {
   width: 100%;
-  padding: 12px 18px;
-  background-color: #3C467B;
-  color: white;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background-color: var(--color-primary);
+  color: var(--text-inverse);
   border: none;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 600;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-md);
+  font-weight: var(--font-semibold);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition-all);
 }
 
 .actionButton:hover {
-  background-color: #50589C;
+  background-color: var(--color-primary-light);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(60, 70, 123, 0.3);
+  box-shadow: var(--shadow-hover);
 }
 
 .actionButton:active {
@@ -124,9 +124,9 @@
 
 /* Error Message */
 .error {
-  background-color: #ffe5e5;
-  color: #c0392b;
-  padding: 15px 20px;
+  background-color: var(--color-error-light);
+  color: var(--color-error-text);
+  padding: var(--spacing-lg) var(--spacing-xl);
   border-radius: 8px;
   margin-bottom: 25px;
   text-align: center;
@@ -135,19 +135,19 @@
 
 /* Success Message */
 .successMessage {
-  background-color: #d4edda;
+  background-color: var(--color-success-light);
   color: #155724;
   padding: 15px 20px;
   border-radius: 8px;
   margin-bottom: 25px;
   text-align: center;
   font-weight: 600;
-  border: 1px solid #c3e6cb;
+  border: 1px solid var(--color-success-border);
 }
 
 /* Section Description */
 .sectionDescription {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 14px;
   margin-bottom: 20px;
   margin-top: -10px;
@@ -156,29 +156,29 @@
 /* Empty State */
 .emptyState {
   text-align: center;
-  color: #999;
+  color: var(--color-gray-500);
   padding: 40px 20px;
   font-size: 16px;
 }
 
 /* Assigned Card Variant */
 .assignedCard {
-  border-left: 4px solid #28a745;
+  border-left: 4px solid var(--color-success);
 }
 
 .assignedCard hr {
   border: none;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--color-gray-200);
   margin: 12px 0;
 }
 
 /* Deliver Button */
 .deliverButton {
-  background-color: #28a745;
+  background-color: var(--color-success);
 }
 
 .deliverButton:hover {
-  background-color: #218838;
+  background-color: var(--color-success-dark);
 }
 
 /* Responsive Design */
@@ -233,7 +233,7 @@
 }
 
 .modalContent {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 12px;
   max-width: 500px;
   width: 100%;
@@ -247,20 +247,20 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--color-gray-200);
 }
 
 .modalHeader h2 {
   margin: 0;
   font-size: 24px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .closeButton {
   background: none;
   border: none;
   font-size: 32px;
-  color: #999;
+  color: var(--color-gray-500);
   cursor: pointer;
   padding: 0;
   width: 32px;
@@ -272,7 +272,7 @@
 }
 
 .closeButton:hover {
-  color: #333;
+  color: var(--text-primary);
 }
 
 .modalContent form {
@@ -287,7 +287,7 @@
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   font-size: 14px;
 }
 
@@ -296,7 +296,7 @@
 .formGroup textarea {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   font-size: 14px;
   font-family: inherit;
@@ -307,7 +307,7 @@
 .formGroup select:focus,
 .formGroup textarea:focus {
   outline: none;
-  border-color: #3C467B;
+  border-color: var(--color-primary);
 }
 
 .formGroup textarea {
@@ -318,7 +318,7 @@
 .formGroup small {
   display: block;
   margin-top: 5px;
-  color: #666;
+  color: var(--text-secondary);
   font-size: 12px;
 }
 
@@ -328,7 +328,7 @@
   justify-content: flex-end;
   margin-top: 25px;
   padding-top: 20px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--color-gray-200);
 }
 
 .cancelButton,
@@ -343,21 +343,21 @@
 }
 
 .cancelButton {
-  background-color: #f0f0f0;
-  color: #333;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .cancelButton:hover {
-  background-color: #e0e0e0;
+  background-color: var(--color-gray-200);
 }
 
 .confirmButton {
-  background-color: #3C467B;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--text-inverse);
 }
 
 .confirmButton:hover {
-  background-color: #50589C;
+  background-color: var(--color-primary-light);
 }
 
 @media (max-width: 768px) {

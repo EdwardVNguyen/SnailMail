@@ -10,9 +10,7 @@ const CreateShipment = ({ globalAuthId }) => {
   // Form state
   const [formData, setFormData] = useState({
     recipientFirstName: '',
-    recipientMiddleName: '',
     recipientLastName: '',
-    recipientPhone: '',
     recipientEmail: '',
     recipientStreet: '',
     recipientCity: '',
@@ -90,9 +88,7 @@ const CreateShipment = ({ globalAuthId }) => {
         // Reset form
         setFormData({
           recipientFirstName: '',
-          recipientMiddleName: '',
           recipientLastName: '',
-          recipientPhone: '',
           recipientEmail: '',
           recipientStreet: '',
           recipientCity: '',
@@ -157,18 +153,6 @@ const CreateShipment = ({ globalAuthId }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="senderMiddleName">Middle Name</label>
-              <input
-                type="text"
-                id="recipientMiddleName"
-                name="recipientMiddleName"
-                value={formData.recipientMiddleName}
-                onChange={handleInputChange}
-                placeholder="Optional"
-              />
-            </div>
-
-            <div className="form-group">
               <label htmlFor="recipientLastName">Last Name *</label>
               <input
                 type="text"
@@ -179,10 +163,7 @@ const CreateShipment = ({ globalAuthId }) => {
                 required
               />
             </div>
-          </div>
 
-
-          <div className="form-row">
             <div className="form-group">
               <label htmlFor="recipientEmail">Email *</label>
               <input
@@ -192,21 +173,6 @@ const CreateShipment = ({ globalAuthId }) => {
                 value={formData.recipientEmail}
                 onChange={handleInputChange}
                 required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="recipientPhone">Phone Number</label>
-              <input
-                type="tel"
-                id="recipientPhone"
-                name="recipientPhone"
-                value={formData.recipientPhone}
-                maxLength={10}
-                minLength={10}
-                pattern="[0-9]*"
-                onChange={handleInputChange}
-                placeholder="Optional"
               />
             </div>
           </div>

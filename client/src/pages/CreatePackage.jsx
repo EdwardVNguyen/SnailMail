@@ -10,9 +10,7 @@ const CreatePackage = () => {
   // Form state
   const [formData, setFormData] = useState({
     senderFirstName: '',
-    senderMiddleName: '',
     senderLastName: '',
-    senderPhone: '',
     senderEmail: '',
     senderStreet: '',
     senderCity: '',
@@ -20,9 +18,7 @@ const CreatePackage = () => {
     senderZipCode: '',
 
     recipientFirstName: '',
-    recipientMiddleName: '',
     recipientLastName: '',
-    recipientPhone: '',
     recipientEmail: '',
     recipientStreet: '',
     recipientCity: '',
@@ -97,9 +93,7 @@ const CreatePackage = () => {
         // Reset form
         setFormData({
           senderFirstName: '',
-          senderMiddleName: '',
           senderLastName: '',
-          senderPhone: '',
           senderEmail: '',
           senderStreet: '',
           senderCity: '',
@@ -107,9 +101,7 @@ const CreatePackage = () => {
           senderZipCode: '',
 
           recipientFirstName: '',
-          recipientMiddleName: '',
           recipientLastName: '',
-          recipientPhone: '',
           recipientEmail: '',
           recipientStreet: '',
           recipientCity: '',
@@ -176,18 +168,6 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="senderMiddleName">Middle Name</label>
-              <input
-                type="text"
-                id="senderMiddleName"
-                name="senderMiddleName"
-                value={formData.senderMiddleName}
-                onChange={handleInputChange}
-                placeholder="Optional"
-              />
-            </div>
-
-            <div className="form-group">
               <label htmlFor="senderLastName">Last Name *</label>
               <input
                 type="text"
@@ -198,9 +178,7 @@ const CreatePackage = () => {
                 required
               />
             </div>
-          </div>
 
-          <div className="form-row">
             <div className="form-group">
               <label htmlFor="senderEmail">Email *</label>
               <input
@@ -210,21 +188,6 @@ const CreatePackage = () => {
                 value={formData.senderEmail}
                 onChange={handleInputChange}
                 required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="senderPhone">Phone Number</label>
-              <input
-                type="tel"
-                id="senderPhone"
-                name="senderPhone"
-                maxLength={10}
-                minLength={10}
-                pattern="[0-9]*"
-                value={formData.senderPhone}
-                onChange={handleInputChange}
-                placeholder="Optional"
               />
             </div>
           </div>
@@ -305,18 +268,6 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="senderMiddleName">Middle Name</label>
-              <input
-                type="text"
-                id="recipientMiddleName"
-                name="recipientMiddleName"
-                value={formData.recipientMiddleName}
-                onChange={handleInputChange}
-                placeholder="Optional"
-              />
-            </div>
-
-            <div className="form-group">
               <label htmlFor="recipientLastName">Last Name *</label>
               <input
                 type="text"
@@ -327,9 +278,7 @@ const CreatePackage = () => {
                 required
               />
             </div>
-          </div>
 
-          <div className="form-row">
             <div className="form-group">
               <label htmlFor="recipientEmail">Email *</label>
               <input
@@ -339,21 +288,6 @@ const CreatePackage = () => {
                 value={formData.recipientEmail}
                 onChange={handleInputChange}
                 required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="recipientPhone">Phone Number</label>
-              <input
-                type="tel"
-                id="recipientPhone"
-                name="recipientPhone"
-                maxLength={10}
-                minLength={10}
-                pattern="[0-9]*"
-                value={formData.recipientPhone}
-                onChange={handleInputChange}
-                placeholder="Optional"
               />
             </div>
           </div>

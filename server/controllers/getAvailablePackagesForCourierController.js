@@ -1,31 +1,12 @@
 import pool from '../config/database.js';
 import { badServerRequest } from '../utils/badRequest.js';
-import { getJSONRequestBody } from '../utils/getJSONRequestBody.js';
 
-export const getMyCourierPackagesController = async (req, res) => {
+export const getAvailablePackagesForCourierController = async (req, res) => {
   let connection;
   try {
-    const body = await getJSONRequestBody(req);
-    const { authId } = body;
-
     connection = await pool.getConnection();
 
-    // Get courier's employee_id from auth_id
-    const [courierRows] = await connection.execute(
-      'SELECT employee_id FROM employee WHERE auth_id = ?',
-      [authId]
-    );
-
-    if (courierRows.length === 0) {
-      res.statusCode = 404;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ success: false, message: 'Courier not found' }));
-      return;
-    }
-
-    const courierId = courierRows[0].employee_id;
-
-    // Get packages assigned to this courier that are in transit
+    // Get packages that are 'processing' at facilities and not assigned to any courier
     const query = `
       SELECT
         p.package_id,
@@ -36,24 +17,27 @@ export const getMyCourierPackagesController = async (req, res) => {
         CONCAT(recipient.first_name, ' ', recipient.last_name) as recipient_name,
         recipient_addr.street_name as recipient_street,
         recipient_addr.city_name as recipient_city,
-        recipient_addr.state_name as recipient_state
+        recipient_addr.state_name as recipient_state,
+        f.facility_name,
+        f.facility_id
       FROM package p
       LEFT JOIN customer sender ON p.sender_id = sender.customer_id
       LEFT JOIN customer recipient ON p.recipient_id = recipient.customer_id
       LEFT JOIN address recipient_addr ON recipient.customer_id = recipient_addr.customer_id
-      WHERE p.courier_id = ?
-      AND p.package_status = 'in transit'
+      LEFT JOIN facility f ON p.current_location = f.facility_id
+      WHERE p.package_status = 'processing'
+      AND p.courier_id IS NULL
       ORDER BY p.created_at DESC
     `;
 
-    const [packages] = await connection.execute(query, [courierId]);
+    const [packages] = await connection.execute(query);
 
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({ success: true, packages }));
   }
   catch (error) {
-    console.error('Error fetching courier packages:', error);
+    console.error('Error fetching available packages:', error);
     badServerRequest(res);
   }
   finally {

@@ -1,0 +1,66 @@
+.filter-panel {
+  display: flex;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  align-items: flex-start;
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-weight: var(--font-semibold);
+  font-size: var(--font-sm);
+}
+
+.filter-select {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-sm);
+  min-width: 200px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--color-white);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.filter-select:hover {
+  border-color: var(--color-primary);
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(60, 70, 123, 0.1);
+}
+
+.filter-toggle {
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--font-sm);
+  font-weight: var(--font-semibold);
+  border: 2px solid;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  min-width: 120px;
+  box-sizing: border-box;
+  transition: var(--transition-base);
+}
+
+.filter-toggle:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.filter-toggle:active {
+  transform: translateY(0);
+}
+
+.filter-help-text {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  margin-top: var(--spacing-xs);
+}

@@ -89,19 +89,15 @@ export const createShipmentController = async (req, res) => {
     // Insert recipient as guest customer
     const [recipientCustomerResult] = await connection.execute(
       `INSERT INTO customer (
-        first_name, 
-        middle_name, 
-        last_name, 
-        phone_number, 
-        account_type, 
-        address_id, 
-        auth_id 
-      ) VALUES (?, ?, ?, ?, 'guest', ?, NULL)`,
+        first_name,
+        last_name,
+        account_type,
+        address_id,
+        auth_id
+      ) VALUES (?, ?, 'guest', ?, NULL)`,
       [
         recipientFirstName,
-        toNullIfBlank(recipientMiddleName),
         recipientLastName,
-        toNullIfBlank(recipientPhone),
         recipient_address_id
       ]
     );

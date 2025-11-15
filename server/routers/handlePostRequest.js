@@ -10,10 +10,10 @@ import { updateFacilityController } from '../controllers/updateFacilityControlle
 import { deleteFacilityController } from '../controllers/deleteFacilityController.js'
 import { createShipmentController } from '../controllers/createShipmentController.js'
 import { createPackageController } from '../controllers/createPackageController.js'
-import { requestPackageController } from '../controllers/requestPackageController.js'
-import { approveCourierRequestController } from '../controllers/approveCourierRequestController.js'
-import { rejectCourierRequestController } from '../controllers/rejectCourierRequestController.js'
-import { confirmDeliveryController } from '../controllers/confirmDeliveryController.js'
+import { getMyCourierPackagesController } from '../controllers/getMyCourierPackagesController.js'
+import { getAvailablePackagesForCourierController } from '../controllers/getAvailablePackagesForCourierController.js'
+import { pickupPackageController } from '../controllers/pickupPackageController.js'
+import { deliverPackageController } from '../controllers/deliverPackageController.js'
 
 export const handlePostRequest= (req, res) => {
 
@@ -65,21 +65,21 @@ export const handlePostRequest= (req, res) => {
   else if (req.url.startsWith('/createPackage')) {
     return createPackageController(req, res)
   }
-  // courier requests a package
-  else if (req.url.startsWith('/requestPackage')) {
-    return requestPackageController(req, res)
+  // get available packages for courier
+  else if (req.url.startsWith('/getAvailablePackagesForCourier')) {
+    return getAvailablePackagesForCourierController(req, res)
   }
-  // clerk approves courier request
-  else if (req.url.startsWith('/approveCourierRequest')) {
-    return approveCourierRequestController(req, res)
+  // get my courier packages
+  else if (req.url.startsWith('/getMyCourierPackages')) {
+    return getMyCourierPackagesController(req, res)
   }
-  // clerk rejects courier request
-  else if (req.url.startsWith('/rejectCourierRequest')) {
-    return rejectCourierRequestController(req, res)
+  // courier picks up package
+  else if (req.url.startsWith('/pickupPackage')) {
+    return pickupPackageController(req, res)
   }
-  // courier confirms delivery
-  else if (req.url.startsWith('/confirmDelivery')) {
-    return confirmDeliveryController(req, res)
+  // courier delivers package
+  else if (req.url.startsWith('/deliverPackage')) {
+    return deliverPackageController(req, res)
   }
   // if an api call is made to a url that isn't any of the above, return 404
   else {
