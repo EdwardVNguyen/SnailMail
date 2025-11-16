@@ -4,14 +4,12 @@ import { badClientRequest, badServerRequest } from '../utils/badRequest.js';
 
 // Clerk approves a courier's package request
 export const approveCourierRequestController = async (req, res) => {
-  let requestId, authId, destinationType, destinationFacilityId;
+  let requestId, authId;
 
   try {
     const body = await getJSONRequestBody(req);
     requestId = body.requestId;
     authId = body.authId;
-    destinationType = body.destinationType || 'recipient_address';
-    destinationFacilityId = body.destinationFacilityId || null;
 
     if (!requestId || !authId) {
       return badClientRequest(res, { message: 'Missing required fields' });
@@ -56,18 +54,34 @@ export const approveCourierRequestController = async (req, res) => {
       return badClientRequest(res, { message: 'Request already processed' });
     }
 
-    // Check if package is still available
+    // Check if package is still available (package should not already have a courier)
+    // Get facility's address_id for the tracking event
     const [[pkg]] = await connection.execute(
-      `SELECT package_id, package_status FROM package WHERE package_id = ?`,
+      `SELECT p.package_id, p.package_status, p.facility_id, p.courier_id, f.address_id AS facility_address_id
+       FROM package p
+       LEFT JOIN facility f ON p.facility_id = f.facility_id
+       WHERE p.package_id = ?`,
       [request.package_id]
     );
 
-    if (!pkg || pkg.package_status !== 'processing') {
+    if (!pkg) {
       await connection.rollback();
-      return badClientRequest(res, { message: 'Package is no longer available' });
+      return badClientRequest(res, { message: 'Package not found' });
     }
 
-    // Update request status
+    // Package should not already have a courier assigned
+    if (pkg.courier_id !== null) {
+      await connection.rollback();
+      return badClientRequest(res, { message: 'Package already assigned to another courier' });
+    }
+
+    // Accept packages in 'processing' or 'out-for-delivery' status (clerk may have just created tracking event)
+    if (pkg.package_status !== 'processing' && pkg.package_status !== 'out-for-delivery') {
+      await connection.rollback();
+      return badClientRequest(res, { message: 'Package is no longer available for pickup' });
+    }
+
+    // 1. Update request status to approved
     await connection.execute(
       `UPDATE courier_package_request
        SET request_status = 'approved',
@@ -78,35 +92,22 @@ export const approveCourierRequestController = async (req, res) => {
       [clerk.employee_id, authId, requestId]
     );
 
-    // Create package assignment
+    // 2. Create tracking event for package assignment (using facility's address_id)
     await connection.execute(
-      `INSERT INTO package_assignment
-       (package_id, courier_id, assigned_by, destination_type, destination_facility_id, created_by, updated_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [request.package_id, request.courier_id, clerk.employee_id, destinationType, destinationFacilityId, authId, authId]
+      `INSERT INTO tracking_event
+       (package_id, event_type, location_id, event_time, created_by, updated_by)
+       VALUES (?, 'processing', ?, NOW(), ?, ?)`,
+      [request.package_id, pkg.facility_address_id, authId, authId]
     );
 
-    // Update package status
+    // 3. Assign courier to package
     await connection.execute(
       `UPDATE package
-       SET package_status = 'pre-shipment',
+       SET courier_id = ?,
+           package_status = 'in-transit',
            updated_by = ?
        WHERE package_id = ?`,
-      [authId, request.package_id]
-    );
-
-    // Create notification for courier
-    await connection.execute(
-      `INSERT INTO courier_notification
-       (courier_id, notification_type, package_id, message, created_by, updated_by)
-       VALUES (?, 'request_approved', ?, ?, ?, ?)`,
-      [
-        request.courier_id,
-        request.package_id,
-        'Your request to deliver this package has been approved!',
-        authId,
-        authId
-      ]
+      [request.courier_id, authId, request.package_id]
     );
 
     await connection.commit();

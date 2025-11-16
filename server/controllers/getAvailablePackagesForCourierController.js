@@ -1,12 +1,38 @@
 import pool from '../config/database.js';
 import { badServerRequest } from '../utils/badRequest.js';
+import { getJSONRequestBody } from '../utils/getJSONRequestBody.js';
 
 export const getAvailablePackagesForCourierController = async (req, res) => {
   let connection;
   try {
+    const body = await getJSONRequestBody(req);
+    const { authId } = body;
+
+    if (!authId) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ success: false, message: 'Auth ID required' }));
+      return;
+    }
+
     connection = await pool.getConnection();
 
-    // Get packages that are 'processing' at facilities and not assigned to any courier
+    // Get courier's facility_id
+    const [courierRows] = await connection.execute(
+      'SELECT facility_id FROM employee WHERE auth_id = ?',
+      [authId]
+    );
+
+    if (courierRows.length === 0) {
+      res.statusCode = 404;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ success: false, message: 'Courier not found' }));
+      return;
+    }
+
+    const courierFacilityId = courierRows[0].facility_id;
+
+    // Get packages that are 'processing' at courier's facility and not assigned to any courier
     const query = `
       SELECT
         p.package_id,
@@ -23,14 +49,15 @@ export const getAvailablePackagesForCourierController = async (req, res) => {
       FROM package p
       LEFT JOIN customer sender ON p.sender_id = sender.customer_id
       LEFT JOIN customer recipient ON p.recipient_id = recipient.customer_id
-      LEFT JOIN address recipient_addr ON recipient.customer_id = recipient_addr.customer_id
-      LEFT JOIN facility f ON p.current_location = f.facility_id
-      WHERE p.package_status = 'processing'
+      LEFT JOIN address recipient_addr ON recipient.address_id = recipient_addr.address_id
+      LEFT JOIN facility f ON p.facility_id = f.facility_id
+      WHERE p.facility_id = ?
+      AND p.package_status = 'processing'
       AND p.courier_id IS NULL
       ORDER BY p.created_at DESC
     `;
 
-    const [packages] = await connection.execute(query);
+    const [packages] = await connection.execute(query, [courierFacilityId]);
 
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');

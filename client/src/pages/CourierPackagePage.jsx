@@ -21,7 +21,6 @@ const CourierPackagePage = ({ globalAuthId }) => {
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [deliveryType, setDeliveryType] = useState('recipient'); // 'recipient' or 'facility'
   const [deliveryFacilityId, setDeliveryFacilityId] = useState('');
-  const [photoUrl, setPhotoUrl] = useState('');
   const [facilities, setFacilities] = useState([]);
 
   // Fetch available packages
@@ -89,13 +88,13 @@ const CourierPackagePage = ({ globalAuthId }) => {
     fetchFacilities();
   }, []);
 
-  // Handle picking up a package
-  const handlePickupPackage = async (packageId) => {
-    const confirmed = window.confirm('Pick up this package?');
+  // Handle requesting a package
+  const handleRequestPackage = async (packageId) => {
+    const confirmed = window.confirm('Request to pick up this package?');
     if (!confirmed) return;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/pickupPackage`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/createCourierRequest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -106,15 +105,14 @@ const CourierPackagePage = ({ globalAuthId }) => {
 
       const data = await response.json();
       if (data.success) {
-        alert('Package picked up successfully!');
+        alert('Package pickup request submitted successfully! Wait for clerk approval.');
         fetchAvailablePackages();
-        fetchMyPackages();
       } else {
-        alert('Error picking up package: ' + data.message);
+        alert('Error requesting package: ' + data.message);
       }
     } catch (err) {
-      console.error('Error picking up package:', err);
-      alert('Error picking up package.');
+      console.error('Error requesting package:', err);
+      alert('Error requesting package.');
     }
   };
 
@@ -124,7 +122,6 @@ const CourierPackagePage = ({ globalAuthId }) => {
     setShowDeliveryModal(true);
     setDeliveryType('recipient');
     setDeliveryFacilityId('');
-    setPhotoUrl('');
   };
 
   // Handle delivery confirmation
@@ -142,7 +139,6 @@ const CourierPackagePage = ({ globalAuthId }) => {
           packageId: selectedPackage.package_id,
           deliveryType,
           deliveryFacilityId: deliveryType === 'facility' ? deliveryFacilityId : null,
-          photoUrl: deliveryType === 'recipient' ? photoUrl : null,
           authId
         })
       });
@@ -211,10 +207,10 @@ const CourierPackagePage = ({ globalAuthId }) => {
                     <p><strong>Status:</strong> <span className="status-badge">{pkg.package_status}</span></p>
                   </div>
                   <button
-                    onClick={() => handlePickupPackage(pkg.package_id)}
+                    onClick={() => handleRequestPackage(pkg.package_id)}
                     className="pickup-button"
                   >
-                    Pick Up Package
+                    Request Package
                   </button>
                 </div>
               ))}
@@ -284,18 +280,6 @@ const CourierPackagePage = ({ globalAuthId }) => {
                     </option>
                   ))}
                 </select>
-              </div>
-            )}
-
-            {deliveryType === 'recipient' && (
-              <div className="form-group">
-                <label>Photo URL (optional):</label>
-                <input
-                  type="text"
-                  value={photoUrl}
-                  onChange={(e) => setPhotoUrl(e.target.value)}
-                  placeholder="https://example.com/photo.jpg"
-                />
               </div>
             )}
 

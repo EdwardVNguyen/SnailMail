@@ -10,7 +10,6 @@ export const addEmployeeController = async (req, res) => {
 
     const {
       firstName,
-      middleName,
       lastName,
       accountType,
       email,
@@ -80,12 +79,11 @@ export const addEmployeeController = async (req, res) => {
     // Step 3: Create employee record (employee_id is auto-generated)
     const [employeeResult] = await connection.execute(
       `INSERT INTO employee
-       (first_name, middle_name, last_name, account_type, address_id,
+       (first_name, last_name, account_type, address_id,
         salary, employee_ssn, auth_id, facility_id, created_by, updated_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         firstName,
-        middleName,
         lastName,
         accountType,
         addressId,

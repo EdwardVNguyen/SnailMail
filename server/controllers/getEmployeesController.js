@@ -16,7 +16,6 @@ export const getEmployeesController = async (req, res) => {
       SELECT
         e.employee_id,
         e.first_name,
-        e.middle_name,
         e.last_name,
         e.account_type,
         e.salary,

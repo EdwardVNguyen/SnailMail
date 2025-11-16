@@ -6,10 +6,33 @@ export const getPackagesAtFacilitiesController = async (req, res) => {
   let connection;
   try {
     const queryObject = url.parse(req.url, true).query;
-    const facilityId = queryObject.facilityId;
+    const authId = queryObject.authId;
+
+    if (!authId) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ success: false, message: 'Auth ID required' }));
+      return;
+    }
 
     connection = await pool.getConnection();
 
+    // Get employee's facility_id
+    const [employeeRows] = await connection.execute(
+      'SELECT facility_id FROM employee WHERE auth_id = ?',
+      [authId]
+    );
+
+    if (employeeRows.length === 0) {
+      res.statusCode = 404;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ success: false, message: 'Employee not found' }));
+      return;
+    }
+
+    const employeeFacilityId = employeeRows[0].facility_id;
+
+    // Get packages at the employee's facility only
     let query = `
       SELECT
         p.package_id,
@@ -25,21 +48,13 @@ export const getPackagesAtFacilitiesController = async (req, res) => {
       FROM package p
       LEFT JOIN customer sender ON p.sender_id = sender.customer_id
       LEFT JOIN customer recipient ON p.recipient_id = recipient.customer_id
-      LEFT JOIN facility f ON p.current_location = f.facility_id
+      LEFT JOIN facility f ON p.facility_id = f.facility_id
       LEFT JOIN employee courier ON p.courier_id = courier.employee_id
-      WHERE 1=1
+      WHERE p.facility_id = ?
+      ORDER BY p.created_at DESC
     `;
 
-    const params = [];
-
-    if (facilityId) {
-      query += ' AND p.current_location = ?';
-      params.push(facilityId);
-    }
-
-    query += ' ORDER BY p.created_at DESC';
-
-    const [packages] = await connection.execute(query, params);
+    const [packages] = await connection.execute(query, [employeeFacilityId]);
 
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');

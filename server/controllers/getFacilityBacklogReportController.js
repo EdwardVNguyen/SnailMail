@@ -24,10 +24,10 @@ export const getFacilityBacklogReportController = async (req, res) => {
       FROM facility f
       LEFT JOIN address a ON f.address_id = a.address_id
       LEFT JOIN tracking_event te_in ON f.facility_id = te_in.location_id
-        AND te_in.event_type = 'in transit'
+        AND te_in.event_type = 'processing'
         AND te_in.event_time BETWEEN ? AND ?
       LEFT JOIN tracking_event te_out ON f.facility_id = te_out.location_id
-        AND te_out.event_type IN ('out for delivery', 'delivered')
+        AND te_out.event_type IN ('out-for-delivery', 'delivered')
         AND te_out.event_time BETWEEN ? AND ?
       GROUP BY f.facility_id, f.facility_name, facility_address
       ORDER BY backlog DESC

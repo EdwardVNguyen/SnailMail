@@ -6,32 +6,54 @@ export const deliverPackageController = async (req, res) => {
   let connection;
   try {
     const body = await getJSONRequestBody(req);
-    const { packageId, deliveryType, deliveryFacilityId, photoUrl, authId } = body;
+    const { packageId, deliveryType, deliveryFacilityId, authId } = body;
 
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
     let finalStatus;
     let eventType;
-    let newLocation = null;
+    let locationAddressId = null;
 
     if (deliveryType === 'facility') {
       // Transfer to another facility
       finalStatus = 'processing';
-      eventType = 'in transit';
-      newLocation = deliveryFacilityId;
+      eventType = 'processing';
+
+      // Get the facility's address_id for the tracking event
+      const [[facilityData]] = await connection.execute(
+        `SELECT address_id FROM facility WHERE facility_id = ?`,
+        [deliveryFacilityId]
+      );
+
+      if (facilityData && facilityData.address_id) {
+        locationAddressId = facilityData.address_id;
+      }
 
       // Update package: change status back to processing, update location, clear courier
       await connection.execute(
         `UPDATE package
-         SET package_status = ?, current_location = ?, courier_id = NULL, updated_by = ?
+         SET package_status = ?, facility_id = ?, courier_id = NULL, updated_by = ?
          WHERE package_id = ?`,
-        [finalStatus, newLocation, authId, packageId]
+        [finalStatus, deliveryFacilityId, authId, packageId]
       );
     } else {
       // Deliver to recipient
       finalStatus = 'delivered';
       eventType = 'delivered';
+
+      // Get recipient's address_id for the tracking event
+      const [[packageData]] = await connection.execute(
+        `SELECT c.address_id
+         FROM package p
+         JOIN customer c ON p.recipient_id = c.customer_id
+         WHERE p.package_id = ?`,
+        [packageId]
+      );
+
+      if (packageData && packageData.address_id) {
+        locationAddressId = packageData.address_id;
+      }
 
       // Update package: mark as delivered
       await connection.execute(
@@ -40,25 +62,13 @@ export const deliverPackageController = async (req, res) => {
          WHERE package_id = ?`,
         [finalStatus, authId, packageId]
       );
-
-      // If photo URL provided, could store it somewhere (optional)
-      if (photoUrl) {
-        // Could add a delivery_photo column to package table or create a separate table
-        // For now, we'll just log it or skip it
-        console.log(`Delivery photo for package ${packageId}: ${photoUrl}`);
-      }
     }
 
-    // Add tracking event
-    const locationForEvent = newLocation || (await connection.execute(
-      'SELECT current_location FROM package WHERE package_id = ?',
-      [packageId]
-    ))[0][0]?.current_location;
-
+    // Add tracking event with location_id pointing to address (either facility or recipient)
     await connection.execute(
-      `INSERT INTO tracking_event (package_id, event_type, location, event_date, created_by, updated_by)
+      `INSERT INTO tracking_event (package_id, event_type, location_id, event_time, created_by, updated_by)
        VALUES (?, ?, ?, NOW(), ?, ?)`,
-      [packageId, eventType, locationForEvent, authId, authId]
+      [packageId, eventType, locationAddressId, authId, authId]
     );
 
     await connection.commit();

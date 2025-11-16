@@ -27,18 +27,18 @@ export const pickupPackageController = async (req, res) => {
 
     const courierId = courierRows[0].employee_id;
 
-    // Update package: assign courier and change status to 'in transit'
+    // Update package: assign courier and change status to 'in-transit'
     await connection.execute(
       `UPDATE package
-       SET courier_id = ?, package_status = 'in transit', updated_by = ?
+       SET courier_id = ?, package_status = 'in-transit', updated_by = ?
        WHERE package_id = ? AND package_status = 'processing' AND courier_id IS NULL`,
       [courierId, authId, packageId]
     );
 
     // Add tracking event
     await connection.execute(
-      `INSERT INTO tracking_event (package_id, event_type, location, event_date, created_by, updated_by)
-       VALUES (?, 'in transit', (SELECT current_location FROM package WHERE package_id = ?), NOW(), ?, ?)`,
+      `INSERT INTO tracking_event (package_id, event_type, location_id, event_time, created_by, updated_by)
+       VALUES (?, 'processing', (SELECT facility_id FROM package WHERE package_id = ?), NOW(), ?, ?)`,
       [packageId, packageId, authId, authId]
     );
 

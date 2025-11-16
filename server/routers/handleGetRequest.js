@@ -17,6 +17,8 @@ import { trackingController } from '../controllers/trackingController.js';
 import { getOutForDeliveryPackagesController } from '../controllers/getOutForDeliveryPackagesController.js'
 import { getFacilityForCustomerController } from '../controllers/getFacilityForCustomerController.js'
 import { getPackagesAtFacilitiesController } from '../controllers/getPackagesAtFacilitiesController.js'
+import { getPackageTrackingHistoryController } from '../controllers/clerk/getPackageTrackingHistoryController.js'
+import { getPendingCourierRequestsController } from '../controllers/getPendingCourierRequestsController.js'
 
 export const handleGetRequest = (req, res) => {
 
@@ -85,6 +87,14 @@ export const handleGetRequest = (req, res) => {
   // get packages at facilities (for clerks)
   else if (req.url.startsWith('/getPackagesAtFacilities')) {
     return getPackagesAtFacilitiesController(req, res);
+  }
+  // get tracking history for a package
+  else if (req.url.startsWith('/getPackageTrackingHistory')) {
+    return getPackageTrackingHistoryController(req, res);
+  }
+  // get pending courier requests (for clerks)
+  else if (req.url.startsWith('/getPendingCourierRequests')) {
+    return getPendingCourierRequestsController(req, res);
   }
   // if an api call is made to a url that isn't any of the above, return 404
   else {

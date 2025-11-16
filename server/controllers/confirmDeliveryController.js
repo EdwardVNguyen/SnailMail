@@ -78,7 +78,7 @@ export const confirmDeliveryController = async (req, res) => {
     if (deliveryType === 'facility') {
       // Delivered to a facility - package goes back to processing
       finalStatus = 'processing';
-      eventType = 'in transit';
+      eventType = 'processing';
       locationId = assignment.destination_facility_id;
 
       // Update package facility location

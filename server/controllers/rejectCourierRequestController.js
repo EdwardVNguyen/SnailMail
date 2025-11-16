@@ -4,13 +4,12 @@ import { badClientRequest, badServerRequest } from '../utils/badRequest.js';
 
 // Clerk rejects a courier's package request
 export const rejectCourierRequestController = async (req, res) => {
-  let requestId, authId, rejectionReason;
+  let requestId, authId;
 
   try {
     const body = await getJSONRequestBody(req);
     requestId = body.requestId;
     authId = body.authId;
-    rejectionReason = body.rejectionReason || 'Request denied by clerk';
 
     if (!requestId || !authId) {
       return badClientRequest(res, { message: 'Missing required fields' });
@@ -55,30 +54,15 @@ export const rejectCourierRequestController = async (req, res) => {
       return badClientRequest(res, { message: 'Request already processed' });
     }
 
-    // Update request status
+    // Update request status to rejected
     await connection.execute(
       `UPDATE courier_package_request
        SET request_status = 'rejected',
            reviewed_by = ?,
            review_date = NOW(),
-           rejection_reason = ?,
            updated_by = ?
        WHERE request_id = ?`,
-      [clerk.employee_id, rejectionReason, authId, requestId]
-    );
-
-    // Create notification for courier
-    await connection.execute(
-      `INSERT INTO courier_notification
-       (courier_id, notification_type, package_id, message, created_by, updated_by)
-       VALUES (?, 'request_rejected', ?, ?, ?, ?)`,
-      [
-        request.courier_id,
-        request.package_id,
-        `Your request to deliver this package was rejected. Reason: ${rejectionReason}`,
-        authId,
-        authId
-      ]
+      [clerk.employee_id, authId, requestId]
     );
 
     await connection.commit();

@@ -40,9 +40,9 @@ export const getMyCourierPackagesController = async (req, res) => {
       FROM package p
       LEFT JOIN customer sender ON p.sender_id = sender.customer_id
       LEFT JOIN customer recipient ON p.recipient_id = recipient.customer_id
-      LEFT JOIN address recipient_addr ON recipient.customer_id = recipient_addr.customer_id
+      LEFT JOIN address recipient_addr ON recipient.address_id = recipient_addr.address_id
       WHERE p.courier_id = ?
-      AND p.package_status = 'in transit'
+      AND p.package_status = 'in-transit'
       ORDER BY p.created_at DESC
     `;
 

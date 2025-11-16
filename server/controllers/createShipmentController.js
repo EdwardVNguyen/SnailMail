@@ -16,9 +16,7 @@ export const createShipmentController = async (req, res) => {
   let authId,
 
       recipientFirstName,
-      recipientMiddleName,
       recipientLastName,
-      recipientPhone,
       recipientEmail,
       recipientStreet,
       recipientCity,
@@ -39,9 +37,7 @@ export const createShipmentController = async (req, res) => {
     authId = body.authId;
 
     recipientFirstName = body.recipientFirstName;
-    recipientMiddleName = body.recipientMiddleName;
     recipientLastName = body.recipientLastName;
-    recipientPhone = body.recipientPhone;
     recipientEmail = body.recipientEmail;
     recipientStreet = body.recipientStreet;
     recipientCity = body.recipientCity;

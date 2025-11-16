@@ -23,7 +23,6 @@ const EmployeesPage = ({ globalAuthId }) => {
 
   // Form state for Add Employee
   const [firstName, setFirstName] = useState('');
-  const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
   const [accountType, setAccountType] = useState('clerk');
   const [email, setEmail] = useState('');
@@ -218,7 +217,6 @@ const EmployeesPage = ({ globalAuthId }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           firstName,
-          middleName: middleName || null,
           lastName,
           accountType,
           email,
@@ -239,7 +237,6 @@ const EmployeesPage = ({ globalAuthId }) => {
       if (data.success) {
         // Reset form
         setFirstName('');
-        setMiddleName('');
         setLastName('');
         setAccountType('clerk');
         setEmail('');
@@ -312,24 +309,30 @@ const EmployeesPage = ({ globalAuthId }) => {
 
   const columnDefs = [
     { field: 'employee_id', headerName: 'ID', sortable: true, filter: true, editable: !safetyLock, width: 100 },
-    { field: 'first_name', headerName: 'First Name', sortable: true, filter: true, editable: true, width: 130 },
-    { field: 'middle_name', headerName: 'Middle', sortable: true, filter: true, editable: true, width: 100 },
-    { field: 'last_name', headerName: 'Last Name', sortable: true, filter: true, editable: true, width: 130 },
-    { field: 'account_type', headerName: 'Role', sortable: true, filter: true, editable: true, width: 110,
+    { field: 'first_name', headerName: 'First Name', sortable: true, filter: true, editable: true, flex: 1 },
+    { field: 'last_name', headerName: 'Last Name', sortable: true, filter: true, editable: true, flex: 1 },
+    { field: 'account_type', headerName: 'Role', sortable: true, filter: true, editable: true, flex: 0.8,
       cellEditor: 'agSelectCellEditor',
       cellEditorParams: {
         values: ['manager', 'clerk', 'courier']
       }
     },
-    { field: 'email', headerName: 'Email', sortable: true, filter: true, editable: true, flex: 1 },
+    { field: 'email', headerName: 'Email', sortable: true, filter: true, editable: true, flex: 1.5 },
     { field: 'employee_ssn', headerName: 'SSN', sortable: true, filter: true, editable: !safetyLock, width: 130 },
-    { field: 'salary', headerName: 'Salary', sortable: true, filter: true, editable: true, width: 110 },
-    { field: 'facility_id', headerName: 'Facility ID', sortable: true, filter: true, editable: true, width: 100 },
-    { field: 'facility_name', headerName: 'Facility', sortable: true, filter: true, editable: false, width: 150 },
-    { field: 'street_name', headerName: 'Street', sortable: true, filter: true, editable: true, flex: 1 },
-    { field: 'city_name', headerName: 'City', sortable: true, filter: true, editable: true, width: 120 },
-    { field: 'state_name', headerName: 'State', sortable: true, filter: true, editable: true, width: 80 },
-    { field: 'zip_code', headerName: 'Zip', sortable: true, filter: true, editable: true, width: 100 }
+    { field: 'salary', headerName: 'Salary', sortable: true, filter: true, editable: true, flex: 0.8 },
+    { field: 'facility_id', headerName: 'Facility ID', sortable: true, filter: true, editable: true, flex: 0.8 },
+    { field: 'facility_name', headerName: 'Facility', sortable: true, filter: true, editable: false, flex: 1.2 },
+    {
+      headerName: 'Address',
+      sortable: true,
+      filter: true,
+      editable: false,
+      flex: 2,
+      valueGetter: (params) => {
+        const { street_name, city_name, state_name, zip_code } = params.data;
+        return `${street_name}, ${city_name}, ${state_name} ${zip_code}`;
+      }
+    }
   ];
 
   return (
@@ -402,64 +405,66 @@ const EmployeesPage = ({ globalAuthId }) => {
       />
 
       {/* Employees Grid */}
-      {loadingEmployees ? (
-        <div style={{ textAlign: 'center', padding: '40px', fontSize: '18px' }}>
-          Loading employees...
-        </div>
-      ) : deleteMode ? (
-        <div>
-          <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '5px', color: '#856404' }}>
-            <strong>Delete Mode:</strong> Double-click any row to delete that employee
+      <div className="employee-edit-container">
+        {loadingEmployees ? (
+          <div style={{ textAlign: 'center', padding: '40px', fontSize: '18px' }}>
+            Loading employees...
           </div>
+        ) : deleteMode ? (
+          <div>
+            <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '5px', color: '#856404' }}>
+              <strong>Delete Mode:</strong> Double-click any row to delete that employee
+            </div>
+            <div className="ag-theme-alpine" style={{ height: 'calc(100vh - 350px)', minHeight: '400px', width: "100%" }}>
+              <AgGridReact
+                rowData={employees}
+                columnDefs={columnDefs}
+                defaultColDef={{
+                  sortable: true,
+                  filter: true,
+                  editable: false
+                }}
+                getRowId={getRowId}
+                onRowDoubleClicked={(params) => handleDeleteEmployee(params.data.employee_id)}
+                rowClass="archive-mode-row"
+                getRowStyle={(params) => {
+                  if (deletingEmployeeId === params.data.employee_id) {
+                    return {
+                      backgroundColor: '#f8d7da',
+                      opacity: 0.6,
+                      cursor: 'not-allowed',
+                      pointerEvents: 'none'
+                    };
+                  }
+                }}
+                readOnlyEdit={true}
+                suppressClickEdit={true}
+                pagination={true}
+                paginationPageSize={20}
+              />
+            </div>
+          </div>
+        ) : (
           <div className="ag-theme-alpine" style={{ height: 'calc(100vh - 350px)', minHeight: '400px', width: "100%" }}>
             <AgGridReact
               rowData={employees}
               columnDefs={columnDefs}
               defaultColDef={{
                 sortable: true,
-                filter: true,
-                editable: false
+                filter: true
               }}
               getRowId={getRowId}
-              onRowDoubleClicked={(params) => handleDeleteEmployee(params.data.employee_id)}
-              rowClass="archive-mode-row"
-              getRowStyle={(params) => {
-                if (deletingEmployeeId === params.data.employee_id) {
-                  return {
-                    backgroundColor: '#f8d7da',
-                    opacity: 0.6,
-                    cursor: 'not-allowed',
-                    pointerEvents: 'none'
-                  };
-                }
-              }}
-              readOnlyEdit={true}
-              suppressClickEdit={true}
+              onCellValueChanged={onCellValueChanged}
               pagination={true}
               paginationPageSize={20}
             />
           </div>
-        </div>
-      ) : (
-        <div className="ag-theme-alpine" style={{ height: 'calc(100vh - 350px)', minHeight: '400px', width: "100%" }}>
-          <AgGridReact
-            rowData={employees}
-            columnDefs={columnDefs}
-            defaultColDef={{
-              sortable: true,
-              filter: true
-            }}
-            getRowId={getRowId}
-            onCellValueChanged={onCellValueChanged}
-            pagination={true}
-            paginationPageSize={20}
-          />
-        </div>
-      )}
+        )}
 
-      <p style={{ marginTop: '15px', color: '#666', fontSize: '14px' }}>
-        Double-click on any cell to edit. Press Enter to save changes.
-      </p>
+        <p style={{ marginTop: '15px', color: '#666', fontSize: '14px' }}>
+          Double-click on any cell to edit. Press Enter to save changes.
+        </p>
+      </div>
 
       {/* Add Employee Modal */}
       {showAddModal && (
@@ -486,7 +491,7 @@ const EmployeesPage = ({ globalAuthId }) => {
               backgroundColor: 'white',
               padding: '30px',
               borderRadius: '8px',
-              maxWidth: '800px',
+              maxWidth: '1000px',
               maxHeight: '90vh',
               overflow: 'auto',
               boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
@@ -499,12 +504,6 @@ const EmployeesPage = ({ globalAuthId }) => {
                 <div className="employee-form-field">
                   <label>First Name: <span className="required-asterisk">*</span></label>
                   <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
-                </div>
-
-                {/* Middle Name */}
-                <div className="employee-form-field">
-                  <label>Middle Name:</label>
-                  <input type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
                 </div>
 
                 {/* Last Name */}

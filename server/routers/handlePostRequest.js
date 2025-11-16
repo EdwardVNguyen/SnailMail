@@ -14,6 +14,10 @@ import { getMyCourierPackagesController } from '../controllers/getMyCourierPacka
 import { getAvailablePackagesForCourierController } from '../controllers/getAvailablePackagesForCourierController.js'
 import { pickupPackageController } from '../controllers/pickupPackageController.js'
 import { deliverPackageController } from '../controllers/deliverPackageController.js'
+import { createTrackingEventController } from '../controllers/clerk/createTrackingEventController.js'
+import { createCourierRequestController } from '../controllers/createCourierRequestController.js'
+import { approveCourierRequestController } from '../controllers/approveCourierRequestController.js'
+import { rejectCourierRequestController } from '../controllers/rejectCourierRequestController.js'
 
 export const handlePostRequest= (req, res) => {
 
@@ -80,6 +84,22 @@ export const handlePostRequest= (req, res) => {
   // courier delivers package
   else if (req.url.startsWith('/deliverPackage')) {
     return deliverPackageController(req, res)
+  }
+  // clerk creates tracking event
+  else if (req.url.startsWith('/createTrackingEvent')) {
+    return createTrackingEventController(req, res)
+  }
+  // courier creates request to pick up package
+  else if (req.url.startsWith('/createCourierRequest')) {
+    return createCourierRequestController(req, res)
+  }
+  // clerk approves courier request
+  else if (req.url.startsWith('/approveCourierRequest')) {
+    return approveCourierRequestController(req, res)
+  }
+  // clerk rejects courier request
+  else if (req.url.startsWith('/rejectCourierRequest')) {
+    return rejectCourierRequestController(req, res)
   }
   // if an api call is made to a url that isn't any of the above, return 404
   else {

@@ -310,13 +310,13 @@ const FacilitiesPage = ({ globalAuthId }) => {
   const columnDefs = [
     { field: 'facility_id', headerName: 'ID', sortable: true, filter: true, editable: !safetyLock, width: 100 },
     { field: 'facility_name', headerName: 'Facility Name', sortable: true, filter: true, editable: true, flex: 1.5 },
-    { field: 'facility_type', headerName: 'Type', sortable: true, filter: true, editable: true, width: 120,
+    { field: 'facility_type', headerName: 'Type', sortable: true, filter: true, editable: true, flex: 0.8,
       cellEditor: 'agSelectCellEditor',
       cellEditorParams: {
         values: ['warehouse', 'post_office']
       }
     },
-    { field: 'status', headerName: 'Status', sortable: true, filter: true, editable: true, width: 110,
+    { field: 'status', headerName: 'Status', sortable: true, filter: true, editable: true, flex: 0.7,
       cellEditor: 'agSelectCellEditor',
       cellEditorParams: {
         values: ['active', 'inactive']
@@ -328,7 +328,7 @@ const FacilitiesPage = ({ globalAuthId }) => {
       sortable: true,
       filter: true,
       editable: true,
-      width: 200,
+      flex: 1.5,
       valueFormatter: (params) => {
         // Format comma-separated days for display
         if (!params.value) return '';
@@ -337,14 +337,21 @@ const FacilitiesPage = ({ globalAuthId }) => {
         ).join(', ');
       }
     },
-    { field: 'opening_hours', headerName: 'Opens', sortable: true, filter: true, editable: true, width: 100 },
-    { field: 'closing_hours', headerName: 'Closes', sortable: true, filter: true, editable: true, width: 100 },
-    { field: 'manager_id', headerName: 'Manager ID', sortable: true, filter: true, editable: true, width: 120 },
-    { field: 'manager_name', headerName: 'Manager Name', sortable: true, filter: true, editable: false, flex: 1 },
-    { field: 'street_name', headerName: 'Street', sortable: true, filter: true, editable: true, flex: 1.5 },
-    { field: 'city_name', headerName: 'City', sortable: true, filter: true, editable: true, width: 150 },
-    { field: 'state_name', headerName: 'State', sortable: true, filter: true, editable: true, width: 80 },
-    { field: 'zip_code', headerName: 'Zip', sortable: true, filter: true, editable: true, width: 100 }
+    { field: 'opening_hours', headerName: 'Opens', sortable: true, filter: true, editable: true, flex: 0.7 },
+    { field: 'closing_hours', headerName: 'Closes', sortable: true, filter: true, editable: true, flex: 0.7 },
+    { field: 'manager_id', headerName: 'Manager ID', sortable: true, filter: true, editable: true, flex: 0.8 },
+    { field: 'manager_name', headerName: 'Manager Name', sortable: true, filter: true, editable: false, flex: 1.2 },
+    {
+      headerName: 'Address',
+      sortable: true,
+      filter: true,
+      editable: false,
+      flex: 2,
+      valueGetter: (params) => {
+        const { street_name, city_name, state_name, zip_code } = params.data;
+        return `${street_name}, ${city_name}, ${state_name} ${zip_code}`;
+      }
+    }
   ];
 
   return (
