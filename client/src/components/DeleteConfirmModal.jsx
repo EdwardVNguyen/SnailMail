@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import './DeleteConfirmModal.css';
+import { Toast } from './Toast';
 
 /**
  * Reusable Delete Confirmation Modal
@@ -14,6 +15,17 @@ import './DeleteConfirmModal.css';
 export const DeleteConfirmModal = ({ show, entityType, entityName, onConfirm, onCancel }) => {
   const [confirmName, setConfirmName] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Toast notification state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('error');
+
+  const showErrorToast = (message) => {
+    setToastMessage(message);
+    setToastType('error');
+    setShowToast(true);
+  };
 
   // Reset state when modal is opened/closed
   useEffect(() => {
@@ -39,7 +51,7 @@ export const DeleteConfirmModal = ({ show, entityType, entityName, onConfirm, on
 
   const handleConfirm = async () => {
     if (confirmName !== entityName) {
-      alert('The name does not match. Please type the exact name to confirm deletion.');
+      showErrorToast('The name does not match. Please type the exact name to confirm deletion.');
       return;
     }
 
@@ -95,6 +107,14 @@ export const DeleteConfirmModal = ({ show, entityType, entityName, onConfirm, on
             Cancel
           </button>
         </div>
+
+        {/* Toast Notification */}
+        <Toast
+          show={showToast}
+          message={toastMessage}
+          type={toastType}
+          onClose={() => setShowToast(false)}
+        />
       </div>
     </div>,
     document.body

@@ -4,12 +4,13 @@ import signUpImg from '../assets/signupImg.svg';
 
 import AuthInput from '../components/AuthInput';
 import AuthButton from '../components/AuthButton';
+import { Toast } from '../components/Toast';
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom'
 
 const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
-  const [mode, switchMode] = useState("Login"); 
+  const [mode, switchMode] = useState("Login");
   const [step, setStep] = useState(1)
 
   const [email, setEmail] = useState("");
@@ -26,6 +27,17 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
   const [accountType, setAccountType] = useState("");
 
   const navigate = useNavigate();
+
+  // Toast notification state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
+
+  const showErrorToast = (message) => {
+    setToastMessage(message);
+    setToastType('error');
+    setShowToast(true);
+  };
 
   // on sign up, go to next slide
   const handleNext = async (e) => {
@@ -44,11 +56,11 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
         if (!data.exists) {
           setStep(2); // no other email exists, so move forward
         } else {
-          alert("This email is already registered");
+          showErrorToast("This email is already registered");
         }
       } catch (err) {
         console.log("error checking email", err);
-        alert("Something went wrong, please try again");
+        showErrorToast("Something went wrong, please try again");
       }
     } else {
       // goes forward after email is valid
@@ -78,7 +90,7 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
       setGlobalAuthId(data.auth_id);
       navigate('/customerPage');
     } else {
-      alert('Something went wrong with user sign up');
+      showErrorToast('Something went wrong with user sign up');
     }
   };
 
@@ -113,10 +125,10 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
         navigate('/managerPage');
       } else {
         setAuth(false);
-        alert('Invalid account type when logging in')
+        showErrorToast('Invalid account type when logging in');
       }
     } else {
-      alert('Invalid email or password.');
+      showErrorToast('Invalid email or password.');
     }
   };
    
@@ -317,6 +329,14 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
         <img className="signUpImg" src={signUpImg} alt="image of Company Logo and man carrying packages"/>
       </div>
     </div>
+
+    {/* Toast Notification */}
+    <Toast
+      show={showToast}
+      message={toastMessage}
+      type={toastType}
+      onClose={() => setShowToast(false)}
+    />
     </div>
   );
 };

@@ -2,11 +2,23 @@ import './CustomerPage.css';
 import { useState, useEffect } from 'react';
 import { getCustomerData } from '../utils/getCustomerData.js';
 import { useNavigate } from 'react-router-dom';
+import { Toast } from '../components/Toast';
 
 const CustomerPage = ({ globalAuthId }) => {
   const [customerInfo, setCustomerInfo] = useState(null);
   const [trackingNumber, setTrackingNumber] = useState('');
   const navigate = useNavigate();
+
+  // Toast notification state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
+
+  const showErrorToast = (message) => {
+    setToastMessage(message);
+    setToastType('error');
+    setShowToast(true);
+  };
 
   // Fetch customer data
   useEffect(() => {
@@ -20,9 +32,9 @@ const CustomerPage = ({ globalAuthId }) => {
   // Handle tracking submission
   const handleTrackingSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!trackingNumber.trim()) {
-      alert('Please enter a tracking number');
+      showErrorToast('Please enter a tracking number');
       return;
     }
     navigate(`/userTrackPackage/${trackingNumber}`);
@@ -142,6 +154,14 @@ const CustomerPage = ({ globalAuthId }) => {
           </div>
         </div>
       </div>
+
+      {/* Toast Notification */}
+      <Toast
+        show={showToast}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 };

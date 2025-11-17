@@ -14,7 +14,9 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
 
   // Modal states
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [rejectingRequestId, setRejectingRequestId] = useState(null);
   const [eventType, setEventType] = useState('processing');
 
   // Toast notification state
@@ -154,16 +156,18 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
     }
   };
 
-  const handleDirectReject = async (requestId) => {
-    const confirmed = window.confirm('Reject this courier request without creating a tracking event?');
-    if (!confirmed) return;
+  const handleDirectReject = (requestId) => {
+    setRejectingRequestId(requestId);
+    setShowRejectModal(true);
+  };
 
+  const confirmReject = async () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/rejectCourierRequest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          requestId,
+          requestId: rejectingRequestId,
           authId
         })
       });
@@ -171,6 +175,8 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
       const data = await response.json();
       if (data.success) {
         showSuccessToast('Request rejected successfully!');
+        setShowRejectModal(false);
+        setRejectingRequestId(null);
         fetchRequests();
       } else {
         showErrorToast('Error: ' + data.message);
@@ -296,6 +302,27 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Reject Confirmation Modal */}
+      <Modal
+        show={showRejectModal}
+        title="Reject Courier Request"
+        onClose={() => setShowRejectModal(false)}
+      >
+        <div className="modal-subtitle">
+          <p>Are you sure you want to reject this courier request without creating a tracking event?</p>
+          <p className="warning-text">This action cannot be undone.</p>
+        </div>
+
+        <div className="modal-actions">
+          <button onClick={confirmReject} className="modal-submit-button delete-confirm-button">
+            Reject Request
+          </button>
+          <button onClick={() => setShowRejectModal(false)} className="modal-cancel-button">
+            Cancel
+          </button>
+        </div>
       </Modal>
 
       {/* Toast Notification */}

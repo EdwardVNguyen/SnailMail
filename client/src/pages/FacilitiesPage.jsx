@@ -63,6 +63,19 @@ const FacilitiesPage = ({ globalAuthId }) => {
   // Toast notification state
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
+
+  const showSuccessToast = (message) => {
+    setToastMessage(message);
+    setToastType('success');
+    setShowToast(true);
+  };
+
+  const showErrorToast = (message) => {
+    setToastMessage(message);
+    setToastType('error');
+    setShowToast(true);
+  };
 
   // Handle day checkbox toggle
   const handleDayToggle = (day) => {
@@ -84,11 +97,6 @@ const FacilitiesPage = ({ globalAuthId }) => {
       newSelectedDays.add(day);
     }
     setEditSelectedDays(newSelectedDays);
-  };
-
-  const showSuccessToast = (message) => {
-    setToastMessage(message);
-    setShowToast(true);
   };
 
   // Fetch facilities on mount
@@ -201,25 +209,25 @@ const FacilitiesPage = ({ globalAuthId }) => {
     // Required fields
     if (!facilityName || !facilityType || !status || selectedDays.size === 0 ||
         !openingHours || !closingHours || !streetName || !cityName || !stateName || !zipCode) {
-      alert('Please fill in all required fields and select at least one day of the week.');
+      showErrorToast('Please fill in all required fields and select at least one day of the week.');
       return false;
     }
 
     // Zip code validation
     if (!isValidZipCode(zipCode)) {
-      alert('Please enter a valid 5-digit zip code.');
+      showErrorToast('Please enter a valid 5-digit zip code.');
       return false;
     }
 
     // State validation
     if (!isValidState(stateName)) {
-      alert('Please enter a valid 2-letter state code (e.g., TX, CA).');
+      showErrorToast('Please enter a valid 2-letter state code (e.g., TX, CA).');
       return false;
     }
 
     // Manager ID validation (optional but if provided must be positive integer)
     if (managerId && (isNaN(managerId) || parseInt(managerId) < 0)) {
-      alert('Please enter a valid manager ID.');
+      showErrorToast('Please enter a valid manager ID.');
       return false;
     }
 
@@ -230,25 +238,25 @@ const FacilitiesPage = ({ globalAuthId }) => {
     // Required fields
     if (!editFacilityName || !editFacilityType || !editStatus || editSelectedDays.size === 0 ||
         !editOpeningHours || !editClosingHours || !editStreetName || !editCityName || !editStateName || !editZipCode) {
-      alert('Please fill in all required fields and select at least one day of the week.');
+      showErrorToast('Please fill in all required fields and select at least one day of the week.');
       return false;
     }
 
     // Zip code validation
     if (!isValidZipCode(editZipCode)) {
-      alert('Please enter a valid 5-digit zip code.');
+      showErrorToast('Please enter a valid 5-digit zip code.');
       return false;
     }
 
     // State validation
     if (!isValidState(editStateName)) {
-      alert('Please enter a valid 2-letter state code (e.g., TX, CA).');
+      showErrorToast('Please enter a valid 2-letter state code (e.g., TX, CA).');
       return false;
     }
 
     // Manager ID validation (optional but if provided must be positive integer)
     if (editManagerId && (isNaN(editManagerId) || parseInt(editManagerId) < 0)) {
-      alert('Please enter a valid manager ID.');
+      showErrorToast('Please enter a valid manager ID.');
       return false;
     }
 
@@ -308,12 +316,12 @@ const FacilitiesPage = ({ globalAuthId }) => {
         showSuccessToast('Facility added successfully!');
       }
       else {
-        alert('Error adding facility: ' + data.message);
+        showErrorToast('Error adding facility: ' + data.message);
       }
     }
     catch (err) {
       console.error('Error adding facility:', err);
-      alert('Error adding facility.');
+      showErrorToast('Error adding facility.');
     }
     finally {
       setLoading(false);
@@ -361,11 +369,11 @@ const FacilitiesPage = ({ globalAuthId }) => {
         fetchFacilities();
         showSuccessToast('Facility updated successfully!');
       } else {
-        alert('Error updating facility: ' + data.message);
+        showErrorToast('Error updating facility: ' + data.message);
       }
     } catch (err) {
       console.error('Error updating facility:', err);
-      alert('Error updating facility.');
+      showErrorToast('Error updating facility.');
     } finally {
       setLoading(false);
     }
@@ -395,11 +403,11 @@ const FacilitiesPage = ({ globalAuthId }) => {
         fetchFacilities();
         showSuccessToast('Facility deleted successfully!');
       } else {
-        alert('Error deleting facility: ' + data.message);
+        showErrorToast('Error deleting facility: ' + data.message);
       }
     } catch (err) {
       console.error('Error deleting facility:', err);
-      alert('Error deleting facility.');
+      showErrorToast('Error deleting facility.');
     }
   };
 
@@ -917,10 +925,11 @@ const FacilitiesPage = ({ globalAuthId }) => {
         onCancel={() => setShowDeleteModal(false)}
       />
 
-      {/* Success Toast Notification */}
+      {/* Toast Notification */}
       <Toast
         show={showToast}
         message={toastMessage}
+        type={toastType}
         onClose={() => setShowToast(false)}
       />
     </div>

@@ -61,9 +61,17 @@ const EmployeesPage = ({ globalAuthId }) => {
   // Toast notification state
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
 
   const showSuccessToast = (message) => {
     setToastMessage(message);
+    setToastType('success');
+    setShowToast(true);
+  };
+
+  const showErrorToast = (message) => {
+    setToastMessage(message);
+    setToastType('error');
     setShowToast(true);
   };
 
@@ -188,25 +196,25 @@ const EmployeesPage = ({ globalAuthId }) => {
     // Required fields
     if (!firstName || !lastName || !accountType || !email || !password ||
         !streetName || !cityName || !stateName || !zipCode || !salary || !facilityId) {
-      alert('Please fill in all required fields.');
+      showErrorToast('Please fill in all required fields.');
       return false;
     }
 
     // Email validation
     if (!isValidEmail(email)) {
-      alert('Please enter a valid email address.');
+      showErrorToast('Please enter a valid email address.');
       return false;
     }
 
     // Zip code validation
     if (!isValidZipCode(zipCode)) {
-      alert('Please enter a valid 5-digit zip code.');
+      showErrorToast('Please enter a valid 5-digit zip code.');
       return false;
     }
 
     // State validation
     if (!isValidState(stateName)) {
-      alert('Please enter a valid 2-letter state code (e.g., TX, CA).');
+      showErrorToast('Please enter a valid 2-letter state code (e.g., TX, CA).');
       return false;
     }
 
@@ -218,25 +226,25 @@ const EmployeesPage = ({ globalAuthId }) => {
     if (!editFirstName || !editLastName || !editAccountType || !editEmail ||
         !editStreetName || !editCityName || !editStateName || !editZipCode ||
         !editSalary || !editFacilityId) {
-      alert('Please fill in all required fields.');
+      showErrorToast('Please fill in all required fields.');
       return false;
     }
 
     // Email validation
     if (!isValidEmail(editEmail)) {
-      alert('Please enter a valid email address.');
+      showErrorToast('Please enter a valid email address.');
       return false;
     }
 
     // Zip code validation
     if (!isValidZipCode(editZipCode)) {
-      alert('Please enter a valid 5-digit zip code.');
+      showErrorToast('Please enter a valid 5-digit zip code.');
       return false;
     }
 
     // State validation
     if (!isValidState(editStateName)) {
-      alert('Please enter a valid 2-letter state code (e.g., TX, CA).');
+      showErrorToast('Please enter a valid 2-letter state code (e.g., TX, CA).');
       return false;
     }
 
@@ -295,11 +303,11 @@ const EmployeesPage = ({ globalAuthId }) => {
         fetchEmployees(); // Refresh the list
         showSuccessToast('Employee added successfully!');
       } else {
-        alert('Error adding employee: ' + data.message);
+        showErrorToast('Error adding employee: ' + data.message);
       }
     } catch (err) {
       console.error('Error adding employee:', err);
-      alert('Error adding employee.');
+      showErrorToast('Error adding employee.');
     } finally {
       setLoading(false);
     }
@@ -342,11 +350,11 @@ const EmployeesPage = ({ globalAuthId }) => {
         fetchEmployees(); // Refresh the list
         showSuccessToast('Employee updated successfully!');
       } else {
-        alert('Error updating employee: ' + data.message);
+        showErrorToast('Error updating employee: ' + data.message);
       }
     } catch (err) {
       console.error('Error updating employee:', err);
-      alert('Error updating employee.');
+      showErrorToast('Error updating employee.');
     } finally {
       setLoading(false);
     }
@@ -376,11 +384,11 @@ const EmployeesPage = ({ globalAuthId }) => {
         fetchEmployees();
         showSuccessToast('Employee deleted successfully!');
       } else {
-        alert('Error deleting employee: ' + data.message);
+        showErrorToast('Error deleting employee: ' + data.message);
       }
     } catch (err) {
       console.error('Error deleting employee:', err);
-      alert('Error deleting employee.');
+      showErrorToast('Error deleting employee.');
     }
   };
 
@@ -704,10 +712,11 @@ const EmployeesPage = ({ globalAuthId }) => {
         onCancel={() => setShowDeleteModal(false)}
       />
 
-      {/* Success Toast Notification */}
+      {/* Toast Notification */}
       <Toast
         show={showToast}
         message={toastMessage}
+        type={toastType}
         onClose={() => setShowToast(false)}
       />
     </div>
