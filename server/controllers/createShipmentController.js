@@ -16,9 +16,7 @@ export const createShipmentController = async (req, res) => {
   let authId,
 
       recipientFirstName,
-      recipientMiddleName,
       recipientLastName,
-      recipientPhone,
       recipientEmail,
       recipientStreet,
       recipientCity,
@@ -29,7 +27,9 @@ export const createShipmentController = async (req, res) => {
       weight,
       length,
       width,
-      height;
+      height,
+
+      facility_id;
 
   // Parse request body
   try {
@@ -37,9 +37,7 @@ export const createShipmentController = async (req, res) => {
     authId = body.authId;
 
     recipientFirstName = body.recipientFirstName;
-    recipientMiddleName = body.recipientMiddleName;
     recipientLastName = body.recipientLastName;
-    recipientPhone = body.recipientPhone;
     recipientEmail = body.recipientEmail;
     recipientStreet = body.recipientStreet;
     recipientCity = body.recipientCity;
@@ -52,10 +50,12 @@ export const createShipmentController = async (req, res) => {
     width = body.width;
     height = body.height;
 
+    facility_id = body.facility_id;
+
     // Validate required fields
     if (!authId || !recipientFirstName || !recipientLastName || !recipientEmail || !recipientStreet || 
         !recipientCity || !recipientState || !recipientZipCode || 
-        !packageType || !weight) {
+        !packageType || !weight || !facility_id) {
       return badClientRequest(res, { message: 'Missing required fields' });
     }
   } catch (err) {
@@ -85,19 +85,15 @@ export const createShipmentController = async (req, res) => {
     // Insert recipient as guest customer
     const [recipientCustomerResult] = await connection.execute(
       `INSERT INTO customer (
-        first_name, 
-        middle_name, 
-        last_name, 
-        phone_number, 
-        account_type, 
-        address_id, 
-        auth_id 
-      ) VALUES (?, ?, ?, ?, 'guest', ?, NULL)`,
+        first_name,
+        last_name,
+        account_type,
+        address_id,
+        auth_id
+      ) VALUES (?, ?, 'guest', ?, NULL)`,
       [
         recipientFirstName,
-        toNullIfBlank(recipientMiddleName),
         recipientLastName,
-        toNullIfBlank(recipientPhone),
         recipient_address_id
       ]
     );
@@ -131,8 +127,9 @@ export const createShipmentController = async (req, res) => {
         package_status,
         tracking_number,
         created_by,
-        updated_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        updated_by,
+        facility_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         sender_id,
         recipient_id,
@@ -144,7 +141,8 @@ export const createShipmentController = async (req, res) => {
         'processing',
         tracking_number,
         authId,
-        authId
+        authId,
+        facility_id
       ]
     );
 

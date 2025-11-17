@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import StateSelect from '../components/StateSelect';
@@ -10,9 +10,7 @@ const CreatePackage = () => {
   // Form state
   const [formData, setFormData] = useState({
     senderFirstName: '',
-    senderMiddleName: '',
     senderLastName: '',
-    senderPhone: '',
     senderEmail: '',
     senderStreet: '',
     senderCity: '',
@@ -20,9 +18,7 @@ const CreatePackage = () => {
     senderZipCode: '',
 
     recipientFirstName: '',
-    recipientMiddleName: '',
     recipientLastName: '',
-    recipientPhone: '',
     recipientEmail: '',
     recipientStreet: '',
     recipientCity: '',
@@ -33,7 +29,9 @@ const CreatePackage = () => {
     weight: '',
     length: '',
     width: '',
-    height: ''
+    height: '',
+
+    facility_id: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,12 +39,33 @@ const CreatePackage = () => {
   const [success, setSuccess] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState('');
 
+  const [facilities, setFacilities] = useState([]);
+
+  useEffect(() => {
+  fetch(`${import.meta.env.VITE_API_URL}/getFacilityForCustomer`)
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("Facility API Response:", data);
+      // Make sure it's an array before setting
+      if (data.success && Array.isArray(data.facilities)) {
+        setFacilities(data.facilities);
+      } else {
+        console.error("Unexpected API response:", data);
+        setFacilities([]); // fallback to empty array
+      }
+    })
+    .catch((err) => {
+      console.error("Error loading facilities:", err);
+      setFacilities([]); // also fallback on error
+    });
+  }, []);
+
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: name === "facility_id" ? Number(value) : value
     }));
   };
 
@@ -74,9 +93,7 @@ const CreatePackage = () => {
         // Reset form
         setFormData({
           senderFirstName: '',
-          senderMiddleName: '',
           senderLastName: '',
-          senderPhone: '',
           senderEmail: '',
           senderStreet: '',
           senderCity: '',
@@ -84,9 +101,7 @@ const CreatePackage = () => {
           senderZipCode: '',
 
           recipientFirstName: '',
-          recipientMiddleName: '',
           recipientLastName: '',
-          recipientPhone: '',
           recipientEmail: '',
           recipientStreet: '',
           recipientCity: '',
@@ -97,7 +112,9 @@ const CreatePackage = () => {
           weight: '',
           length: '',
           width: '',
-          height: ''
+          height: '',
+
+          facility_id: ''
         });
       } else {
         setError(data.message || 'Failed to create package');
@@ -151,18 +168,6 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="senderMiddleName">Middle Name</label>
-              <input
-                type="text"
-                id="senderMiddleName"
-                name="senderMiddleName"
-                value={formData.senderMiddleName}
-                onChange={handleInputChange}
-                placeholder="Optional"
-              />
-            </div>
-
-            <div className="form-group">
               <label htmlFor="senderLastName">Last Name *</label>
               <input
                 type="text"
@@ -173,9 +178,7 @@ const CreatePackage = () => {
                 required
               />
             </div>
-          </div>
 
-          <div className="form-row">
             <div className="form-group">
               <label htmlFor="senderEmail">Email *</label>
               <input
@@ -185,21 +188,6 @@ const CreatePackage = () => {
                 value={formData.senderEmail}
                 onChange={handleInputChange}
                 required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="senderPhone">Phone Number</label>
-              <input
-                type="tel"
-                id="senderPhone"
-                name="senderPhone"
-                maxLength={10}
-                minLength={10}
-                pattern="[0-9]*"
-                value={formData.senderPhone}
-                onChange={handleInputChange}
-                placeholder="Optional"
               />
             </div>
           </div>
@@ -280,18 +268,6 @@ const CreatePackage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="senderMiddleName">Middle Name</label>
-              <input
-                type="text"
-                id="recipientMiddleName"
-                name="recipientMiddleName"
-                value={formData.recipientMiddleName}
-                onChange={handleInputChange}
-                placeholder="Optional"
-              />
-            </div>
-
-            <div className="form-group">
               <label htmlFor="recipientLastName">Last Name *</label>
               <input
                 type="text"
@@ -302,9 +278,7 @@ const CreatePackage = () => {
                 required
               />
             </div>
-          </div>
 
-          <div className="form-row">
             <div className="form-group">
               <label htmlFor="recipientEmail">Email *</label>
               <input
@@ -314,21 +288,6 @@ const CreatePackage = () => {
                 value={formData.recipientEmail}
                 onChange={handleInputChange}
                 required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="recipientPhone">Phone Number</label>
-              <input
-                type="tel"
-                id="recipientPhone"
-                name="recipientPhone"
-                maxLength={10}
-                minLength={10}
-                pattern="[0-9]*"
-                value={formData.recipientPhone}
-                onChange={handleInputChange}
-                placeholder="Optional"
               />
             </div>
           </div>
@@ -466,6 +425,30 @@ const CreatePackage = () => {
                 min="0"
               />
             </div>
+          </div>
+        </div>
+
+        <div className="form-section">
+          <h2>Drop Off Location</h2>
+        
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="facilitySelect">Select Facility:</label>
+                <select
+                  id="facilitySelect"
+                  name="facility_id"
+                  value={formData.facility_id}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">-- Choose a Facility --</option>
+                  {facilities.map((facility) => (
+                    <option key={facility.facility_id} value={facility.facility_id}>
+                      {facility.facility_name}
+                    </option>
+                  ))}
+                </select>
+           </div>
           </div>
         </div>
 

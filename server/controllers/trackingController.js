@@ -22,10 +22,19 @@ export const trackingController = async (req, res) => {
     try {
         connection = await pool.getConnection();
 
-        //get package details from database
+        //get package details from database (excluding courier info for privacy)
         const package_sql = `
-            SELECT 
-              p.*,
+            SELECT
+              p.package_id,
+              p.tracking_number,
+              p.package_type,
+              p.weight,
+              p.length,
+              p.width,
+              p.height,
+              p.package_status,
+              p.created_at,
+              p.last_updated,
               a.street_name,
               a.city_name,
               a.state_name,
@@ -49,14 +58,15 @@ export const trackingController = async (req, res) => {
 
         //get tracking events from database
         const tracking_sql = `
-            SELECT 
+            SELECT
                 te.*,
+                a.street_name,
                 a.city_name,
-                a.state_name
+                a.state_name,
+                a.zip_code
             FROM tracking_event te
-            LEFT JOIN facility f ON te.location_id = f.facility_id
-            LEFT JOIN address a ON f.address_id = a.address_id
-            WHERE te.package_id = ? 
+            LEFT JOIN address a ON te.location_id = a.address_id
+            WHERE te.package_id = ?
             ORDER BY te.event_time DESC
         `;
         const [tracking_results] = await connection.execute(tracking_sql, [package_data.package_id]);

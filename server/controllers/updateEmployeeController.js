@@ -1,26 +1,12 @@
 import pool from '../config/database.js';
 import { badServerRequest } from '../utils/badRequest.js';
-
-const parseRequestBody = (req) => {
-  return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', chunk => { body += chunk.toString(); });
-    req.on('end', () => {
-      try {
-        resolve(JSON.parse(body));
-      } catch (error) {
-        reject(error);
-      }
-    });
-    req.on('error', reject);
-  });
-};
+import { getJSONRequestBody } from '../utils/getJSONRequestBody.js';
 
 export const updateEmployeeController = async (req, res) => {
   let connection;
 
   try {
-    const body = await parseRequestBody(req);
+    const body = await getJSONRequestBody(req);
     let { employeeId, field, value, updatedBy } = body;
 
     // Convert undefined to null for SQL

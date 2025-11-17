@@ -25,12 +25,6 @@ const UserShipping = ( {globalAuthId }) => {
     const navigateSettingPage = () => {
       navigate('/userProfile');
     }
-    const navigateCreateShipment = () => {
-        navigate('/userCreateShipment');
-    }
-    const navigateEShop = () => {
-      navigate('/ecommercePage');
-    }
 
     const limit = 12; // number of packages per request
     const authId = globalAuthId;
@@ -122,15 +116,7 @@ const UserShipping = ( {globalAuthId }) => {
 
   return (
     <div className="userShippingContainer">
-      <div className="userShippingSideBar"> 
-        <div/>
-        <button className="userShippingBtn"> 📦 Your Shipments </button>
-        <button className="userShippingBtn" onClick={navigateCreateShipment}> ✉️  Create Shipment </button>
-        <button className="userShippingBtn" onClick={navigateEShop} > 🛒 E-Shop</button>
-        <button className="userShippingBtn" onClick={navigateSettingPage}> ⚙️  Settings </button>
-        <button className="userShippingBtn" onClick={navigateSupportPage}> 💬 Help </button>
-      </div>
-      <div className="userShippingRight">
+     <div className="userShippingRight">
         <div className="userShippingTop">
           <div className="userShippingDesc">
             SnailMail <span> Your shipments, anywhere, anytime</span>

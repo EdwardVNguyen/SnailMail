@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState , useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './UserCreateShipment.css';
 
@@ -10,9 +10,7 @@ const CreateShipment = ({ globalAuthId }) => {
   // Form state
   const [formData, setFormData] = useState({
     recipientFirstName: '',
-    recipientMiddleName: '',
     recipientLastName: '',
-    recipientPhone: '',
     recipientEmail: '',
     recipientStreet: '',
     recipientCity: '',
@@ -22,7 +20,8 @@ const CreateShipment = ({ globalAuthId }) => {
     weight: '',
     length: '',
     width: '',
-    height: ''
+    height: '',
+    facility_id: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,6 +29,27 @@ const CreateShipment = ({ globalAuthId }) => {
   const [success, setSuccess] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState('');
 
+  const [facilities, setFacilities] = useState([]);
+
+  useEffect(() => {
+  fetch(`${import.meta.env.VITE_API_URL}/getFacilityForCustomer`)
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("Facility API Response:", data);
+      // Make sure it's an array before setting
+      if (data.success && Array.isArray(data.facilities)) {
+        setFacilities(data.facilities);
+      } else {
+        console.error("Unexpected API response:", data);
+        setFacilities([]); // fallback to empty array
+      }
+    })
+    .catch((err) => {
+      console.error("Error loading facilities:", err);
+      setFacilities([]); // also fallback on error
+    });
+  }, []);
+  
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -68,9 +88,7 @@ const CreateShipment = ({ globalAuthId }) => {
         // Reset form
         setFormData({
           recipientFirstName: '',
-          recipientMiddleName: '',
           recipientLastName: '',
-          recipientPhone: '',
           recipientEmail: '',
           recipientStreet: '',
           recipientCity: '',
@@ -80,7 +98,8 @@ const CreateShipment = ({ globalAuthId }) => {
           weight: '',
           length: '',
           width: '',
-          height: ''
+          height: '',
+          facility_id: ''
         });
       } else {
         setError(data.message || 'Failed to create shipment');
@@ -134,18 +153,6 @@ const CreateShipment = ({ globalAuthId }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="senderMiddleName">Middle Name</label>
-              <input
-                type="text"
-                id="recipientMiddleName"
-                name="recipientMiddleName"
-                value={formData.recipientMiddleName}
-                onChange={handleInputChange}
-                placeholder="Optional"
-              />
-            </div>
-
-            <div className="form-group">
               <label htmlFor="recipientLastName">Last Name *</label>
               <input
                 type="text"
@@ -156,10 +163,7 @@ const CreateShipment = ({ globalAuthId }) => {
                 required
               />
             </div>
-          </div>
 
-
-          <div className="form-row">
             <div className="form-group">
               <label htmlFor="recipientEmail">Email *</label>
               <input
@@ -169,21 +173,6 @@ const CreateShipment = ({ globalAuthId }) => {
                 value={formData.recipientEmail}
                 onChange={handleInputChange}
                 required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="recipientPhone">Phone Number</label>
-              <input
-                type="tel"
-                id="recipientPhone"
-                name="recipientPhone"
-                value={formData.recipientPhone}
-                maxLength={10}
-                minLength={10}
-                pattern="[0-9]*"
-                onChange={handleInputChange}
-                placeholder="Optional"
               />
             </div>
           </div>
@@ -322,7 +311,36 @@ const CreateShipment = ({ globalAuthId }) => {
               />
             </div>
           </div>
+
+
+
+
         </div>
+
+        <div className="form-section">
+          <h2>Drop Off Location</h2>
+        
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="facilitySelect">Select Facility:</label>
+                <select
+                  id="facilitySelect"
+                  name="facility_id"
+                  value={formData.facility_id}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">-- Choose a Facility --</option>
+                  {facilities.map((facility) => (
+                    <option key={facility.facility_id} value={facility.facility_id}>
+                      {facility.facility_name}
+                    </option>
+                  ))}
+                </select>
+           </div>
+          </div>
+        </div>
+
 
         {/* Submit Button */}
         <div className="form-actions">

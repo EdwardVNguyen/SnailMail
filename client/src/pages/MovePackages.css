@@ -15,19 +15,19 @@
 
 .move-packages-header h1 {
   font-size: 28px;
-  color: #333;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .move-packages-header p {
   font-size: 16px;
-  color: #666;
+  color: var(--text-secondary);
   margin: 5px 0 0 0;
 }
 
 .back-button {
   padding: 10px 20px;
-  background-color: #f0f0f0;
+  background-color: var(--bg-tertiary);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -36,12 +36,12 @@
 }
 
 .back-button:hover {
-  background-color: #e0e0e0;
+  background-color: var(--color-gray-200);
 }
 
 /* Step Cards */
 .step-card {
-  background-color: #fff;
+  background-color: var(--color-white);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 30px;
@@ -54,11 +54,11 @@
   margin-top: 0;
   margin-bottom: 20px;
   padding-bottom: 10px;
-  border-bottom: 2px solid #3C467B;
+  border-bottom: 2px solid var(--color-primary);
 }
 
 .step-card p {
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 15px;
 }
 
@@ -90,12 +90,12 @@
 .form-field select:focus,
 .form-field input:focus {
   outline: none;
-  border-color: #3C467B;
+  border-color: var(--color-primary);
 }
 
 /* AG Grid Container */
 .packages-grid-container {
-  background-color: #fff;
+  background-color: var(--color-white);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 20px;
@@ -112,11 +112,11 @@
   margin-top: 0;
   margin-bottom: 10px;
   padding-bottom: 10px;
-  border-bottom: 2px solid #3C467B;
+  border-bottom: 2px solid var(--color-primary);
 }
 
 .packages-grid-header p {
-  color: #666;
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -126,8 +126,8 @@
   padding: 15px 50px;
   font-size: 18px;
   font-weight: 600;
-  background-color: #3C467B;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--text-inverse);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -137,7 +137,7 @@
 }
 
 .move-packages-submit:hover:not(:disabled) {
-  background-color: #50589C;
+  background-color: var(--color-primary-light);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(60, 70, 123, 0.3);
 }
@@ -152,7 +152,7 @@
 .empty-message {
   text-align: center;
   padding: 40px;
-  color: #666;
+  color: var(--text-secondary);
   font-size: 16px;
 }
 

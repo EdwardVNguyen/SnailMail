@@ -13,8 +13,12 @@ import { getProblemsReportController } from '../controllers/getProblemsReportCon
 import { getFacilityBacklogReportController } from '../controllers/getFacilityBacklogReportController.js'
 import { getDeliveryTimeReportController } from '../controllers/getDeliveryTimeReportController.js'
 import { getCourierPerformanceReportController } from '../controllers/getCourierPerformanceReportController.js'
-import {trackingController} from '../controllers/trackingController.js';
+import { trackingController } from '../controllers/trackingController.js';
 import { getOutForDeliveryPackagesController } from '../controllers/getOutForDeliveryPackagesController.js'
+import { getFacilityForCustomerController } from '../controllers/getFacilityForCustomerController.js'
+import { getPackagesAtFacilitiesController } from '../controllers/getPackagesAtFacilitiesController.js'
+import { getPackageTrackingHistoryController } from '../controllers/clerk/getPackageTrackingHistoryController.js'
+import { getPendingCourierRequestsController } from '../controllers/getPendingCourierRequestsController.js'
 
 export const handleGetRequest = (req, res) => {
 
@@ -69,22 +73,6 @@ export const handleGetRequest = (req, res) => {
   else if ( req.url.startsWith('/getCourierPerformanceReport')) {
     return getCourierPerformanceReportController(req, res)
   }
-  // get problem packages report
-  else if ( req.url.startsWith('/getProblemsReport')) {
-    return getProblemsReportController(req, res)
-  }
-  // get facility backlog report
-  else if ( req.url.startsWith('/getFacilityBacklogReport')) {
-    return getFacilityBacklogReportController(req, res)
-  }
-  // get delivery time report
-  else if ( req.url.startsWith('/getDeliveryTimeReport')) {
-    return getDeliveryTimeReportController(req, res)
-  }
-  // get courier performance report
-  else if ( req.url.startsWith('/getCourierPerformanceReport')) {
-    return getCourierPerformanceReportController(req, res)
-  }
   // get tracking info for a package
   else if (req.url.startsWith('/tracking')) {
         return trackingController(req, res);
@@ -92,6 +80,21 @@ export const handleGetRequest = (req, res) => {
   // get packages out for delivery from a facility
   else if (req.url.startsWith('/getOutForDeliveryPackages')) {
     return getOutForDeliveryPackagesController(req, res)
+  }
+  else if (req.url.startsWith('/getFacilityForCustomer')) {
+    return getFacilityForCustomerController(req, res);
+  }
+  // get packages at facilities (for clerks)
+  else if (req.url.startsWith('/getPackagesAtFacilities')) {
+    return getPackagesAtFacilitiesController(req, res);
+  }
+  // get tracking history for a package
+  else if (req.url.startsWith('/getPackageTrackingHistory')) {
+    return getPackageTrackingHistoryController(req, res);
+  }
+  // get pending courier requests (for clerks)
+  else if (req.url.startsWith('/getPendingCourierRequests')) {
+    return getPendingCourierRequestsController(req, res);
   }
   // if an api call is made to a url that isn't any of the above, return 404
   else {

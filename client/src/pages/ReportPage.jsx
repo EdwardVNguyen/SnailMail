@@ -387,11 +387,7 @@ const ReportPage = ({ globalAuthId }) => {
 
   return (
     <div className="reportPageContainer">
-      <div className="reportPageHeader">
-        <h1>Manager Reports</h1>
-        <p>System overview and operational statistics</p>
-      </div>
-
+      
       <div className="reportPageContent">
         {/* Left side accordion menu */}
         <div className="reportMenu">

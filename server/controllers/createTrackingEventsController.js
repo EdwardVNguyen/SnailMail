@@ -12,7 +12,7 @@ export const createTrackingEventsController = async (req, res) => {
     packageIds = body.packageIds;
     destinationFacilityId = body.destinationFacilityId;
     travelTime = body.travelTime;
-    eventStatus = body.eventStatus || 'in transit'; // Default to 'in transit' if not provided
+    eventStatus = body.eventStatus || 'processing'; // Default to 'processing' if not provided
     authId = body.authId;
 
     if (!packageIds || !Array.isArray(packageIds) || packageIds.length === 0) {

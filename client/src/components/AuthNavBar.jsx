@@ -29,7 +29,7 @@ const AuthNavBar = ( {globalAccountType} ) => {
             { globalAccountType === 'courier'
             ? <NavLink to="/courierPage" ><img className="homeLogo" src={homeLogo} alt="Courier page"/></NavLink>
             : globalAccountType === 'clerk'
-            ? <NavLink to="/employeePage" ><img className="homeLogo" src={homeLogo} alt="Employee page"/></NavLink>
+            ? <NavLink to="/employeePage" ><img className="homeLogo" src={homeLogo} alt="Clerk page"/></NavLink>
             : globalAccountType === 'manager'
               ? <NavLink to="/managerPage" ><img className="homeLogo" src={homeLogo} alt="Manager page"/></NavLink>
               : <NavLink to="/customerPage" ><img className="homeLogo" src={homeLogo} alt="Customer page"/></NavLink>
@@ -47,14 +47,17 @@ const AuthNavBar = ( {globalAccountType} ) => {
             <NavLink to="/support">Support</NavLink>
           </li>
 
-          {/* Show Move Packages only for couriers, manager links for managers, other links for non-couriers/non-managers */}
+          {/* Show courier links for couriers, clerk links for clerks, manager links for managers, other links for customers */}
           {globalAccountType === 'courier' ? (
             <>
               <li>
-                <NavLink to="/courierDelivery">Deliveries</NavLink>
+                <NavLink to="/courierPackage">Packages</NavLink>
               </li>
+            </>
+          ) : globalAccountType === 'clerk' ? (
+            <>
               <li>
-                <NavLink to="/movePackages">Move Packages</NavLink>
+                <NavLink to="/clerkCourierApproval">Courier Requests</NavLink>
               </li>
             </>
           ) : globalAccountType === 'manager' ? (
@@ -73,6 +76,9 @@ const AuthNavBar = ( {globalAccountType} ) => {
             <>
               <li>
                 <NavLink to="/userShipping">Your Shipments</NavLink>
+              </li>
+              <li>
+                <NavLink to="/userCreateShipment"> Create Shipments</NavLink>
               </li>
               <li>
                 <NavLink to="/userTrackPackage">Tracking</NavLink>

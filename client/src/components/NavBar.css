@@ -1,7 +1,7 @@
 .header-container {
   display: flex;
   align-items: center;
-  background-color: #3C467B;
+  background-color: var(--color-primary);
   font-size: 15px;
   position: fixed;
   height: 7rem;
@@ -16,7 +16,7 @@
 
  .header.tiny {
    height: 70px;
-   background: #3C467B;
+   background: var(--color-primary);
    font-size: 10px;
  }
 

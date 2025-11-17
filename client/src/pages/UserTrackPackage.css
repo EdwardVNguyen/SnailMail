@@ -13,13 +13,13 @@
 
 .tracking-header h1 {
   font-size: 28px;
-  color: #333;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .back-button {
   padding: 10px 20px;
-  background-color: #f0f0f0;
+  background-color: var(--bg-tertiary);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -28,12 +28,12 @@
 }
 
 .back-button:hover {
-  background-color: #e0e0e0;
+  background-color: var(--color-gray-200);
 }
 
 /* Search Section */
 .tracking-search-section {
-  background-color: white;
+  background-color: var(--text-inverse);
   padding: 30px;
   border-radius: 12px;
   margin-bottom: 30px;
@@ -58,15 +58,15 @@
 }
 
 .tracking-input:focus {
-  border-color: #3C467B;
+  border-color: var(--color-primary);
 }
 
 .tracking-button {
   padding: 12px 30px;
   font-size: 16px;
   font-weight: 600;
-  background-color: #3C467B;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--text-inverse);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -76,7 +76,7 @@
 }
 
 .tracking-button:hover:not(:disabled) {
-  background-color: #50589C;
+  background-color: var(--color-primary-light);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(60, 70, 123, 0.3);
 }
@@ -121,7 +121,7 @@
 }
 
 .package-summary {
-  background-color: white;
+  background-color: var(--text-inverse);
   padding: 30px;
   border-radius: 12px;
   margin-bottom: 30px;
@@ -152,7 +152,7 @@
 }
 
 .status {
-  color: #28a745;
+  color: var(--color-success);
   text-transform: uppercase;
   font-size: 36px;
   font-weight: 700;
@@ -201,20 +201,20 @@
 
 .travel-history h2 {
   margin-bottom: 20px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .history-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: white;
+  background-color: var(--text-inverse);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .history-table th {
-  background-color: #f8f9fa;
+  background-color: var(--bg-secondary);
   padding: 15px;
   text-align: left;
   border-bottom: 2px solid #dee2e6;
@@ -232,7 +232,7 @@
 }
 
 .history-table tbody tr:hover {
-  background-color: #f8f9fa;
+  background-color: var(--bg-secondary);
 }
 
 .date-time-cell {

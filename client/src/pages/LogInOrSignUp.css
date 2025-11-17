@@ -8,7 +8,7 @@
   padding: 100px 0px;
   padding-top: 7rem;
   margin-top: -7rem;
-  border-bottom: 2px solid #3C467B;
+  border-bottom: 2px solid var(--color-primary);
 }
 
 .signContainer {
@@ -70,11 +70,11 @@
 }
 
 .signContainer .switch .click {
-  color: #50589C;
+  color: var(--color-primary-light);
   cursor: pointer;
 }
 .signContainer .switch .click:hover {
-  color: #636CCB;
+  color: var(--color-primary-accent);
 }
 
 .pageBackground .right {
@@ -128,14 +128,14 @@
   min-width: 120px;
   max-width: 200px;
   box-sizing: border-box;
-  box-shadow: 2px 2px 5px 2px #ddd;
+  box-shadow: 2px 2px 5px 2px var(--border-color);
   transition: all 200ms ease-in-out;
   cursor: pointer;
 }
 
 .signContainer .left .accountType .formInput .title {
   font-size: 15px;
-  color: #3C467B;
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -158,23 +158,23 @@
  }
 
 .signContainer .left .accountType .formInput:hover {
-  border: 1px solid #636CCB;
+  border: 1px solid var(--color-primary-accent);
  }
 
 .signContainer .left .accountType .formInput:has(input:checked) {
-  border: 1px solid #636CCB;
-  background: #636CCB;
+  border: 1px solid var(--color-primary-accent);
+  background: var(--color-primary-accent);
  }
 .signContainer .left .accountType .formInput:has(input:checked) .title {
-  color: white;
+  color: var(--text-inverse);
 }
 .signContainer .left .accountType .formInput:has(input:checked) .price {
-  color: white;
+  color: var(--text-inverse);
 }
 .signContainer .left .accountType .formInput:has(input:checked) p{
-  color: white;
+  color: var(--text-inverse);
 }
 .signContainer .left .accountType .formInput:has(input:checked) .desc {
-  color: white;
+  color: var(--text-inverse);
 }
 
