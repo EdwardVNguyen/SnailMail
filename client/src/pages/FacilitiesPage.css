@@ -1,3 +1,57 @@
+/* Page Header */
+.facility-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #3C467B;
+}
+
+.facility-page-header h1 {
+  font-size: 28px;
+  color: #2c3e50;
+  margin: 0;
+  font-weight: 600;
+}
+
+.facility-header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.facility-add-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  background-color: #3C467B;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.facility-add-button:hover {
+  background-color: #2c3457;
+}
+
+.facility-back-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.facility-back-button:hover {
+  background-color: #5a6268;
+}
+
 /* Form Container and Card */
 .facility-form-container {
   margin-bottom: 20px;
@@ -51,7 +105,7 @@
   font-family: inherit;
   border: 2px solid #ced4da;
   border-radius: 4px;
-  transition: border-color 0.3s;
+  transition: border-color 0.15s ease;
 }
 
 .facility-form-field input:focus,
@@ -74,8 +128,39 @@
   margin-top: 2px;
 }
 
+.facility-form-field-full {
+  grid-column: 1 / -1;
+}
+
 .required-asterisk {
   color: red;
+}
+
+/* Days of Week Checkboxes */
+.days-checkbox-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 8px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+}
+
+.days-checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.days-checkbox-label input {
+  margin-right: 6px;
+  cursor: pointer;
+}
+
+.days-checkbox-label span {
+  text-transform: capitalize;
 }
 
 /* Form Actions - Centered Submit Button */
@@ -133,6 +218,148 @@
   border-bottom: 2px solid var(--color-primary);
   font-size: 20px;
   color: #495057;
+}
+
+/* Loading Message */
+.facility-loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+}
+
+/* Delete Mode Warning */
+.delete-mode-warning {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 5px;
+  color: #856404;
+}
+
+/* Search and Filter Controls */
+.facility-controls {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.facility-search-container {
+  flex: 1;
+  min-width: 250px;
+}
+
+.facility-search-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 2px solid #ced4da;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.facility-filter-select {
+  padding: 12px;
+  font-size: 16px;
+  border: 2px solid #ced4da;
+  border-radius: 4px;
+  min-width: 200px;
+}
+
+/* Table Styles */
+.facilities-table-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.facilities-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.facilities-table thead {
+  background-color: #3C467B;
+  color: white;
+}
+
+.facilities-table th {
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.facilities-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.facilities-table tbody tr {
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.facilities-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.facilities-table td {
+  padding: 12px 15px;
+}
+
+.facilities-table td.capitalize {
+  text-transform: capitalize;
+}
+
+.facilities-table td.empty-state {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+}
+
+.facility-table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.facility-edit-btn {
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  background-color: #3C467B;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.facility-delete-btn {
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.facility-table-stats {
+  margin-top: 15px;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Grid Stats */
+.facility-grid-stats {
+  margin-top: 15px;
+  color: #666;
+  font-size: 14px;
 }
 
 /* Archive mode row hover effect */

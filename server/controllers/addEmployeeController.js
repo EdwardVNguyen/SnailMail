@@ -19,7 +19,6 @@ export const addEmployeeController = async (req, res) => {
       stateName,
       zipCode,
       salary,
-      employeeSsn,
       facilityId,
       createdBy
     } = body;
@@ -44,19 +43,37 @@ export const addEmployeeController = async (req, res) => {
       return;
     }
 
-    // Check if SSN already exists
-    const [ssnCheck] = await connection.execute(
-      'SELECT employee_id FROM employee WHERE employee_ssn = ?',
-      [employeeSsn]
-    );
+    // Generate a unique SSN (placeholder format: XXX-XX-XXXX)
+    // Keep trying until we find a unique one
+    let employeeSsn;
+    let ssnIsUnique = false;
+    let attempts = 0;
+    while (!ssnIsUnique && attempts < 10) {
+      // Generate random SSN
+      const part1 = Math.floor(Math.random() * 900 + 100); // 100-999
+      const part2 = Math.floor(Math.random() * 90 + 10);   // 10-99
+      const part3 = Math.floor(Math.random() * 9000 + 1000); // 1000-9999
+      employeeSsn = `${part1}-${part2}-${part3}`;
 
-    if (ssnCheck.length > 0) {
+      // Check if SSN already exists
+      const [ssnCheck] = await connection.execute(
+        'SELECT employee_id FROM employee WHERE employee_ssn = ?',
+        [employeeSsn]
+      );
+
+      if (ssnCheck.length === 0) {
+        ssnIsUnique = true;
+      }
+      attempts++;
+    }
+
+    if (!ssnIsUnique) {
       await connection.rollback();
-      res.statusCode = 400;
+      res.statusCode = 500;
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify({
         success: false,
-        message: 'SSN already exists in the system'
+        message: 'Unable to generate unique SSN'
       }));
       return;
     }

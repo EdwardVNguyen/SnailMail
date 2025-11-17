@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ClerkCourierApprovalPage.css';
+import { Modal } from '../components/Modal';
+import { Toast } from '../components/Toast';
 
 const ClerkCourierApprovalPage = ({ globalAuthId }) => {
   const authId = globalAuthId;
@@ -14,6 +16,23 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [eventType, setEventType] = useState('processing');
+
+  // Toast notification state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
+
+  const showSuccessToast = (message) => {
+    setToastMessage(message);
+    setToastType('success');
+    setShowToast(true);
+  };
+
+  const showErrorToast = (message) => {
+    setToastMessage(message);
+    setToastType('error');
+    setShowToast(true);
+  };
 
   useEffect(() => {
     fetchClerkFacility();
@@ -58,7 +77,7 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
 
     // Ensure clerk facility address is loaded
     if (!clerkFacilityAddressId) {
-      alert('Error: Clerk facility information not loaded. Please refresh the page.');
+      showErrorToast('Error: Clerk facility information not loaded. Please refresh the page.');
       return;
     }
 
@@ -81,7 +100,7 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
 
       const trackingData = await trackingResponse.json();
       if (!trackingData.success) {
-        alert('Error creating tracking event: ' + trackingData.message);
+        showErrorToast('Error creating tracking event: ' + trackingData.message);
         return;
       }
 
@@ -99,11 +118,11 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
 
         const rejectData = await rejectResponse.json();
         if (rejectData.success) {
-          alert(`Tracking event created. Request automatically rejected due to "${eventType}" status.`);
+          showSuccessToast(`Tracking event created. Request automatically rejected due to "${eventType}" status.`);
           setShowReviewModal(false);
           fetchRequests();
         } else {
-          alert('Tracking event created but rejection failed: ' + rejectData.message);
+          showErrorToast('Tracking event created but rejection failed: ' + rejectData.message);
           setShowReviewModal(false);
           fetchRequests();
         }
@@ -120,18 +139,18 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
 
         const approveData = await approveResponse.json();
         if (approveData.success) {
-          alert('Tracking event created and request approved successfully!');
+          showSuccessToast('Tracking event created and request approved successfully!');
           setShowReviewModal(false);
           fetchRequests();
         } else {
-          alert('Tracking event created but approval failed: ' + approveData.message);
+          showErrorToast('Tracking event created but approval failed: ' + approveData.message);
           setShowReviewModal(false);
           fetchRequests();
         }
       }
     } catch (err) {
       console.error('Error in review process:', err);
-      alert('Error processing request.');
+      showErrorToast('Error processing request.');
     }
   };
 
@@ -151,14 +170,14 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
 
       const data = await response.json();
       if (data.success) {
-        alert('Request rejected successfully!');
+        showSuccessToast('Request rejected successfully!');
         fetchRequests();
       } else {
-        alert('Error: ' + data.message);
+        showErrorToast('Error: ' + data.message);
       }
     } catch (err) {
       console.error('Error rejecting request:', err);
-      alert('Error rejecting request.');
+      showErrorToast('Error rejecting request.');
     }
   };
 
@@ -236,49 +255,56 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
       </div>
 
       {/* Review Modal with Tracking Event */}
-      {showReviewModal && (
-        <div className="modal-overlay" onClick={() => setShowReviewModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Review Request & Create Tracking Event</h2>
-            <p className="modal-subtitle">
-              Package: {selectedRequest?.tracking_number} |
-              Courier: {selectedRequest?.courier_first_name} {selectedRequest?.courier_last_name}
-            </p>
+      <Modal
+        show={showReviewModal}
+        title="Review Request & Create Tracking Event"
+        onClose={() => setShowReviewModal(false)}
+      >
+        <p className="modal-subtitle">
+          Package: {selectedRequest?.tracking_number} |
+          Courier: {selectedRequest?.courier_first_name} {selectedRequest?.courier_last_name}
+        </p>
 
-            <div className="info-box">
-              <p><strong>Note:</strong> Creating a tracking event with status 'lost', 'returned', 'undeliverable', 'failed-delivery', or 'damaged' will automatically reject the courier request.</p>
-            </div>
-
-            <form onSubmit={handleReviewRequest}>
-              <div className="form-group">
-                <label>Package Condition:</label>
-                <select value={eventType} onChange={(e) => setEventType(e.target.value)} required>
-                  <option value="out-for-delivery">Good Condition - Ready for Delivery (Approve)</option>
-                  <option value="lost">Lost (Auto-Reject)</option>
-                  <option value="returned">Returned (Auto-Reject)</option>
-                  <option value="undeliverable">Undeliverable (Auto-Reject)</option>
-                  <option value="failed-delivery">Failed Delivery (Auto-Reject)</option>
-                  <option value="damaged">Damaged (Auto-Reject)</option>
-                </select>
-                <small>Tracking event will be created at your facility</small>
-              </div>
-
-              <div className="modal-actions">
-                <button type="submit" className="confirm-button">
-                  Create Event & Process
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowReviewModal(false)}
-                  className="cancel-button"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
+        <div className="info-box">
+          <p><strong>Note:</strong> Creating a tracking event with status 'lost', 'returned', 'undeliverable', 'failed-delivery', or 'damaged' will automatically reject the courier request.</p>
         </div>
-      )}
+
+        <form onSubmit={handleReviewRequest}>
+          <div className="form-group">
+            <label>Package Condition:</label>
+            <select value={eventType} onChange={(e) => setEventType(e.target.value)} required>
+              <option value="out-for-delivery">Good Condition - Ready for Delivery (Approve)</option>
+              <option value="lost">Lost (Auto-Reject)</option>
+              <option value="returned">Returned (Auto-Reject)</option>
+              <option value="undeliverable">Undeliverable (Auto-Reject)</option>
+              <option value="failed-delivery">Failed Delivery (Auto-Reject)</option>
+              <option value="damaged">Damaged (Auto-Reject)</option>
+            </select>
+            <small>Tracking event will be created at your facility</small>
+          </div>
+
+          <div className="modal-actions">
+            <button type="submit" className="modal-submit-button">
+              Create Event & Process
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowReviewModal(false)}
+              className="modal-cancel-button"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Toast Notification */}
+      <Toast
+        show={showToast}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 };

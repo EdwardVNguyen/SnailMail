@@ -3,10 +3,10 @@ import { emailCheckController } from '../controllers/emailCheckController.js'
 import { userSignUpController } from '../controllers/userSignUpController.js'
 import { createTrackingEventsController } from '../controllers/createTrackingEventsController.js'
 import { addEmployeeController } from '../controllers/addEmployeeController.js'
-import { updateEmployeeController } from '../controllers/updateEmployeeController.js'
+import { updateEmployeeFullController } from '../controllers/updateEmployeeFullController.js'
 import { deleteEmployeeController } from '../controllers/deleteEmployeeController.js'
 import { addFacilityController } from '../controllers/addFacilityController.js'
-import { updateFacilityController } from '../controllers/updateFacilityController.js'
+import { updateFacilityFullController } from '../controllers/updateFacilityFullController.js'
 import { deleteFacilityController } from '../controllers/deleteFacilityController.js'
 import { createShipmentController } from '../controllers/createShipmentController.js'
 import { createPackageController } from '../controllers/createPackageController.js'
@@ -18,6 +18,7 @@ import { createTrackingEventController } from '../controllers/clerk/createTracki
 import { createCourierRequestController } from '../controllers/createCourierRequestController.js'
 import { approveCourierRequestController } from '../controllers/approveCourierRequestController.js'
 import { rejectCourierRequestController } from '../controllers/rejectCourierRequestController.js'
+import { markPackagesDeliveredController } from '../controllers/markPackagesDeliveredController.js'
 
 export const handlePostRequest= (req, res) => {
 
@@ -41,17 +42,17 @@ export const handlePostRequest= (req, res) => {
   else if ( req.url.startsWith('/addEmployee') ) {
     return addEmployeeController(req, res)
   }
-  // update employee field
-  else if ( req.url.startsWith('/updateEmployee') ) {
-    return updateEmployeeController(req, res)
+  // update employee full (all fields)
+  else if ( req.url.startsWith('/updateEmployeeFull') ) {
+    return updateEmployeeFullController(req, res)
   }
   // add new facility
   else if ( req.url.startsWith('/addFacility') ) {
     return addFacilityController(req, res)
   }
-  // update facility field
-  else if ( req.url.startsWith('/updateFacility') ) {
-    return updateFacilityController(req, res)
+  // update facility full (all fields)
+  else if ( req.url.startsWith('/updateFacilityFull') ) {
+    return updateFacilityFullController(req, res)
   }
   // delete employee
   else if ( req.url.startsWith('/deleteEmployee') ) {
@@ -100,6 +101,10 @@ export const handlePostRequest= (req, res) => {
   // clerk rejects courier request
   else if (req.url.startsWith('/rejectCourierRequest')) {
     return rejectCourierRequestController(req, res)
+  }
+  // mark packages as delivered
+  else if (req.url.startsWith('/markPackagesDelivered')) {
+    return markPackagesDeliveredController(req, res)
   }
   // if an api call is made to a url that isn't any of the above, return 404
   else {

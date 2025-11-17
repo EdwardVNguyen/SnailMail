@@ -19,7 +19,6 @@ export const getEmployeesController = async (req, res) => {
         e.last_name,
         e.account_type,
         e.salary,
-        e.employee_ssn,
         e.facility_id,
         f.facility_name,
         a.email,

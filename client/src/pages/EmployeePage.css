@@ -176,64 +176,6 @@
   box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
 }
 
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-  backdrop-filter: blur(4px);
-}
-
-.modal-content {
-  background: var(--bg-primary);
-  border-radius: 12px;
-  max-width: 500px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  animation: modalSlideIn 0.3s ease-out;
-}
-
-.modal-content.modal-wide {
-  max-width: 700px;
-}
-
-@keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.modal-content h2 {
-  margin: 0;
-  padding: 25px 25px 15px 25px;
-  font-size: 24px;
-  color: var(--text-primary);
-  font-weight: 700;
-}
-
-.modal-subtitle {
-  padding: 0 25px 20px 25px;
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 14px;
-  border-bottom: 1px solid var(--border-color);
-}
-
 /* Form Group */
 .form-group {
   padding: 0 25px;
@@ -276,51 +218,6 @@
   margin-top: 6px;
   color: var(--text-secondary);
   font-size: 12px;
-}
-
-/* Modal Actions */
-.modal-actions {
-  display: flex;
-  gap: 12px;
-  padding: 25px;
-  border-top: 1px solid var(--border-color);
-  margin-top: 25px;
-}
-
-.confirm-button,
-.cancel-button {
-  flex: 1;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-  border: none;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.confirm-button {
-  background-color: var(--color-primary);
-  color: var(--text-inverse);
-}
-
-.confirm-button:hover {
-  background-color: var(--color-primary-light);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(60, 70, 123, 0.3);
-}
-
-.cancel-button {
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
-  border: 2px solid var(--border-color);
-}
-
-.cancel-button:hover {
-  background-color: var(--color-gray-200);
-  border-color: var(--color-gray-300);
 }
 
 /* Tracking Timeline */
@@ -517,15 +414,6 @@
 
   .action-buttons .btn-primary,
   .action-buttons .btn-secondary {
-    width: 100%;
-  }
-
-  .modal-actions {
-    flex-direction: column;
-  }
-
-  .confirm-button,
-  .cancel-button {
     width: 100%;
   }
 

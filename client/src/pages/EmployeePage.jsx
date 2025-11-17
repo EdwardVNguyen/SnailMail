@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './EmployeePage.css';
+import { Modal } from '../components/Modal';
+import { Toast } from '../components/Toast';
 
 const EmployeePage = ({ globalAuthId }) => {
   const authId = globalAuthId;
@@ -21,6 +23,23 @@ const EmployeePage = ({ globalAuthId }) => {
 
   // Tracking history
   const [trackingHistory, setTrackingHistory] = useState([]);
+
+  // Toast notification state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
+
+  const showSuccessToast = (message) => {
+    setToastMessage(message);
+    setToastType('success');
+    setShowToast(true);
+  };
+
+  const showErrorToast = (message) => {
+    setToastMessage(message);
+    setToastType('error');
+    setShowToast(true);
+  };
 
   useEffect(() => {
     fetchFacilities();
@@ -96,15 +115,15 @@ const EmployeePage = ({ globalAuthId }) => {
 
       const data = await response.json();
       if (data.success) {
-        alert('Tracking event added successfully!');
+        showSuccessToast('Tracking event added successfully!');
         setShowTrackingModal(false);
         fetchPackages();
       } else {
-        alert('Error: ' + data.message);
+        showErrorToast('Error: ' + data.message);
       }
     } catch (err) {
       console.error('Error adding tracking event:', err);
-      alert('Error adding tracking event');
+      showErrorToast('Error adding tracking event');
     }
   };
 
@@ -178,105 +197,111 @@ const EmployeePage = ({ globalAuthId }) => {
       </div>
 
       {/* Add Tracking Event Modal */}
-      {showTrackingModal && (
-        <div className="modal-overlay" onClick={() => setShowTrackingModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Add Tracking Event</h2>
-            <p className="modal-subtitle">Package: {selectedPackage?.tracking_number}</p>
+      <Modal
+        show={showTrackingModal}
+        title="Add Tracking Event"
+        onClose={() => setShowTrackingModal(false)}
+      >
+        <p className="modal-subtitle">Package: {selectedPackage?.tracking_number}</p>
 
-            <form onSubmit={handleAddTrackingEvent}>
-              <div className="form-group">
-                <label>Event Type:</label>
-                <select value={eventType} onChange={(e) => setEventType(e.target.value)} required>
-                  <option value="processing">Processing</option>
-                  <option value="pre-shipment">Pre-shipment</option>
-                  <option value="out-for-delivery">Out for Delivery</option>
-                  <option value="delivered">Delivered</option>
-                  <option value="lost">Lost</option>
-                  <option value="returned">Returned</option>
-                  <option value="undeliverable">Undeliverable</option>
-                  <option value="failed-delivery">Failed Delivery</option>
-                  <option value="damaged">Damaged</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Location (Facility):</label>
-                <select value={locationId} onChange={(e) => setLocationId(e.target.value)}>
-                  <option value="">-- Select Facility (Optional) --</option>
-                  {facilities.map((facility) => (
-                    <option key={facility.facility_id} value={facility.facility_id}>
-                      {facility.facility_name}
-                    </option>
-                  ))}
-                </select>
-                <small>Leave empty if event has no specific facility</small>
-              </div>
-
-              <div className="modal-actions">
-                <button type="submit" className="confirm-button">
-                  Add Event
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowTrackingModal(false)}
-                  className="cancel-button"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+        <form onSubmit={handleAddTrackingEvent}>
+          <div className="form-group">
+            <label>Event Type:</label>
+            <select value={eventType} onChange={(e) => setEventType(e.target.value)} required>
+              <option value="processing">Processing</option>
+              <option value="pre-shipment">Pre-shipment</option>
+              <option value="out-for-delivery">Out for Delivery</option>
+              <option value="delivered">Delivered</option>
+              <option value="lost">Lost</option>
+              <option value="returned">Returned</option>
+              <option value="undeliverable">Undeliverable</option>
+              <option value="failed-delivery">Failed Delivery</option>
+              <option value="damaged">Damaged</option>
+            </select>
           </div>
-        </div>
-      )}
+
+          <div className="form-group">
+            <label>Location (Facility):</label>
+            <select value={locationId} onChange={(e) => setLocationId(e.target.value)}>
+              <option value="">-- Select Facility (Optional) --</option>
+              {facilities.map((facility) => (
+                <option key={facility.facility_id} value={facility.facility_id}>
+                  {facility.facility_name}
+                </option>
+              ))}
+            </select>
+            <small>Leave empty if event has no specific facility</small>
+          </div>
+
+          <div className="modal-actions">
+            <button type="submit" className="modal-submit-button">
+              Add Event
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowTrackingModal(false)}
+              className="modal-cancel-button"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Tracking History Modal */}
-      {showHistoryModal && (
-        <div className="modal-overlay" onClick={() => setShowHistoryModal(false)}>
-          <div className="modal-content modal-wide" onClick={(e) => e.stopPropagation()}>
-            <h2>Tracking History</h2>
-            <p className="modal-subtitle">Package: {selectedPackage?.tracking_number}</p>
+      <Modal
+        show={showHistoryModal}
+        title="Tracking History"
+        onClose={() => setShowHistoryModal(false)}
+      >
+        <p className="modal-subtitle">Package: {selectedPackage?.tracking_number}</p>
 
-            {trackingHistory.length === 0 ? (
-              <p className="empty-state">No tracking events found.</p>
-            ) : (
-              <div className="tracking-timeline">
-                {trackingHistory.map((event) => (
-                  <div key={event.tracking_event_id} className="timeline-event">
-                    <div className="timeline-marker"></div>
-                    <div className="timeline-content">
-                      <div className="event-type-badge">
-                        {event.event_type}
-                      </div>
-                      <div className="event-time">
-                        {new Date(event.event_time).toLocaleString()}
-                      </div>
-                      {event.facility_name && (
-                        <div className="event-location">
-                          <strong>Location:</strong> {event.facility_name}
-                          {event.location_address && (
-                            <div className="location-address">{event.location_address}</div>
-                          )}
-                        </div>
+        {trackingHistory.length === 0 ? (
+          <p className="empty-state">No tracking events found.</p>
+        ) : (
+          <div className="tracking-timeline">
+            {trackingHistory.map((event) => (
+              <div key={event.tracking_event_id} className="timeline-event">
+                <div className="timeline-marker"></div>
+                <div className="timeline-content">
+                  <div className="event-type-badge">
+                    {event.event_type}
+                  </div>
+                  <div className="event-time">
+                    {new Date(event.event_time).toLocaleString()}
+                  </div>
+                  {event.facility_name && (
+                    <div className="event-location">
+                      <strong>Location:</strong> {event.facility_name}
+                      {event.location_address && (
+                        <div className="location-address">{event.location_address}</div>
                       )}
                     </div>
-                  </div>
-                ))}
+                  )}
+                </div>
               </div>
-            )}
-
-            <div className="modal-actions">
-              <button
-                type="button"
-                onClick={() => setShowHistoryModal(false)}
-                className="cancel-button"
-              >
-                Close
-              </button>
-            </div>
+            ))}
           </div>
+        )}
+
+        <div className="modal-actions">
+          <button
+            type="button"
+            onClick={() => setShowHistoryModal(false)}
+            className="modal-cancel-button"
+          >
+            Close
+          </button>
         </div>
-      )}
+      </Modal>
+
+      {/* Toast Notification */}
+      <Toast
+        show={showToast}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 };

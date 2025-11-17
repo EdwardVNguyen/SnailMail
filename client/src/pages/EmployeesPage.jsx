@@ -1,18 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './UserShipping.css';
 import './EmployeesPage.css';
 import './CreatePackage.css';
 
-import { AgGridReact } from 'ag-grid-react';
-import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
-import "ag-grid-community/styles/ag-theme-alpine.css";
-
-import { formatSSN, formatPhoneNumber } from '../utils/formatting';
-import { isValidEmail, isValidSSN, isValidZipCode, isValidState, isValidPhone } from '../utils/validation';
-import FilterPanel from '../components/FilterPanel';
-
-ModuleRegistry.registerModules([AllCommunityModule]);
+import { isValidEmail, isValidZipCode, isValidState } from '../utils/validation';
+import { Modal } from '../components/Modal';
+import { Toast } from '../components/Toast';
+import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
 
 const EmployeesPage = ({ globalAuthId }) => {
   const authId = globalAuthId;
@@ -20,6 +15,10 @@ const EmployeesPage = ({ globalAuthId }) => {
 
   // Modal state
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingEmployee, setDeletingEmployee] = useState(null);
 
   // Form state for Add Employee
   const [firstName, setFirstName] = useState('');
@@ -32,23 +31,40 @@ const EmployeesPage = ({ globalAuthId }) => {
   const [stateName, setStateName] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [salary, setSalary] = useState('');
-  const [employeeSsn, setEmployeeSsn] = useState('');
   const [facilityId, setFacilityId] = useState('');
+
+  // Edit form state
+  const [editFirstName, setEditFirstName] = useState('');
+  const [editLastName, setEditLastName] = useState('');
+  const [editAccountType, setEditAccountType] = useState('clerk');
+  const [editEmail, setEditEmail] = useState('');
+  const [editStreetName, setEditStreetName] = useState('');
+  const [editCityName, setEditCityName] = useState('');
+  const [editStateName, setEditStateName] = useState('');
+  const [editZipCode, setEditZipCode] = useState('');
+  const [editSalary, setEditSalary] = useState('');
+  const [editFacilityId, setEditFacilityId] = useState('');
 
   // Employees grid state
   const [roleFilter, setRoleFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [employees, setEmployees] = useState([]);
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
-  const [safetyLock, setSafetyLock] = useState(true);
-  const [deleteMode, setDeleteMode] = useState(false);
-  const [deletingEmployeeId, setDeletingEmployeeId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [facilities, setFacilities] = useState([]);
 
-  // Format SSN with dashes as user types
-  const handleSsnChange = (e) => {
-    const formatted = formatSSN(e.target.value);
-    setEmployeeSsn(formatted);
+  // Sorting state
+  const [sortField, setSortField] = useState('employee_id');
+  const [sortDirection, setSortDirection] = useState('asc');
+
+  // Toast notification state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
+  const showSuccessToast = (message) => {
+    setToastMessage(message);
+    setShowToast(true);
   };
 
   // Fetch facilities on mount
@@ -58,11 +74,53 @@ const EmployeesPage = ({ globalAuthId }) => {
 
   // Fetch employees on mount and when filters change
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      fetchEmployees();
-    }, 300);
-    return () => clearTimeout(timeoutId);
-  }, [roleFilter]);
+    fetchEmployees();
+  }, []);
+
+  // Filter and sort employees when search/filter changes
+  useEffect(() => {
+    let filtered = [...employees];
+
+    // Apply role filter
+    if (roleFilter !== 'all') {
+      filtered = filtered.filter(emp => emp.account_type === roleFilter);
+    }
+
+    // Apply search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(emp =>
+        emp.first_name?.toLowerCase().includes(query) ||
+        emp.last_name?.toLowerCase().includes(query) ||
+        emp.email?.toLowerCase().includes(query) ||
+        emp.facility_name?.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aVal = a[sortField];
+      let bVal = b[sortField];
+
+      // Handle null values
+      if (aVal === null || aVal === undefined) aVal = '';
+      if (bVal === null || bVal === undefined) bVal = '';
+
+      // String comparison
+      if (typeof aVal === 'string') {
+        aVal = aVal.toLowerCase();
+        bVal = bVal.toLowerCase();
+      }
+
+      if (sortDirection === 'asc') {
+        return aVal > bVal ? 1 : -1;
+      } else {
+        return aVal < bVal ? 1 : -1;
+      }
+    });
+
+    setFilteredEmployees(filtered);
+  }, [employees, roleFilter, searchQuery, sortField, sortDirection]);
 
   const fetchFacilities = async () => {
     try {
@@ -83,14 +141,7 @@ const EmployeesPage = ({ globalAuthId }) => {
   const fetchEmployees = async () => {
     setLoadingEmployees(true);
     try {
-      let url = `${import.meta.env.VITE_API_URL}/getEmployees?`;
-      const params = [];
-      if (roleFilter !== 'all') {
-        params.push(`role=${roleFilter}`);
-      }
-      url += params.join('&');
-
-      const response = await fetch(url);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/getEmployees`);
       const data = await response.json();
       if (data.success) {
         setEmployees(data.employees);
@@ -104,73 +155,39 @@ const EmployeesPage = ({ globalAuthId }) => {
     }
   };
 
-  const getRowId = useCallback((params) => {
-    return params.data.employee_id.toString();
-  }, []);
-
-  const onCellValueChanged = async (params) => {
-    const updatedEmployee = params.data;
-    const field = params.colDef.field;
-    const newValue = params.newValue;
-    const oldValue = params.oldValue;
-
-    if (field === 'employee_id' || field === 'employee_ssn') {
-      const confirmed = window.confirm(
-        `Are you sure you want to change ${field === 'employee_id' ? 'Employee ID' : 'SSN'} from ${oldValue} to ${newValue}?\n\nThis will check for uniqueness before applying.`
-      );
-
-      if (!confirmed) {
-        fetchEmployees();
-        return;
-      }
-
-      try {
-        const checkResponse = await fetch(
-          `${import.meta.env.VITE_API_URL}/checkEmployeeUniqueness?field=${field}&value=${newValue}&currentId=${updatedEmployee.employee_id}`
-        );
-        const checkData = await checkResponse.json();
-
-        if (!checkData.isUnique) {
-          alert(`This ${field === 'employee_id' ? 'Employee ID' : 'SSN'} is already in use. Change reverted.`);
-          fetchEmployees();
-          return;
-        }
-      } catch (err) {
-        console.error('Error checking uniqueness:', err);
-        alert('Error checking uniqueness. Change reverted.');
-        fetchEmployees();
-        return;
-      }
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
     }
+  };
 
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/updateEmployee`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          employeeId: updatedEmployee.employee_id,
-          field: field,
-          value: newValue,
-          updatedBy: authId
-        })
-      });
+  const getSortIcon = (field) => {
+    if (sortField !== field) return '⇅';
+    return sortDirection === 'asc' ? '↑' : '↓';
+  };
 
-      const data = await response.json();
-      if (!data.success) {
-        alert('Error updating employee: ' + data.message);
-        fetchEmployees();
-      }
-    } catch (err) {
-      console.error('Error updating employee:', err);
-      alert('Error updating employee.');
-      fetchEmployees();
-    }
+  const handleEditClick = (employee) => {
+    setEditingEmployee(employee);
+    setEditFirstName(employee.first_name || '');
+    setEditLastName(employee.last_name || '');
+    setEditAccountType(employee.account_type || 'clerk');
+    setEditEmail(employee.email || '');
+    setEditStreetName(employee.street_name || '');
+    setEditCityName(employee.city_name || '');
+    setEditStateName(employee.state_name || '');
+    setEditZipCode(employee.zip_code || '');
+    setEditSalary(employee.salary || '');
+    setEditFacilityId(employee.facility_id || '');
+    setShowEditModal(true);
   };
 
   const validateForm = () => {
     // Required fields
     if (!firstName || !lastName || !accountType || !email || !password ||
-        !streetName || !cityName || !stateName || !zipCode || !employeeSsn || !salary || !facilityId) {
+        !streetName || !cityName || !stateName || !zipCode || !salary || !facilityId) {
       alert('Please fill in all required fields.');
       return false;
     }
@@ -178,12 +195,6 @@ const EmployeesPage = ({ globalAuthId }) => {
     // Email validation
     if (!isValidEmail(email)) {
       alert('Please enter a valid email address.');
-      return false;
-    }
-
-    // SSN validation
-    if (!isValidSSN(employeeSsn)) {
-      alert('Please enter a valid SSN (XXX-XX-XXXX).');
       return false;
     }
 
@@ -195,6 +206,36 @@ const EmployeesPage = ({ globalAuthId }) => {
 
     // State validation
     if (!isValidState(stateName)) {
+      alert('Please enter a valid 2-letter state code (e.g., TX, CA).');
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateEditForm = () => {
+    // Required fields
+    if (!editFirstName || !editLastName || !editAccountType || !editEmail ||
+        !editStreetName || !editCityName || !editStateName || !editZipCode ||
+        !editSalary || !editFacilityId) {
+      alert('Please fill in all required fields.');
+      return false;
+    }
+
+    // Email validation
+    if (!isValidEmail(editEmail)) {
+      alert('Please enter a valid email address.');
+      return false;
+    }
+
+    // Zip code validation
+    if (!isValidZipCode(editZipCode)) {
+      alert('Please enter a valid 5-digit zip code.');
+      return false;
+    }
+
+    // State validation
+    if (!isValidState(editStateName)) {
       alert('Please enter a valid 2-letter state code (e.g., TX, CA).');
       return false;
     }
@@ -226,7 +267,6 @@ const EmployeesPage = ({ globalAuthId }) => {
           stateName,
           zipCode,
           salary: parseFloat(salary),
-          employeeSsn,
           facilityId: parseInt(facilityId),
           createdBy: authId
         })
@@ -246,15 +286,14 @@ const EmployeesPage = ({ globalAuthId }) => {
         setStateName('');
         setZipCode('');
         setSalary('');
-        setEmployeeSsn('');
         // Reset facility to first one
         if (facilities.length > 0) {
           setFacilityId(facilities[0].facility_id);
         }
 
-        alert('Employee added successfully!');
         setShowAddModal(false);
-        fetchEmployees(); // Refresh the grid
+        fetchEmployees(); // Refresh the list
+        showSuccessToast('Employee added successfully!');
       } else {
         alert('Error adding employee: ' + data.message);
       }
@@ -266,27 +305,65 @@ const EmployeesPage = ({ globalAuthId }) => {
     }
   };
 
-  const handleDeleteEmployee = async (employeeId) => {
-    if (deletingEmployeeId === employeeId) {
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateEditForm()) {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Are you sure you want to DELETE employee ID ${employeeId}?\n\nThis action cannot be undone!`
-    );
+    setLoading(true);
 
-    if (!confirmed) {
-      return;
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/updateEmployeeFull`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          employeeId: editingEmployee.employee_id,
+          firstName: editFirstName,
+          lastName: editLastName,
+          accountType: editAccountType,
+          email: editEmail,
+          streetName: editStreetName,
+          cityName: editCityName,
+          stateName: editStateName,
+          zipCode: editZipCode,
+          salary: parseFloat(editSalary),
+          facilityId: parseInt(editFacilityId),
+          updatedBy: authId
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setShowEditModal(false);
+        setEditingEmployee(null);
+        fetchEmployees(); // Refresh the list
+        showSuccessToast('Employee updated successfully!');
+      } else {
+        alert('Error updating employee: ' + data.message);
+      }
+    } catch (err) {
+      console.error('Error updating employee:', err);
+      alert('Error updating employee.');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    setDeletingEmployeeId(employeeId);
+  const handleDeleteClick = (employee) => {
+    setDeletingEmployee(employee);
+    setShowDeleteModal(true);
+  };
 
+  const handleDeleteConfirm = async () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/deleteEmployee`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          employeeId: employeeId,
+          employeeId: deletingEmployee.employee_id,
           deletedBy: authId
         })
       });
@@ -294,212 +371,152 @@ const EmployeesPage = ({ globalAuthId }) => {
       const data = await response.json();
 
       if (data.success) {
-        alert('Employee deleted successfully!');
+        setShowDeleteModal(false);
+        setDeletingEmployee(null);
         fetchEmployees();
+        showSuccessToast('Employee deleted successfully!');
       } else {
         alert('Error deleting employee: ' + data.message);
       }
     } catch (err) {
       console.error('Error deleting employee:', err);
       alert('Error deleting employee.');
-    } finally {
-      setDeletingEmployeeId(null);
     }
   };
 
-  const columnDefs = [
-    { field: 'employee_id', headerName: 'ID', sortable: true, filter: true, editable: !safetyLock, width: 100 },
-    { field: 'first_name', headerName: 'First Name', sortable: true, filter: true, editable: true, flex: 1 },
-    { field: 'last_name', headerName: 'Last Name', sortable: true, filter: true, editable: true, flex: 1 },
-    { field: 'account_type', headerName: 'Role', sortable: true, filter: true, editable: true, flex: 0.8,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['manager', 'clerk', 'courier']
-      }
-    },
-    { field: 'email', headerName: 'Email', sortable: true, filter: true, editable: true, flex: 1.5 },
-    { field: 'employee_ssn', headerName: 'SSN', sortable: true, filter: true, editable: !safetyLock, width: 130 },
-    { field: 'salary', headerName: 'Salary', sortable: true, filter: true, editable: true, flex: 0.8 },
-    { field: 'facility_id', headerName: 'Facility ID', sortable: true, filter: true, editable: true, flex: 0.8 },
-    { field: 'facility_name', headerName: 'Facility', sortable: true, filter: true, editable: false, flex: 1.2 },
-    {
-      headerName: 'Address',
-      sortable: true,
-      filter: true,
-      editable: false,
-      flex: 2,
-      valueGetter: (params) => {
-        const { street_name, city_name, state_name, zip_code } = params.data;
-        return `${street_name}, ${city_name}, ${state_name} ${zip_code}`;
-      }
-    }
-  ];
-
   return (
     <div className="create-package-container">
-      <div className="package-header">
+      <div className="employee-page-header">
         <h1>Employees</h1>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={() => setShowAddModal(true)} className="add-button" style={{
-            padding: '10px 20px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            backgroundColor: '#3C467B',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer'
-          }}>
+        <div className="employee-header-buttons">
+          <button onClick={() => setShowAddModal(true)} className="employee-add-button">
             + Add Employee
           </button>
-          <button onClick={() => navigate('/managerPage')} className="back-button">
+          <button onClick={() => navigate('/managerPage')} className="employee-back-button">
             ← Back to Manager
           </button>
         </div>
       </div>
 
-      {/* Separator Line */}
-      <div style={{ borderTop: '1px solid #e9ecef', marginBottom: '20px' }}></div>
-
-      {/* Filter Panel */}
-      <FilterPanel
-        filters={[
-          {
-            label: 'Filter by Role',
-            value: roleFilter,
-            onChange: setRoleFilter,
-            options: [
-              { value: 'all', label: 'All Employees' },
-              { value: 'manager', label: 'Managers' },
-              { value: 'clerk', label: 'Clerks' },
-              { value: 'courier', label: 'Couriers' }
-            ]
-          }
-        ]}
-        toggles={[
-          {
-            label: 'Safety Lock (ID & SSN)',
-            value: safetyLock,
-            onToggle: () => setSafetyLock(!safetyLock),
-            activeText: 'Locked',
-            inactiveText: 'Unlocked',
-            activeColor: '#50589C',
-            helpText: {
-              active: 'ID & SSN cannot be edited',
-              inactive: 'ID & SSN can be edited'
-            }
-          },
-          {
-            label: 'Delete Mode',
-            value: deleteMode,
-            onToggle: () => setDeleteMode(!deleteMode),
-            activeText: 'Enabled',
-            inactiveText: 'Disabled',
-            activeColor: '#dc3545',
-            helpText: {
-              active: 'Delete mode active',
-              inactive: 'Delete mode inactive'
-            }
-          }
-        ]}
-      />
-
-      {/* Employees Grid */}
+      {/* Employees Table */}
       <div className="employee-edit-container">
-        {loadingEmployees ? (
-          <div style={{ textAlign: 'center', padding: '40px', fontSize: '18px' }}>
-            Loading employees...
-          </div>
-        ) : deleteMode ? (
-          <div>
-            <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '5px', color: '#856404' }}>
-              <strong>Delete Mode:</strong> Double-click any row to delete that employee
-            </div>
-            <div className="ag-theme-alpine" style={{ height: 'calc(100vh - 350px)', minHeight: '400px', width: "100%" }}>
-              <AgGridReact
-                rowData={employees}
-                columnDefs={columnDefs}
-                defaultColDef={{
-                  sortable: true,
-                  filter: true,
-                  editable: false
-                }}
-                getRowId={getRowId}
-                onRowDoubleClicked={(params) => handleDeleteEmployee(params.data.employee_id)}
-                rowClass="archive-mode-row"
-                getRowStyle={(params) => {
-                  if (deletingEmployeeId === params.data.employee_id) {
-                    return {
-                      backgroundColor: '#f8d7da',
-                      opacity: 0.6,
-                      cursor: 'not-allowed',
-                      pointerEvents: 'none'
-                    };
-                  }
-                }}
-                readOnlyEdit={true}
-                suppressClickEdit={true}
-                pagination={true}
-                paginationPageSize={20}
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine" style={{ height: 'calc(100vh - 350px)', minHeight: '400px', width: "100%" }}>
-            <AgGridReact
-              rowData={employees}
-              columnDefs={columnDefs}
-              defaultColDef={{
-                sortable: true,
-                filter: true
-              }}
-              getRowId={getRowId}
-              onCellValueChanged={onCellValueChanged}
-              pagination={true}
-              paginationPageSize={20}
+        {/* Search and Filter Controls */}
+        <div className="employee-controls">
+          <div className="employee-search-container">
+            <input
+              type="text"
+              placeholder="Search by name, email, or facility..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="employee-search-input"
             />
           </div>
-        )}
+          <div>
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="employee-filter-select"
+            >
+              <option value="all">All Employees</option>
+              <option value="manager">Managers</option>
+              <option value="clerk">Clerks</option>
+              <option value="courier">Couriers</option>
+            </select>
+          </div>
+        </div>
 
-        <p style={{ marginTop: '15px', color: '#666', fontSize: '14px' }}>
-          Double-click on any cell to edit. Press Enter to save changes.
-        </p>
+        {loadingEmployees ? (
+          <div className="employee-loading">
+            Loading employees...
+          </div>
+        ) : (
+          <>
+            <div className="employees-table-container">
+              <table className="employees-table">
+                <thead>
+                  <tr>
+                    <th onClick={() => handleSort('employee_id')} className="sortable">
+                      ID {getSortIcon('employee_id')}
+                    </th>
+                    <th onClick={() => handleSort('first_name')} className="sortable">
+                      First Name {getSortIcon('first_name')}
+                    </th>
+                    <th onClick={() => handleSort('last_name')} className="sortable">
+                      Last Name {getSortIcon('last_name')}
+                    </th>
+                    <th onClick={() => handleSort('account_type')} className="sortable">
+                      Role {getSortIcon('account_type')}
+                    </th>
+                    <th onClick={() => handleSort('email')} className="sortable">
+                      Email {getSortIcon('email')}
+                    </th>
+                    <th onClick={() => handleSort('salary')} className="sortable">
+                      Salary {getSortIcon('salary')}
+                    </th>
+                    <th onClick={() => handleSort('facility_name')} className="sortable">
+                      Facility {getSortIcon('facility_name')}
+                    </th>
+                    <th>
+                      Address
+                    </th>
+                    <th>
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredEmployees.length === 0 ? (
+                    <tr>
+                      <td colSpan="9" className="empty-state">
+                        {searchQuery || roleFilter !== 'all' ? 'No employees match your search criteria.' : 'No employees found.'}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredEmployees.map(employee => (
+                      <tr key={employee.employee_id}>
+                        <td>{employee.employee_id}</td>
+                        <td>{employee.first_name}</td>
+                        <td>{employee.last_name}</td>
+                        <td className="capitalize">{employee.account_type}</td>
+                        <td>{employee.email}</td>
+                        <td>${parseFloat(employee.salary || 0).toLocaleString()}</td>
+                        <td>{employee.facility_name}</td>
+                        <td>
+                          {employee.street_name}, {employee.city_name}, {employee.state_name} {employee.zip_code}
+                        </td>
+                        <td>
+                          <div className="employee-table-actions">
+                            <button
+                              onClick={() => handleEditClick(employee)}
+                              className="employee-edit-btn"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteClick(employee)}
+                              className="employee-delete-btn"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <p className="employee-table-stats">
+              Showing {filteredEmployees.length} of {employees.length} employees. Click column headers to sort.
+            </p>
+          </>
+        )}
       </div>
 
       {/* Add Employee Modal */}
-      {showAddModal && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowAddModal(false)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000
-          }}
-        >
-          <div
-            className="modal-content"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: 'white',
-              padding: '30px',
-              borderRadius: '8px',
-              maxWidth: '1000px',
-              maxHeight: '90vh',
-              overflow: 'auto',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-            }}
-          >
-            <h2>Add New Employee</h2>
-            <form onSubmit={handleSubmit} className="employee-form-card">
-              <div className="employee-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+      <Modal show={showAddModal} title="Add New Employee" onClose={() => setShowAddModal(false)}>
+        <form onSubmit={handleSubmit}>
+              <div className="employee-form-grid">
                 {/* First Name */}
                 <div className="employee-form-field">
                   <label>First Name: <span className="required-asterisk">*</span></label>
@@ -534,12 +551,6 @@ const EmployeesPage = ({ globalAuthId }) => {
                   <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                 </div>
 
-                {/* SSN */}
-                <div className="employee-form-field">
-                  <label>SSN (XXX-XX-XXXX): <span className="required-asterisk">*</span></label>
-                  <input type="text" value={employeeSsn} onChange={handleSsnChange} placeholder="123-45-6789" maxLength="11" required />
-                </div>
-
                 {/* Salary */}
                 <div className="employee-form-field">
                   <label>Salary: <span className="required-asterisk">*</span></label>
@@ -559,7 +570,7 @@ const EmployeesPage = ({ globalAuthId }) => {
                 </div>
 
                 {/* Street */}
-                <div className="employee-form-field" style={{ gridColumn: '1 / -1' }}>
+                <div className="employee-form-field employee-form-field-full">
                   <label>Street Address: <span className="required-asterisk">*</span></label>
                   <input type="text" value={streetName} onChange={(e) => setStreetName(e.target.value)} required />
                 </div>
@@ -583,37 +594,122 @@ const EmployeesPage = ({ globalAuthId }) => {
                 </div>
               </div>
 
-              <div className="modal-actions" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
-                <button type="submit" disabled={loading} style={{
-                  padding: '10px 20px',
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  backgroundColor: '#3C467B',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  opacity: loading ? 0.6 : 1
-                }}>
+              <div className="modal-actions">
+                <button type="submit" disabled={loading} className="modal-submit-button">
                   {loading ? 'Adding...' : 'Add Employee'}
                 </button>
-                <button type="button" onClick={() => setShowAddModal(false)} style={{
-                  padding: '10px 20px',
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  backgroundColor: '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer'
-                }}>
+                <button type="button" onClick={() => setShowAddModal(false)} className="modal-cancel-button">
                   Cancel
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+      </Modal>
+
+      {/* Edit Employee Modal */}
+      <Modal
+        show={showEditModal && editingEmployee !== null}
+        title={editingEmployee ? `Edit Employee (ID: ${editingEmployee.employee_id})` : 'Edit Employee'}
+        onClose={() => setShowEditModal(false)}
+      >
+        <form onSubmit={handleEditSubmit}>
+              <div className="employee-form-grid">
+                {/* First Name */}
+                <div className="employee-form-field">
+                  <label>First Name: <span className="required-asterisk">*</span></label>
+                  <input type="text" value={editFirstName} onChange={(e) => setEditFirstName(e.target.value)} required />
+                </div>
+
+                {/* Last Name */}
+                <div className="employee-form-field">
+                  <label>Last Name: <span className="required-asterisk">*</span></label>
+                  <input type="text" value={editLastName} onChange={(e) => setEditLastName(e.target.value)} required />
+                </div>
+
+                {/* Account Type */}
+                <div className="employee-form-field">
+                  <label>Role: <span className="required-asterisk">*</span></label>
+                  <select value={editAccountType} onChange={(e) => setEditAccountType(e.target.value)} required>
+                    <option value="clerk">Clerk</option>
+                    <option value="courier">Courier</option>
+                    <option value="manager">Manager</option>
+                  </select>
+                </div>
+
+                {/* Email */}
+                <div className="employee-form-field">
+                  <label>Email: <span className="required-asterisk">*</span></label>
+                  <input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} required />
+                </div>
+
+                {/* Salary */}
+                <div className="employee-form-field">
+                  <label>Salary: <span className="required-asterisk">*</span></label>
+                  <input type="number" step="0.01" value={editSalary} onChange={(e) => setEditSalary(e.target.value)} required />
+                </div>
+
+                {/* Facility */}
+                <div className="employee-form-field">
+                  <label>Facility: <span className="required-asterisk">*</span></label>
+                  <select value={editFacilityId} onChange={(e) => setEditFacilityId(e.target.value)} required>
+                    {facilities.map(facility => (
+                      <option key={facility.facility_id} value={facility.facility_id}>
+                        {facility.facility_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Street */}
+                <div className="employee-form-field employee-form-field-full">
+                  <label>Street Address: <span className="required-asterisk">*</span></label>
+                  <input type="text" value={editStreetName} onChange={(e) => setEditStreetName(e.target.value)} required />
+                </div>
+
+                {/* City */}
+                <div className="employee-form-field">
+                  <label>City: <span className="required-asterisk">*</span></label>
+                  <input type="text" value={editCityName} onChange={(e) => setEditCityName(e.target.value)} required />
+                </div>
+
+                {/* State */}
+                <div className="employee-form-field">
+                  <label>State (2 letters): <span className="required-asterisk">*</span></label>
+                  <input type="text" value={editStateName} onChange={(e) => setEditStateName(e.target.value.toUpperCase())} placeholder="TX" maxLength="2" required />
+                </div>
+
+                {/* Zip */}
+                <div className="employee-form-field">
+                  <label>Zip Code (5 digits): <span className="required-asterisk">*</span></label>
+                  <input type="text" value={editZipCode} onChange={(e) => setEditZipCode(e.target.value)} placeholder="12345" maxLength="5" required />
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button type="submit" disabled={loading} className="modal-submit-button">
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button type="button" onClick={() => setShowEditModal(false)} className="modal-cancel-button">
+                  Cancel
+                </button>
+              </div>
+            </form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        show={showDeleteModal && deletingEmployee !== null}
+        entityType="Employee"
+        entityName={deletingEmployee ? `${deletingEmployee.first_name} ${deletingEmployee.last_name}` : ''}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setShowDeleteModal(false)}
+      />
+
+      {/* Success Toast Notification */}
+      <Toast
+        show={showToast}
+        message={toastMessage}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 };

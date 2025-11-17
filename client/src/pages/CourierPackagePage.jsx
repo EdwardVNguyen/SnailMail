@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CourierPackagePage.css';
+import { Modal } from '../components/Modal';
+import { Toast } from '../components/Toast';
 
 const CourierPackagePage = ({ globalAuthId }) => {
   const authId = globalAuthId;
@@ -22,6 +24,27 @@ const CourierPackagePage = ({ globalAuthId }) => {
   const [deliveryType, setDeliveryType] = useState('recipient'); // 'recipient' or 'facility'
   const [deliveryFacilityId, setDeliveryFacilityId] = useState('');
   const [facilities, setFacilities] = useState([]);
+
+  // Request package modal state
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestPackage, setRequestPackage] = useState(null);
+
+  // Toast notification state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
+
+  const showSuccessToast = (message) => {
+    setToastMessage(message);
+    setToastType('success');
+    setShowToast(true);
+  };
+
+  const showErrorToast = (message) => {
+    setToastMessage(message);
+    setToastType('error');
+    setShowToast(true);
+  };
 
   // Fetch available packages
   const fetchAvailablePackages = async () => {
@@ -88,31 +111,35 @@ const CourierPackagePage = ({ globalAuthId }) => {
     fetchFacilities();
   }, []);
 
-  // Handle requesting a package
-  const handleRequestPackage = async (packageId) => {
-    const confirmed = window.confirm('Request to pick up this package?');
-    if (!confirmed) return;
+  // Open request modal
+  const openRequestModal = (pkg) => {
+    setRequestPackage(pkg);
+    setShowRequestModal(true);
+  };
 
+  // Handle requesting a package
+  const handleRequestPackage = async () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/createCourierRequest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          packageId,
+          packageId: requestPackage.package_id,
           authId
         })
       });
 
       const data = await response.json();
       if (data.success) {
-        alert('Package pickup request submitted successfully! Wait for clerk approval.');
+        showSuccessToast('Package pickup request submitted successfully! Wait for clerk approval.');
+        setShowRequestModal(false);
         fetchAvailablePackages();
       } else {
-        alert('Error requesting package: ' + data.message);
+        showErrorToast('Error requesting package: ' + data.message);
       }
     } catch (err) {
       console.error('Error requesting package:', err);
-      alert('Error requesting package.');
+      showErrorToast('Error requesting package.');
     }
   };
 
@@ -127,7 +154,7 @@ const CourierPackagePage = ({ globalAuthId }) => {
   // Handle delivery confirmation
   const handleDeliverPackage = async () => {
     if (deliveryType === 'facility' && !deliveryFacilityId) {
-      alert('Please select a delivery facility.');
+      showErrorToast('Please select a delivery facility.');
       return;
     }
 
@@ -145,15 +172,15 @@ const CourierPackagePage = ({ globalAuthId }) => {
 
       const data = await response.json();
       if (data.success) {
-        alert('Package delivered successfully!');
+        showSuccessToast('Package delivered successfully!');
         setShowDeliveryModal(false);
         fetchMyPackages();
       } else {
-        alert('Error delivering package: ' + data.message);
+        showErrorToast('Error delivering package: ' + data.message);
       }
     } catch (err) {
       console.error('Error delivering package:', err);
-      alert('Error delivering package.');
+      showErrorToast('Error delivering package.');
     }
   };
 
@@ -207,7 +234,7 @@ const CourierPackagePage = ({ globalAuthId }) => {
                     <p><strong>Status:</strong> <span className="status-badge">{pkg.package_status}</span></p>
                   </div>
                   <button
-                    onClick={() => handleRequestPackage(pkg.package_id)}
+                    onClick={() => openRequestModal(pkg)}
                     className="pickup-button"
                   >
                     Request Package
@@ -255,45 +282,80 @@ const CourierPackagePage = ({ globalAuthId }) => {
         </div>
       )}
 
-      {/* Delivery Modal */}
-      {showDeliveryModal && (
-        <div className="modal-overlay" onClick={() => setShowDeliveryModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Deliver Package #{selectedPackage?.package_id}</h2>
+      {/* Request Package Modal */}
+      <Modal
+        show={showRequestModal}
+        title="Request Package Pickup"
+        onClose={() => setShowRequestModal(false)}
+      >
+        <p className="modal-subtitle">
+          Package #{requestPackage?.package_id} - {requestPackage?.tracking_number}
+        </p>
 
-            <div className="form-group">
-              <label>Delivery Type:</label>
-              <select value={deliveryType} onChange={(e) => setDeliveryType(e.target.value)}>
-                <option value="recipient">Deliver to Recipient</option>
-                <option value="facility">Transfer to Facility</option>
-              </select>
-            </div>
-
-            {deliveryType === 'facility' && (
-              <div className="form-group">
-                <label>Select Facility:</label>
-                <select value={deliveryFacilityId} onChange={(e) => setDeliveryFacilityId(e.target.value)}>
-                  <option value="">-- Select Facility --</option>
-                  {facilities.map((facility) => (
-                    <option key={facility.facility_id} value={facility.facility_id}>
-                      {facility.facility_name} ({facility.city_name}, {facility.state_name})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            <div className="modal-actions">
-              <button onClick={handleDeliverPackage} className="confirm-button">
-                Confirm Delivery
-              </button>
-              <button onClick={() => setShowDeliveryModal(false)} className="cancel-button">
-                Cancel
-              </button>
-            </div>
-          </div>
+        <div className="form-group">
+          <label>Package Details:</label>
+          <p><strong>From:</strong> {requestPackage?.sender_name}</p>
+          <p><strong>To:</strong> {requestPackage?.recipient_name}</p>
+          <p><strong>Destination:</strong> {requestPackage?.recipient_street}, {requestPackage?.recipient_city}, {requestPackage?.recipient_state}</p>
+          <p><strong>Current Location:</strong> {requestPackage?.facility_name}</p>
+          <p><strong>Weight:</strong> {requestPackage?.weight} kg</p>
         </div>
-      )}
+
+        <div className="modal-actions">
+          <button onClick={handleRequestPackage} className="modal-submit-button">
+            Confirm Request
+          </button>
+          <button onClick={() => setShowRequestModal(false)} className="modal-cancel-button">
+            Cancel
+          </button>
+        </div>
+      </Modal>
+
+      {/* Delivery Modal */}
+      <Modal
+        show={showDeliveryModal}
+        title={`Deliver Package #${selectedPackage?.package_id}`}
+        onClose={() => setShowDeliveryModal(false)}
+      >
+        <div className="form-group">
+          <label>Delivery Type:</label>
+          <select value={deliveryType} onChange={(e) => setDeliveryType(e.target.value)}>
+            <option value="recipient">Deliver to Recipient</option>
+            <option value="facility">Transfer to Facility</option>
+          </select>
+        </div>
+
+        {deliveryType === 'facility' && (
+          <div className="form-group">
+            <label>Select Facility:</label>
+            <select value={deliveryFacilityId} onChange={(e) => setDeliveryFacilityId(e.target.value)}>
+              <option value="">-- Select Facility --</option>
+              {facilities.map((facility) => (
+                <option key={facility.facility_id} value={facility.facility_id}>
+                  {facility.facility_name} ({facility.city_name}, {facility.state_name})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <div className="modal-actions">
+          <button onClick={handleDeliverPackage} className="modal-submit-button">
+            Confirm Delivery
+          </button>
+          <button onClick={() => setShowDeliveryModal(false)} className="modal-cancel-button">
+            Cancel
+          </button>
+        </div>
+      </Modal>
+
+      {/* Toast Notification */}
+      <Toast
+        show={showToast}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 };
