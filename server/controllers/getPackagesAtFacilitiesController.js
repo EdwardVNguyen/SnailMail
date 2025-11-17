@@ -44,6 +44,7 @@ export const getPackagesAtFacilitiesController = async (req, res) => {
         CONCAT(recipient.first_name, ' ', recipient.last_name) as recipient_name,
         f.facility_name,
         f.facility_id,
+        f.address_id as facility_address_id,
         CONCAT(courier.first_name, ' ', courier.last_name) as courier_name
       FROM package p
       LEFT JOIN customer sender ON p.sender_id = sender.customer_id

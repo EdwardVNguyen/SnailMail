@@ -78,7 +78,7 @@ const EmployeePage = ({ globalAuthId }) => {
     setSelectedPackage(pkg);
     setShowTrackingModal(true);
     setEventType('processing');
-    setLocationId(pkg.facility_id || '');
+    setLocationId(pkg.facility_address_id || '');
   };
 
   const openHistoryModal = async (pkg) => {
@@ -225,7 +225,7 @@ const EmployeePage = ({ globalAuthId }) => {
             <select value={locationId} onChange={(e) => setLocationId(e.target.value)}>
               <option value="">-- Select Facility (Optional) --</option>
               {facilities.map((facility) => (
-                <option key={facility.facility_id} value={facility.facility_id}>
+                <option key={facility.facility_id} value={facility.address_id}>
                   {facility.facility_name}
                 </option>
               ))}

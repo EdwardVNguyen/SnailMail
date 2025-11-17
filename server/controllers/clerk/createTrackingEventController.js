@@ -9,12 +9,12 @@ export const createTrackingEventController = async (req, res) => {
     const { packageId, eventType, locationId, authId } = body;
 
     // Validate required fields
-    if (!packageId || !eventType || !locationId) {
+    if (!packageId || !eventType) {
       res.statusCode = 400;
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify({
         success: false,
-        message: 'Package ID, event type, and location ID are required'
+        message: 'Package ID and event type are required'
       }));
       return;
     }

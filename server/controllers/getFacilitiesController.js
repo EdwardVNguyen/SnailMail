@@ -21,6 +21,7 @@ export const getFacilitiesController = async (req, res) => {
         f.opening_hours,
         f.closing_hours,
         f.manager_id,
+        f.address_id,
         CONCAT(e.first_name, ' ', e.last_name) as manager_name,
         a.street_name,
         a.city_name,
