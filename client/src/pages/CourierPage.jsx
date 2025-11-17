@@ -70,7 +70,7 @@ const CourierPage = ({ globalAuthId }) => {
       <div className="actions-section">
         <h2>Quick Actions</h2>
         <div className="action-cards">
-          <div className="action-card primary" onClick={() => navigate('/courierPackagePage')}>
+          <div className="action-card primary" onClick={() => navigate('/courierPackage')}>
             <div className="action-icon">📋</div>
             <h3>Available Packages</h3>
             <p>Request packages for pickup and delivery from your facility</p>
@@ -79,7 +79,7 @@ const CourierPage = ({ globalAuthId }) => {
             )}
           </div>
 
-          <div className="action-card" onClick={() => navigate('/courierMyPackagePage')}>
+          <div className="action-card" onClick={() => navigate('/courierPackage?tab=my-packages')}>
             <div className="action-icon">🚛</div>
             <h3>My Deliveries</h3>
             <p>View and manage packages currently assigned to you</p>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import './CourierPackagePage.css';
 import { Modal } from '../components/Modal';
 import { Toast } from '../components/Toast';
@@ -7,8 +7,11 @@ import { Toast } from '../components/Toast';
 const CourierPackagePage = ({ globalAuthId }) => {
   const authId = globalAuthId;
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState('available'); // 'available' or 'my-packages'
+  // Get initial tab from URL params, default to 'available'
+  const initialTab = searchParams.get('tab') === 'my-packages' ? 'my-packages' : 'available';
+  const [activeTab, setActiveTab] = useState(initialTab); // 'available' or 'my-packages'
 
   // Available packages state
   const [availablePackages, setAvailablePackages] = useState([]);
