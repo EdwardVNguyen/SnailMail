@@ -7,6 +7,7 @@ import { isValidZipCode, isValidState } from '../utils/validation';
 import { Modal } from '../components/Modal';
 import { Toast } from '../components/Toast';
 import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
+import { encodeFacilityId, encodeEmployeeId } from '../utils/idEncoder';
 
 const DAYS_OF_WEEK = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
@@ -692,7 +693,7 @@ const FacilitiesPage = ({ globalAuthId }) => {
                   ) : (
                     filteredFacilities.map(facility => (
                       <tr key={facility.facility_id}>
-                        <td>{facility.facility_id}</td>
+                        <td>{encodeFacilityId(facility.facility_id)}</td>
                         <td>{facility.facility_name}</td>
                         <td className="capitalize">{facility.facility_type?.replace('_', ' ')}</td>
                         <td className="capitalize">{facility.status}</td>
@@ -734,7 +735,7 @@ const FacilitiesPage = ({ globalAuthId }) => {
       {/* Edit Facility Modal */}
       <Modal
         show={showEditModal && editingFacility !== null}
-        title={editingFacility ? `Edit Facility (ID: ${editingFacility.facility_id})` : 'Edit Facility'}
+        title={editingFacility ? `Edit Facility ${encodeFacilityId(editingFacility.facility_id)}` : 'Edit Facility'}
         onClose={() => setShowEditModal(false)}
       >
         <form onSubmit={handleEditSubmit}>

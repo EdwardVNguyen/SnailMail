@@ -4,10 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import './UserShipping.css'
 
 import { AgGridReact } from 'ag-grid-react'; // React Data Grid Component
-import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community'; 
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import "ag-grid-community/styles/ag-theme-alpine.css";
 
 import Pagination from '../utils/Pagination';
+import { encodePackageId } from '../utils/idEncoder';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -60,7 +61,7 @@ const UserShipping = ( {globalAuthId }) => {
   const rowData = packages.map(pkg => {
     // Find the corresponding address for this package
     return {
-      ID: pkg.package_id,
+      ID: encodePackageId(pkg.package_id),
       Recipient: `${pkg.first_name + ' ' + pkg.last_name}`,
       DropoffAddress: `${pkg.street_name + ', ' + pkg.city_name + ', ' + pkg.state_name + ', ' + pkg.zip_code}`,
       Type: pkg.package_type,

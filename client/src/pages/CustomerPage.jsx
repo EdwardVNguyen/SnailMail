@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { getCustomerData } from '../utils/getCustomerData.js';
 import { useNavigate } from 'react-router-dom';
 import { Toast } from '../components/Toast';
+import { encodeCustomerId } from '../utils/idEncoder';
 
 const CustomerPage = ({ globalAuthId }) => {
   const [customerInfo, setCustomerInfo] = useState(null);
@@ -74,7 +75,7 @@ const CustomerPage = ({ globalAuthId }) => {
                   {customerInfo.customer.first_name} {customerInfo.customer.last_name}
                 </div>
                 <div className="profileEmail">{customerInfo.customer.email}</div>
-                <div className="profileId">Account ID: {customerInfo.customer.customer_id}</div>
+                <div className="profileId">Account ID: {encodeCustomerId(customerInfo.customer.customer_id)}</div>
               </div>
             </div>
             <button 

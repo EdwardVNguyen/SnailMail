@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './ClerkCourierApprovalPage.css';
 import { Modal } from '../components/Modal';
 import { Toast } from '../components/Toast';
+import { encodeCourierRequestId, encodePackageId, formatTrackingNumber } from '../utils/idEncoder';
 
 const ClerkCourierApprovalPage = ({ globalAuthId }) => {
   const authId = globalAuthId;
@@ -218,11 +219,11 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
               <tbody>
                 {requests.map((request) => (
                   <tr key={request.request_id}>
-                    <td>{request.request_id}</td>
+                    <td>{encodeCourierRequestId(request.request_id)}</td>
                     <td>{new Date(request.request_date).toLocaleString()}</td>
                     <td>{request.courier_first_name} {request.courier_last_name}</td>
-                    <td>{request.package_id}</td>
-                    <td className="tracking-number">{request.tracking_number}</td>
+                    <td>{encodePackageId(request.package_id)}</td>
+                    <td className="tracking-number">{formatTrackingNumber(request.tracking_number)}</td>
                     <td>{request.recipient_first_name} {request.recipient_last_name}</td>
                     <td>{request.recipient_city}, {request.recipient_state}</td>
                     <td>{request.weight}</td>
@@ -261,7 +262,7 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
         onClose={() => setShowReviewModal(false)}
       >
         <p className="modal-subtitle">
-          Package: {selectedRequest?.tracking_number} |
+          {encodePackageId(selectedRequest?.package_id)}: {formatTrackingNumber(selectedRequest?.tracking_number)} |
           Courier: {selectedRequest?.courier_first_name} {selectedRequest?.courier_last_name}
         </p>
 

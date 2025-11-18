@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './EmployeePage.css';
 import { Modal } from '../components/Modal';
 import { Toast } from '../components/Toast';
+import { encodePackageId, formatTrackingNumber } from '../utils/idEncoder';
 
 const EmployeePage = ({ globalAuthId }) => {
   const authId = globalAuthId;
@@ -155,8 +156,8 @@ const EmployeePage = ({ globalAuthId }) => {
               <tbody>
                 {packages.map((pkg) => (
                   <tr key={pkg.package_id}>
-                    <td>{pkg.package_id}</td>
-                    <td className="tracking-number">{pkg.tracking_number}</td>
+                    <td>{encodePackageId(pkg.package_id)}</td>
+                    <td className="tracking-number">{formatTrackingNumber(pkg.tracking_number)}</td>
                     <td>{pkg.sender_name}</td>
                     <td>{pkg.recipient_name}</td>
                     <td>{pkg.facility_name || 'Unknown'}</td>
@@ -195,7 +196,9 @@ const EmployeePage = ({ globalAuthId }) => {
         title="Add Tracking Event"
         onClose={() => setShowTrackingModal(false)}
       >
-        <p className="modal-subtitle">Package: {selectedPackage?.tracking_number}</p>
+        <p className="modal-subtitle">
+          Package {encodePackageId(selectedPackage?.package_id)}: {formatTrackingNumber(selectedPackage?.tracking_number)}
+        </p>
 
         <form onSubmit={handleAddTrackingEvent}>
           <div className="form-group">
@@ -247,7 +250,9 @@ const EmployeePage = ({ globalAuthId }) => {
         title="Tracking History"
         onClose={() => setShowHistoryModal(false)}
       >
-        <p className="modal-subtitle">Package: {selectedPackage?.tracking_number}</p>
+        <p className="modal-subtitle">
+          Package {encodePackageId(selectedPackage?.package_id)}: {formatTrackingNumber(selectedPackage?.tracking_number)}
+        </p>
 
         {trackingHistory.length === 0 ? (
           <p className="empty-state">No tracking events found.</p>

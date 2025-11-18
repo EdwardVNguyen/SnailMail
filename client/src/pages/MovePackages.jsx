@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from 'react-router-dom';
 import './MovePackages.css';
 import { Toast } from '../components/Toast';
+import { encodePackageId } from '../utils/idEncoder';
 
 import { AgGridReact } from 'ag-grid-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
@@ -158,7 +159,7 @@ const MovePackages = ( {globalAuthId} ) => {
   // Row data for AG Grid
   const rowData = packages.map(pkg => ({
     package_id: pkg.package_id,
-    ID: pkg.package_id,
+    ID: encodePackageId(pkg.package_id),
     Sender: pkg.sender_name,
     Recipient: pkg.recipient_name,
     Type: pkg.package_type,

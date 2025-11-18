@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './Tracking.css';
+import { formatTrackingNumber } from '../utils/idEncoder';
 
 const Tracking = () => {
   const [trackingNumber, setTrackingNumber] = useState('');
@@ -96,7 +97,7 @@ const Tracking = () => {
           <div className="package-summary">
             <div className="tracking-number-display">
               <span className="label">Tracking Number:</span>
-              <span className="value">{trackingData.package.tracking_number}</span>
+              <span className="value">{formatTrackingNumber(trackingData.package.tracking_number)}</span>
             </div>
             
             <div className="status-section">

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import './CourierPackagePage.css';
 import { Modal } from '../components/Modal';
 import { Toast } from '../components/Toast';
+import { encodePackageId, formatTrackingNumber } from '../utils/idEncoder';
 
 const CourierPackagePage = ({ globalAuthId }) => {
   const authId = globalAuthId;
@@ -218,8 +219,8 @@ const CourierPackagePage = ({ globalAuthId }) => {
               {availablePackages.map((pkg) => (
                 <div key={pkg.package_id} className="package-card">
                   <div className="package-header">
-                    <h3>Package #{pkg.package_id}</h3>
-                    <span className="tracking-badge">{pkg.tracking_number}</span>
+                    <h3>{encodePackageId(pkg.package_id)}</h3>
+                    <span className="tracking-badge">{formatTrackingNumber(pkg.tracking_number)}</span>
                   </div>
                   <div className="package-details">
                     <p><strong>From:</strong> {pkg.sender_name}</p>
@@ -255,8 +256,8 @@ const CourierPackagePage = ({ globalAuthId }) => {
               {myPackages.map((pkg) => (
                 <div key={pkg.package_id} className="package-card">
                   <div className="package-header">
-                    <h3>Package #{pkg.package_id}</h3>
-                    <span className="tracking-badge">{pkg.tracking_number}</span>
+                    <h3>{encodePackageId(pkg.package_id)}</h3>
+                    <span className="tracking-badge">{formatTrackingNumber(pkg.tracking_number)}</span>
                   </div>
                   <div className="package-details">
                     <p><strong>From:</strong> {pkg.sender_name}</p>
@@ -285,7 +286,7 @@ const CourierPackagePage = ({ globalAuthId }) => {
         onClose={() => setShowRequestModal(false)}
       >
         <p className="modal-subtitle">
-          Package #{requestPackage?.package_id} - {requestPackage?.tracking_number}
+          {encodePackageId(requestPackage?.package_id)} - {formatTrackingNumber(requestPackage?.tracking_number)}
         </p>
 
         <div className="form-group">
@@ -310,7 +311,7 @@ const CourierPackagePage = ({ globalAuthId }) => {
       {/* Delivery Modal */}
       <Modal
         show={showDeliveryModal}
-        title={`Deliver Package #${selectedPackage?.package_id}`}
+        title={`Deliver ${encodePackageId(selectedPackage?.package_id)}`}
         onClose={() => setShowDeliveryModal(false)}
       >
         <div className="form-group">

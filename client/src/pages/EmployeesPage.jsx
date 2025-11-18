@@ -8,6 +8,7 @@ import { isValidEmail, isValidZipCode, isValidState } from '../utils/validation'
 import { Modal } from '../components/Modal';
 import { Toast } from '../components/Toast';
 import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
+import { encodeEmployeeId, encodeFacilityId } from '../utils/idEncoder';
 
 const EmployeesPage = ({ globalAuthId }) => {
   const authId = globalAuthId;
@@ -482,7 +483,7 @@ const EmployeesPage = ({ globalAuthId }) => {
                   ) : (
                     filteredEmployees.map(employee => (
                       <tr key={employee.employee_id}>
-                        <td>{employee.employee_id}</td>
+                        <td>{encodeEmployeeId(employee.employee_id)}</td>
                         <td>{employee.first_name}</td>
                         <td>{employee.last_name}</td>
                         <td className="capitalize">{employee.account_type}</td>
@@ -616,7 +617,7 @@ const EmployeesPage = ({ globalAuthId }) => {
       {/* Edit Employee Modal */}
       <Modal
         show={showEditModal && editingEmployee !== null}
-        title={editingEmployee ? `Edit Employee (ID: ${editingEmployee.employee_id})` : 'Edit Employee'}
+        title={editingEmployee ? `Edit Employee ${encodeEmployeeId(editingEmployee.employee_id)}` : 'Edit Employee'}
         onClose={() => setShowEditModal(false)}
       >
         <form onSubmit={handleEditSubmit}>
