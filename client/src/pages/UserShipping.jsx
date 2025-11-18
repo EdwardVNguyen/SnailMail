@@ -8,7 +8,7 @@ import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import "ag-grid-community/styles/ag-theme-alpine.css";
 
 import Pagination from '../utils/Pagination';
-import { encodePackageId } from '../utils/idEncoder';
+import { encodePackageId, formatTrackingNumber } from '../utils/idEncoder';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -62,6 +62,8 @@ const UserShipping = ( {globalAuthId }) => {
     // Find the corresponding address for this package
     return {
       ID: encodePackageId(pkg.package_id),
+      TrackingNumber: formatTrackingNumber(pkg.tracking_number),
+      tracking_number: pkg.tracking_number, // Keep raw tracking number for navigation
       Recipient: `${pkg.first_name + ' ' + pkg.last_name}`,
       DropoffAddress: `${pkg.street_name + ', ' + pkg.city_name + ', ' + pkg.state_name + ', ' + pkg.zip_code}`,
       Type: pkg.package_type,
@@ -72,46 +74,64 @@ const UserShipping = ( {globalAuthId }) => {
       LastModified: new Date(pkg.last_updated).toISOString().split('T')[0]
     };
   });
+  // Handle row double-click to navigate to tracking page
+  const handleRowDoubleClick = (event) => {
+    const trackingNumber = event.data.tracking_number;
+    if (trackingNumber) {
+      navigate(`/userTrackPackage/${trackingNumber}`);
+    }
+  };
+
   // Column Definitions: Defines the columns to be displayed.
     const [colDefs, setColDefs] = useState([
-        { 
+        {
           field: "ID",
-          flex: 0.4
+          headerName: "Package ID",
+          flex: 0.7
         },
-        { 
+        {
+          field: "TrackingNumber",
+          headerName: "Tracking Number",
+          flex: 0.9
+        },
+        {
           field: "Type",
-          flex: 0.70
+          flex: 0.6
         },
-        { 
+        {
           field: "PackageStatus",
-          flex: 0.85
-        },
-        { 
-          field: "Recipient",
-          flex: 0.85
-        },
-        { 
-          field: "DropoffAddress",
-          flex: 1.25
-        },
-        { 
-          field: "Dimensions",
-          headerName: "LxWxH (in cm)",
-          flex: 0.85
-        },
-        { 
-          field: "Weight",
-          headerName: "Weight (in kg)",
-          flex: 0.75,
-        },
-        { 
-          field: "LastModified",
-          flex: 0.75,
-          sort: "desc" // makes the latest modfication date go on top
-        },
-        { 
-          field: "DateCreated",
+          headerName: "Status",
           flex: 0.75
+        },
+        {
+          field: "Recipient",
+          flex: 0.8
+        },
+        {
+          field: "DropoffAddress",
+          headerName: "Destination",
+          flex: 1.2
+        },
+        {
+          field: "Dimensions",
+          headerName: "LxWxH (cm)",
+          flex: 0.7
+        },
+        {
+          field: "Weight",
+          headerName: "Weight (kg)",
+          flex: 0.6,
+        },
+        {
+          field: "LastModified",
+          headerName: "Last Modified",
+          flex: 0.7,
+          sort: "desc" // makes the latest modification date go on top
+        },
+        {
+          field: "DateCreated",
+          headerName: "Date Created",
+          flex: 0.7
         }
     ]);
 
@@ -134,6 +154,7 @@ const UserShipping = ( {globalAuthId }) => {
                 rowData={rowData}
                 columnDefs={colDefs}
                 pagination={false}
+                onRowDoubleClicked={handleRowDoubleClick}
             />
         </div>
     </div>
