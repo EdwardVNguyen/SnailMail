@@ -136,18 +136,6 @@ export const approveCourierRequestController = async (req, res) => {
       await connection.rollback();
     }
     console.error('Error in approveCourierRequestController:', error);
-
-    // Check if error is from the courier package limit trigger
-    if (error.sqlState === '45000' && error.message.includes('Courier cannot have more than 5 packages')) {
-      res.statusCode = 400;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({
-        success: false,
-        message: 'Cannot approve request. Courier has reached the maximum limit of 5 packages.'
-      }));
-      return;
-    }
-
     badServerRequest(res);
   } finally {
     if (connection) connection.release();

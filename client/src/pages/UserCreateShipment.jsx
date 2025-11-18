@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './UserCreateShipment.css';
 
 import StateSelect from '../components/StateSelect';
+import { Toast } from '../components/Toast';
 
 const CreateShipment = ({ globalAuthId }) => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const CreateShipment = ({ globalAuthId }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
 
   const [facilities, setFacilities] = useState([]);
 
@@ -102,7 +104,14 @@ const CreateShipment = ({ globalAuthId }) => {
           facility_id: ''
         });
       } else {
-        setError(data.message || 'Failed to create shipment');
+        // Show toast for dimension/weight errors
+        if (data.errorType === 'dimension_length' ||
+            data.errorType === 'dimension_width_height' ||
+            data.errorType === 'weight') {
+          setToast({ show: true, message: data.message, type: 'error' });
+        } else {
+          setError(data.message || 'Failed to create shipment');
+        }
       }
     } catch (err) {
       setError('Failed to create shipment. Please try again.');
@@ -114,13 +123,21 @@ const CreateShipment = ({ globalAuthId }) => {
 
   return (
     <div className="create-shipment-container">
+      {/* Toast Notification */}
+      <Toast
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        duration={5000}
+        onClose={() => setToast({ show: false, message: '', type: 'error' })}
+      />
 
       {/* Success Message */}
       {success && (
         <div className="success-message">
           <h2>✓ Shipment Created Successfully!</h2>
           <p>Your tracking number is: <strong>{trackingNumber}</strong></p>
-          <button 
+          <button
             onClick={() => navigate(`/userTrackPackage/${trackingNumber}`)}
             className="track-button"
           >

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import StateSelect from '../components/StateSelect';
+import { Toast } from '../components/Toast';
 import './CreatePackage.css';
 
 const CreatePackage = () => {
@@ -38,6 +39,7 @@ const CreatePackage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
 
   const [facilities, setFacilities] = useState([]);
 
@@ -117,7 +119,14 @@ const CreatePackage = () => {
           facility_id: ''
         });
       } else {
-        setError(data.message || 'Failed to create package');
+        // Show toast for dimension/weight errors
+        if (data.errorType === 'dimension_length' ||
+            data.errorType === 'dimension_width_height' ||
+            data.errorType === 'weight') {
+          setToast({ show: true, message: data.message, type: 'error' });
+        } else {
+          setError(data.message || 'Failed to create package');
+        }
       }
     } catch (err) {
       setError('Failed to create package. Please try again.');
@@ -129,6 +138,14 @@ const CreatePackage = () => {
 
   return (
     <div className="create-package-container">
+      {/* Toast Notification */}
+      <Toast
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        duration={5000}
+        onClose={() => setToast({ show: false, message: '', type: 'error' })}
+      />
 
       {/* Success Message */}
       {success && (
@@ -136,7 +153,7 @@ const CreatePackage = () => {
           <h2>✓ Package Created Successfully!</h2>
           <p>Your tracking number is: <strong>{trackingNumber}</strong></p>
           <p className="save-notice">Please save this tracking number to track your package.</p>
-          <button 
+          <button
             onClick={() => navigate(`/tracking`)}
             className="track-button"
           >
