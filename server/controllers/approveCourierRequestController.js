@@ -122,6 +122,13 @@ export const approveCourierRequestController = async (req, res) => {
       [request.courier_id, authId, request.package_id]
     );
 
+    // 3. Create tracking event for out-for-delivery status
+    await connection.execute(
+      `INSERT INTO tracking_event (package_id, event_type, location_id, event_time, created_by, updated_by)
+       VALUES (?, 'out-for-delivery', ?, NOW(), ?, ?)`,
+      [request.package_id, pkg.facility_address_id, authId, authId]
+    );
+
     await connection.commit();
 
     res.statusCode = 200;
