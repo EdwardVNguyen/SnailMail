@@ -128,14 +128,7 @@ const EmployeePage = ({ globalAuthId }) => {
   };
 
   return (
-    <div className="clerk-page-container">
-      <div className="clerk-page-header">
-        <h1>Clerk Package Management</h1>
-        <button onClick={() => navigate('/clerkPage')} className="back-button">
-          ← Back
-        </button>
-      </div>
-
+    <div className="clerk-package-container">
       {/* Packages Table */}
       <div className="packages-section">
         <h2>Packages at My Facility</h2>

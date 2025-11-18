@@ -189,13 +189,6 @@ const CourierPackagePage = ({ globalAuthId }) => {
 
   return (
     <div className="courier-package-container">
-      <div className="courier-header">
-        <h1>Courier Packages</h1>
-        <button onClick={() => navigate('/courierPage')} className="back-button">
-          ← Back
-        </button>
-      </div>
-
       {/* Tab Navigation */}
       <div className="courier-tabs">
         <button

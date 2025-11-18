@@ -189,13 +189,7 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
 
   return (
     <div className="clerk-package-container">
-      <div className="clerk-header">
-        <h1>Courier Package Requests & Management</h1>
-        <button onClick={() => navigate('/clerkPage')} className="back-button">
-          ← Back
-        </button>
-      </div>
-
+    
       {/* Requests Table */}
       <div className="packages-section">
         <h2>Pending Courier Requests</h2>
