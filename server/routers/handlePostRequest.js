@@ -19,6 +19,7 @@ import { createCourierRequestController } from '../controllers/createCourierRequ
 import { approveCourierRequestController } from '../controllers/approveCourierRequestController.js'
 import { rejectCourierRequestController } from '../controllers/rejectCourierRequestController.js'
 import { markPackagesDeliveredController } from '../controllers/markPackagesDeliveredController.js'
+import { updatePackageDimensionsController } from '../controllers/updatePackageDimensionsController.js'
 
 export const handlePostRequest= (req, res) => {
 
@@ -105,6 +106,10 @@ export const handlePostRequest= (req, res) => {
   // mark packages as delivered
   else if (req.url.startsWith('/markPackagesDelivered')) {
     return markPackagesDeliveredController(req, res)
+  }
+  // update package dimensions
+  else if (req.url.startsWith('/updatePackageDimensions')) {
+    return updatePackageDimensionsController(req, res)
   }
   // if an api call is made to a url that isn't any of the above, return 404
   else {

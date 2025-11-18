@@ -16,11 +16,18 @@ const EmployeePage = ({ globalAuthId }) => {
   // Modal states
   const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showDimensionsModal, setShowDimensionsModal] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
 
   // Tracking event form
   const [eventType, setEventType] = useState('processing');
   const [locationId, setLocationId] = useState('');
+
+  // Package dimensions form
+  const [editLength, setEditLength] = useState('');
+  const [editWidth, setEditWidth] = useState('');
+  const [editHeight, setEditHeight] = useState('');
+  const [editWeight, setEditWeight] = useState('');
 
   // Tracking history
   const [trackingHistory, setTrackingHistory] = useState([]);
@@ -96,6 +103,46 @@ const EmployeePage = ({ globalAuthId }) => {
       }
     } catch (err) {
       console.error('Error fetching tracking history:', err);
+    }
+  };
+
+  const openDimensionsModal = (pkg) => {
+    setSelectedPackage(pkg);
+    setEditLength(pkg.length || '');
+    setEditWidth(pkg.width || '');
+    setEditHeight(pkg.height || '');
+    setEditWeight(pkg.weight || '');
+    setShowDimensionsModal(true);
+  };
+
+  const handleUpdateDimensions = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/updatePackageDimensions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          packageId: selectedPackage.package_id,
+          length: editLength,
+          width: editWidth,
+          height: editHeight,
+          weight: editWeight,
+          authId
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        showSuccessToast('Package dimensions updated successfully!');
+        setShowDimensionsModal(false);
+        fetchPackages();
+      } else {
+        showErrorToast('Error: ' + data.message);
+      }
+    } catch (err) {
+      console.error('Error updating dimensions:', err);
+      showErrorToast('Error updating package dimensions');
     }
   };
 
@@ -180,6 +227,12 @@ const EmployeePage = ({ globalAuthId }) => {
                         className="btn-secondary"
                       >
                         View History
+                      </button>
+                      <button
+                        onClick={() => openDimensionsModal(pkg)}
+                        className="btn-primary"
+                      >
+                        Edit Dimensions
                       </button>
                     </td>
                   </tr>
@@ -291,6 +344,80 @@ const EmployeePage = ({ globalAuthId }) => {
             Close
           </button>
         </div>
+      </Modal>
+
+      {/* Edit Dimensions Modal */}
+      <Modal
+        show={showDimensionsModal}
+        title="Edit Package Dimensions"
+        onClose={() => setShowDimensionsModal(false)}
+      >
+        <p className="modal-subtitle">
+          Package {encodePackageId(selectedPackage?.package_id)}: {formatTrackingNumber(selectedPackage?.tracking_number)}
+        </p>
+
+        <form onSubmit={handleUpdateDimensions}>
+          <div className="form-group">
+            <label>Length (cm):</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={editLength}
+              onChange={(e) => setEditLength(e.target.value)}
+              placeholder="Enter length"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Width (cm):</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={editWidth}
+              onChange={(e) => setEditWidth(e.target.value)}
+              placeholder="Enter width"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Height (cm):</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={editHeight}
+              onChange={(e) => setEditHeight(e.target.value)}
+              placeholder="Enter height"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Weight (kg):</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={editWeight}
+              onChange={(e) => setEditWeight(e.target.value)}
+              placeholder="Enter weight"
+            />
+          </div>
+
+          <div className="modal-actions">
+            <button type="submit" className="modal-submit-button">
+              Update Dimensions
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowDimensionsModal(false)}
+              className="modal-cancel-button"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </Modal>
 
       {/* Toast Notification */}
