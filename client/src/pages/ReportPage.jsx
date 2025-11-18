@@ -2,15 +2,15 @@ import { useState, useEffect } from 'react';
 import './ReportPage.css';
 
 const ReportPage = ({ globalAuthId }) => {
-  const [activeReport, setActiveReport] = useState('problems');
+  const [activeReport, setActiveReport] = useState('facility');
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState(null);
 
   // Date range states
-  const [backlogStartDate, setBacklogStartDate] = useState('');
-  const [backlogEndDate, setBacklogEndDate] = useState('');
-  const [deliveryStartDate, setDeliveryStartDate] = useState('');
-  const [deliveryEndDate, setDeliveryEndDate] = useState('');
+  const [facilityStartDate, setFacilityStartDate] = useState('');
+  const [facilityEndDate, setFacilityEndDate] = useState('');
+  const [clerkStartDate, setClerkStartDate] = useState('');
+  const [clerkEndDate, setClerkEndDate] = useState('');
   const [courierStartDate, setCourierStartDate] = useState('');
   const [courierEndDate, setCourierEndDate] = useState('');
 
@@ -24,10 +24,10 @@ const ReportPage = ({ globalAuthId }) => {
     thirtyDaysBack.setDate(thirtyDaysBack.getDate() - 30);
     const endDate = thirtyDaysBack.toISOString().split('T')[0];
 
-    setBacklogStartDate(startDate);
-    setBacklogEndDate(endDate);
-    setDeliveryStartDate(startDate);
-    setDeliveryEndDate(endDate);
+    setFacilityStartDate(startDate);
+    setFacilityEndDate(endDate);
+    setClerkStartDate(startDate);
+    setClerkEndDate(endDate);
     setCourierStartDate(startDate);
     setCourierEndDate(endDate);
   }, []);
@@ -38,8 +38,8 @@ const ReportPage = ({ globalAuthId }) => {
 
     const fetchReportData = async (reportType) => {
       // Don't fetch if dates aren't initialized yet
-      if (reportType === 'backlog' && (!backlogStartDate || !backlogEndDate)) return;
-      if (reportType === 'delivery' && (!deliveryStartDate || !deliveryEndDate)) return;
+      if (reportType === 'facility' && (!facilityStartDate || !facilityEndDate)) return;
+      if (reportType === 'clerk' && (!clerkStartDate || !clerkEndDate)) return;
       if (reportType === 'courier' && (!courierStartDate || !courierEndDate)) return;
 
       setLoading(true);
@@ -50,25 +50,21 @@ const ReportPage = ({ globalAuthId }) => {
         let url = '';
 
         switch (reportType) {
-          case 'problems':
-            endpoint = 'getProblemsReport';
-            url = `${import.meta.env.VITE_API_URL}/${endpoint}`;
+          case 'facility':
+            endpoint = 'getFacilityReport';
+            url = `${import.meta.env.VITE_API_URL}/${endpoint}?startDate=${facilityStartDate}&endDate=${facilityEndDate}`;
             break;
-          case 'backlog':
-            endpoint = 'getFacilityBacklogReport';
-            url = `${import.meta.env.VITE_API_URL}/${endpoint}?startDate=${backlogStartDate}&endDate=${backlogEndDate}`;
-            break;
-          case 'delivery':
-            endpoint = 'getDeliveryTimeReport';
-            url = `${import.meta.env.VITE_API_URL}/${endpoint}?startDate=${deliveryStartDate}&endDate=${deliveryEndDate}`;
+          case 'clerk':
+            endpoint = 'getClerkReport';
+            url = `${import.meta.env.VITE_API_URL}/${endpoint}?startDate=${clerkStartDate}&endDate=${clerkEndDate}`;
             break;
           case 'courier':
-            endpoint = 'getCourierPerformanceReport';
+            endpoint = 'getCourierReport';
             url = `${import.meta.env.VITE_API_URL}/${endpoint}?startDate=${courierStartDate}&endDate=${courierEndDate}`;
             break;
           default:
-            endpoint = 'getProblemsReport';
-            url = `${import.meta.env.VITE_API_URL}/${endpoint}`;
+            endpoint = 'getFacilityReport';
+            url = `${import.meta.env.VITE_API_URL}/${endpoint}?startDate=${facilityStartDate}&endDate=${facilityEndDate}`;
         }
 
         const response = await fetch(url);
@@ -100,90 +96,60 @@ const ReportPage = ({ globalAuthId }) => {
     return () => {
       cancelled = true;
     };
-  }, [activeReport, backlogStartDate, backlogEndDate, deliveryStartDate, deliveryEndDate, courierStartDate, courierEndDate]);
+  }, [activeReport, facilityStartDate, facilityEndDate, clerkStartDate, clerkEndDate, courierStartDate, courierEndDate]);
 
-  const renderProblemsReport = () => {
-    if (!reportData || !reportData.packages) return <div>No data available</div>;
-
-    return (
-      <div className="reportContent">
-        <div className="reportHeader">
-          <h2>Problem Packages Report</h2>
-          <p>Packages with issues: Returned, Undeliverable, Failed Delivery, Lost, or Damaged</p>
-          <div className="reportStats">
-            <div className="statCard">
-              <div className="statValue">{reportData.count}</div>
-              <div className="statLabel">Total Problem Packages</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="tableContainer">
-          <table className="reportTable">
-            <thead>
-              <tr>
-                <th>Package ID</th>
-                <th>Recipient</th>
-                <th>Status</th>
-                <th>Type</th>
-                <th>Weight (lbs)</th>
-                <th>Days Old</th>
-                <th>Sender Address</th>
-                <th>Recipient Address</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportData.packages.map((pkg) => (
-                <tr key={pkg.package_id}>
-                  <td>{pkg.package_id}</td>
-                  <td>{pkg.recipient_name}</td>
-                  <td><span className={`status ${pkg.package_status.replace(/\s+/g, '-').toLowerCase()}`}>{pkg.package_status}</span></td>
-                  <td>{pkg.package_type}</td>
-                  <td>{pkg.weight}</td>
-                  <td>{pkg.days_since_creation}</td>
-                  <td>{pkg.sender_address}</td>
-                  <td>{pkg.recipient_address}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    );
-  };
-
-  const renderBacklogReport = () => {
+  const renderFacilityReport = () => {
     if (!reportData || !reportData.facilities) return <div>No data available</div>;
 
     return (
       <div className="reportContent">
         <div className="reportHeader">
-          <h2>Facility Backlog Report</h2>
-          <p>Facilities with package processing backlogs</p>
+          <h2>Facility Report</h2>
+          <p>Comprehensive facility performance and metrics</p>
 
           <div className="dateRangeSelector">
             <div className="dateInput">
-              <label>Start Date:</label>
+              <label>End Date (higher):</label>
               <input
                 type="date"
-                value={backlogStartDate}
-                onChange={(e) => setBacklogStartDate(e.target.value)}
+                value={facilityStartDate}
+                onChange={(e) => setFacilityStartDate(e.target.value)}
               />
             </div>
             <div className="dateInput">
-              <label>End Date:</label>
+              <label>Start Date (lower):</label>
               <input
                 type="date"
-                value={backlogEndDate}
-                onChange={(e) => setBacklogEndDate(e.target.value)}
+                value={facilityEndDate}
+                onChange={(e) => setFacilityEndDate(e.target.value)}
               />
             </div>
           </div>
 
           <div className="reportStats">
             <div className="statCard">
-              <div className="statValue">{reportData.count}</div>
-              <div className="statLabel">Total Facilities</div>
+              <div className="statValue">{reportData.summary.total_received}</div>
+              <div className="statLabel">Total Received</div>
+            </div>
+            <div className="statCard">
+              <div className="statValue">{reportData.summary.total_delivered}</div>
+              <div className="statLabel">Total Delivered</div>
+            </div>
+            <div className="statCard">
+              <div className="statValue">{reportData.summary.total_lost}</div>
+              <div className="statLabel">Lost Packages</div>
+            </div>
+            <div className="statCard">
+              <div className="statValue">{reportData.summary.total_backlog}</div>
+              <div className="statLabel">Current Backlog</div>
+            </div>
+            <div className="statCard">
+              <div className="statValue">{reportData.summary.avg_delivery_days}</div>
+              <div className="statLabel">Avg Delivery Days</div>
+            </div>
+            <div className="statCard">
+              <div className="statValue">{reportData.summary.overall_lost_rate}%</div>
+              <div className="statLabel">Lost Rate</div>
             </div>
           </div>
         </div>
@@ -195,111 +161,32 @@ const ReportPage = ({ globalAuthId }) => {
                 <th>Facility ID</th>
                 <th>Facility Name</th>
                 <th>Address</th>
-                <th>Packages In (30d)</th>
-                <th>Packages Out (30d)</th>
-                <th>Current Backlog</th>
-                <th>Status</th>
+                <th>Received</th>
+                <th>Delivered</th>
+                <th>Lost</th>
+                <th>Lost Rate</th>
+                <th>Avg Days</th>
+                <th>Backlog</th>
+                <th>Processing</th>
+                <th>In Transit</th>
+                <th>Out for Delivery</th>
               </tr>
             </thead>
             <tbody>
-              {reportData.facilities.map((facility) => {
-                const backlog = facility.backlog;
-                const backlogStatus = backlog > 50 ? 'critical' : backlog > 20 ? 'warning' : 'normal';
-
-                return (
-                  <tr key={facility.facility_id}>
-                    <td>{facility.facility_id}</td>
-                    <td>{facility.facility_name}</td>
-                    <td>{facility.facility_address}</td>
-                    <td>{facility.packages_in}</td>
-                    <td>{facility.packages_out}</td>
-                    <td className={`backlog-${backlogStatus}`}>{backlog}</td>
-                    <td><span className={`status ${backlogStatus}`}>
-                      {backlogStatus === 'critical' ? 'Critical' : backlogStatus === 'warning' ? 'Warning' : 'Normal'}
-                    </span></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    );
-  };
-
-  const renderDeliveryTimeReport = () => {
-    if (!reportData || !reportData.packages) return <div>No data available</div>;
-
-    return (
-      <div className="reportContent">
-        <div className="reportHeader">
-          <h2>Average Delivery Time Report</h2>
-          <p>Delivered packages</p>
-
-          <div className="dateRangeSelector">
-            <div className="dateInput">
-              <label>Start Date:</label>
-              <input
-                type="date"
-                value={deliveryStartDate}
-                onChange={(e) => setDeliveryStartDate(e.target.value)}
-              />
-            </div>
-            <div className="dateInput">
-              <label>End Date:</label>
-              <input
-                type="date"
-                value={deliveryEndDate}
-                onChange={(e) => setDeliveryEndDate(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="reportStats">
-            <div className="statCard">
-              <div className="statValue">{reportData.stats.average_days}</div>
-              <div className="statLabel">Average Days</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.stats.min_days}</div>
-              <div className="statLabel">Fastest Delivery</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.stats.max_days}</div>
-              <div className="statLabel">Slowest Delivery</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.stats.total_packages}</div>
-              <div className="statLabel">Total Packages</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="tableContainer">
-          <table className="reportTable">
-            <thead>
-              <tr>
-                <th>Package ID</th>
-                <th>Recipient</th>
-                <th>Type</th>
-                <th>Origin</th>
-                <th>Destination</th>
-                <th>Ship Date</th>
-                <th>Delivery Date</th>
-                <th>Days to Deliver</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportData.packages.map((pkg) => (
-                <tr key={pkg.package_id}>
-                  <td>{pkg.package_id}</td>
-                  <td>{pkg.recipient_name}</td>
-                  <td>{pkg.package_type}</td>
-                  <td>{pkg.origin}</td>
-                  <td>{pkg.destination}</td>
-                  <td>{new Date(pkg.ship_date).toLocaleDateString()}</td>
-                  <td>{new Date(pkg.last_updated).toLocaleDateString()}</td>
-                  <td className={pkg.delivery_days > 7 ? 'slow-delivery' : ''}>{pkg.delivery_days}</td>
+              {reportData.facilities.map((facility) => (
+                <tr key={facility.facility_id}>
+                  <td>{facility.facility_id}</td>
+                  <td>{facility.facility_name}</td>
+                  <td>{facility.facility_address}</td>
+                  <td>{facility.packages_received}</td>
+                  <td>{facility.packages_delivered}</td>
+                  <td>{facility.packages_lost}</td>
+                  <td><span className={facility.lost_package_rate > 5 ? 'rate needs-improvement' : 'rate good'}>{facility.lost_package_rate}%</span></td>
+                  <td>{facility.avg_delivery_days != null ? Number(facility.avg_delivery_days).toFixed(1) : '0.0'}</td>
+                  <td className={facility.current_backlog > 50 ? 'backlog-critical' : facility.current_backlog > 20 ? 'backlog-warning' : ''}>{facility.current_backlog}</td>
+                  <td>{facility.status_processing}</td>
+                  <td>{facility.status_in_transit}</td>
+                  <td>{facility.status_out_for_delivery}</td>
                 </tr>
               ))}
             </tbody>
@@ -309,18 +196,116 @@ const ReportPage = ({ globalAuthId }) => {
     );
   };
 
-  const renderCourierPerformanceReport = () => {
+  const renderClerkReport = () => {
+    if (!reportData || !reportData.clerks) return <div>No data available</div>;
+
+    return (
+      <div className="reportContent">
+        <div className="reportHeader">
+          <h2>Clerk Report</h2>
+          <p>Clerk performance, reviews, and tracking activity</p>
+
+          <div className="dateRangeSelector">
+            <div className="dateInput">
+              <label>End Date (higher):</label>
+              <input
+                type="date"
+                value={clerkStartDate}
+                onChange={(e) => setClerkStartDate(e.target.value)}
+              />
+            </div>
+            <div className="dateInput">
+              <label>Start Date (lower):</label>
+              <input
+                type="date"
+                value={clerkEndDate}
+                onChange={(e) => setClerkEndDate(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="reportStats">
+            <div className="statCard">
+              <div className="statValue">{reportData.summary.total_reviews}</div>
+              <div className="statLabel">Total Reviews</div>
+            </div>
+            <div className="statCard">
+              <div className="statValue">{reportData.summary.total_approved}</div>
+              <div className="statLabel">Approved</div>
+            </div>
+            <div className="statCard">
+              <div className="statValue">{reportData.summary.total_rejected}</div>
+              <div className="statLabel">Rejected</div>
+            </div>
+            <div className="statCard">
+              <div className="statValue">{reportData.summary.overall_approval_rate}%</div>
+              <div className="statLabel">Approval Rate</div>
+            </div>
+            <div className="statCard">
+              <div className="statValue">{reportData.summary.total_events}</div>
+              <div className="statLabel">Tracking Events</div>
+            </div>
+            <div className="statCard">
+              <div className="statValue">{reportData.summary.total_problem_packages}</div>
+              <div className="statLabel">Problem Packages</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="tableContainer">
+          <table className="reportTable">
+            <thead>
+              <tr>
+                <th>Employee ID</th>
+                <th>Clerk Name</th>
+                <th>Facility</th>
+                <th>Reviews</th>
+                <th>Approved</th>
+                <th>Rejected</th>
+                <th>Approval Rate</th>
+                <th>Events Created</th>
+                <th>Problem Pkgs</th>
+                <th>Packages Processed</th>
+                <th>Avg Review Time (hrs)</th>
+                <th>Activity/Day</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reportData.clerks.map((clerk) => (
+                <tr key={clerk.employee_id}>
+                  <td>{clerk.employee_id}</td>
+                  <td>{clerk.clerk_name}</td>
+                  <td>{clerk.facility_name}</td>
+                  <td>{clerk.total_reviews}</td>
+                  <td>{clerk.reviews_approved}</td>
+                  <td>{clerk.reviews_rejected}</td>
+                  <td><span className={clerk.approval_rate >= 75 ? 'rate good' : 'rate needs-improvement'}>{clerk.approval_rate}%</span></td>
+                  <td>{clerk.events_total}</td>
+                  <td>{clerk.problem_packages}</td>
+                  <td>{clerk.unique_packages_processed}</td>
+                  <td>{clerk.avg_review_time_hours != null ? Number(clerk.avg_review_time_hours).toFixed(1) : '0.0'}</td>
+                  <td>{clerk.activity_per_day}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
+  const renderCourierReport = () => {
     if (!reportData || !reportData.couriers) return <div>No data available</div>;
 
     return (
       <div className="reportContent">
         <div className="reportHeader">
-          <h2>Courier Performance Report</h2>
-          <p>Courier statistics</p>
+          <h2>Courier Report</h2>
+          <p>Courier performance, deliveries, and package handling metrics</p>
 
           <div className="dateRangeSelector">
             <div className="dateInput">
-              <label>Start Date:</label>
+              <label>End Date (higher):</label>
               <input
                 type="date"
                 value={courierStartDate}
@@ -328,7 +313,7 @@ const ReportPage = ({ globalAuthId }) => {
               />
             </div>
             <div className="dateInput">
-              <label>End Date:</label>
+              <label>Start Date (lower):</label>
               <input
                 type="date"
                 value={courierEndDate}
@@ -339,8 +324,28 @@ const ReportPage = ({ globalAuthId }) => {
 
           <div className="reportStats">
             <div className="statCard">
-              <div className="statValue">{reportData.count}</div>
-              <div className="statLabel">Active Couriers</div>
+              <div className="statValue">{reportData.summary.total_claimed}</div>
+              <div className="statLabel">Total Claimed</div>
+            </div>
+            <div className="statCard">
+              <div className="statValue">{reportData.summary.total_delivered}</div>
+              <div className="statLabel">Total Delivered</div>
+            </div>
+            <div className="statCard">
+              <div className="statValue">{reportData.summary.total_lost}</div>
+              <div className="statLabel">Lost Packages</div>
+            </div>
+            <div className="statCard">
+              <div className="statValue">{reportData.summary.overall_delivery_rate}%</div>
+              <div className="statLabel">Delivery Rate</div>
+            </div>
+            <div className="statCard">
+              <div className="statValue">{reportData.summary.overall_lost_rate}%</div>
+              <div className="statLabel">Lost Rate</div>
+            </div>
+            <div className="statCard">
+              <div className="statValue">{reportData.summary.avg_delivery_days}</div>
+              <div className="statLabel">Avg Delivery Days</div>
             </div>
           </div>
         </div>
@@ -351,33 +356,43 @@ const ReportPage = ({ globalAuthId }) => {
               <tr>
                 <th>Employee ID</th>
                 <th>Courier Name</th>
-                <th>Phone Number</th>
-                <th>Total Packages</th>
+                <th>Claimed</th>
                 <th>Delivered</th>
                 <th>In Transit</th>
-                <th>Out for Delivery</th>
+                <th>Lost</th>
                 <th>Delivery Rate</th>
-                <th>Avg. Days</th>
+                <th>Lost Rate</th>
+                <th>Total Moves</th>
+                <th>Facility Transfers</th>
+                <th>Final Deliveries</th>
+                <th>Avg Days</th>
+                <th>Avg Time Between Moves</th>
+                <th>On-Time Rate</th>
+                <th>Request Approval Rate</th>
+                <th>Pkgs/Day</th>
               </tr>
             </thead>
             <tbody>
-              {reportData.couriers.map((courier) => {
-                const rateClass = courier.delivery_rate >= 90 ? 'excellent' : courier.delivery_rate >= 75 ? 'good' : 'needs-improvement';
-
-                return (
-                  <tr key={courier.employee_id}>
-                    <td>{courier.employee_id}</td>
-                    <td>{courier.courier_name}</td>
-                    <td>{courier.phone_number || 'N/A'}</td>
-                    <td>{courier.total_packages}</td>
-                    <td>{courier.delivered_packages}</td>
-                    <td>{courier.in_transit_packages}</td>
-                    <td>{courier.out_for_delivery_packages}</td>
-                    <td><span className={`rate ${rateClass}`}>{courier.delivery_rate}%</span></td>
-                    <td>{courier.avg_delivery_days ? courier.avg_delivery_days.toFixed(1) : 'N/A'}</td>
-                  </tr>
-                );
-              })}
+              {reportData.couriers.map((courier) => (
+                <tr key={courier.employee_id}>
+                  <td>{courier.employee_id}</td>
+                  <td>{courier.courier_name}</td>
+                  <td>{courier.packages_claimed}</td>
+                  <td>{courier.packages_delivered}</td>
+                  <td>{courier.packages_in_transit}</td>
+                  <td>{courier.packages_lost}</td>
+                  <td><span className={courier.delivery_success_rate >= 90 ? 'rate excellent' : courier.delivery_success_rate >= 75 ? 'rate good' : 'rate needs-improvement'}>{courier.delivery_success_rate}%</span></td>
+                  <td><span className={courier.lost_package_rate > 5 ? 'rate needs-improvement' : 'rate good'}>{courier.lost_package_rate}%</span></td>
+                  <td>{courier.total_moves}</td>
+                  <td>{courier.facility_transfers}</td>
+                  <td>{courier.final_deliveries}</td>
+                  <td>{courier.avg_delivery_days != null ? Number(courier.avg_delivery_days).toFixed(1) : '0.0'}</td>
+                  <td>{courier.avg_time_between_moves != null ? Number(courier.avg_time_between_moves).toFixed(1) : '0.0'} hrs</td>
+                  <td><span className={courier.on_time_rate >= 80 ? 'rate excellent' : courier.on_time_rate >= 60 ? 'rate good' : 'rate needs-improvement'}>{courier.on_time_rate}%</span></td>
+                  <td>{courier.request_approval_rate}%</td>
+                  <td>{courier.packages_per_day}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -392,35 +407,27 @@ const ReportPage = ({ globalAuthId }) => {
         {/* Left side accordion menu */}
         <div className="reportMenu">
           <div
-            className={`reportMenuItem ${activeReport === 'problems' ? 'active' : ''}`}
-            onClick={() => setActiveReport('problems')}
+            className={`reportMenuItem ${activeReport === 'facility' ? 'active' : ''}`}
+            onClick={() => setActiveReport('facility')}
           >
-            <div className="menuItemTitle">Problem Packages</div>
-            <div className="menuItemDesc">Returned & undeliverable items</div>
+            <div className="menuItemTitle">Facility Report</div>
+            <div className="menuItemDesc">Performance, throughput, and backlog</div>
           </div>
 
           <div
-            className={`reportMenuItem ${activeReport === 'backlog' ? 'active' : ''}`}
-            onClick={() => setActiveReport('backlog')}
+            className={`reportMenuItem ${activeReport === 'clerk' ? 'active' : ''}`}
+            onClick={() => setActiveReport('clerk')}
           >
-            <div className="menuItemTitle">Facility Backlogs</div>
-            <div className="menuItemDesc">Facility capacity analysis</div>
-          </div>
-
-          <div
-            className={`reportMenuItem ${activeReport === 'delivery' ? 'active' : ''}`}
-            onClick={() => setActiveReport('delivery')}
-          >
-            <div className="menuItemTitle">Delivery Times</div>
-            <div className="menuItemDesc">Average delivery performance</div>
+            <div className="menuItemTitle">Clerk Report</div>
+            <div className="menuItemDesc">Reviews, approvals, and activity</div>
           </div>
 
           <div
             className={`reportMenuItem ${activeReport === 'courier' ? 'active' : ''}`}
             onClick={() => setActiveReport('courier')}
           >
-            <div className="menuItemTitle">Courier Performance</div>
-            <div className="menuItemDesc">Employee delivery metrics</div>
+            <div className="menuItemTitle">Courier Report</div>
+            <div className="menuItemDesc">Deliveries and performance metrics</div>
           </div>
         </div>
 
@@ -430,10 +437,9 @@ const ReportPage = ({ globalAuthId }) => {
             <div className="loadingMessage">Loading report...</div>
           ) : reportData ? (
             <>
-              {activeReport === 'problems' && renderProblemsReport()}
-              {activeReport === 'backlog' && renderBacklogReport()}
-              {activeReport === 'delivery' && renderDeliveryTimeReport()}
-              {activeReport === 'courier' && renderCourierPerformanceReport()}
+              {activeReport === 'facility' && renderFacilityReport()}
+              {activeReport === 'clerk' && renderClerkReport()}
+              {activeReport === 'courier' && renderCourierReport()}
             </>
           ) : (
             <div className="loadingMessage">No data available</div>

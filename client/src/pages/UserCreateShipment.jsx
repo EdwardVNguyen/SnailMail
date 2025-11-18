@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './UserCreateShipment.css';
 
 import StateSelect from '../components/StateSelect';
+import { Toast } from '../components/Toast';
 
 const CreateShipment = ({ globalAuthId }) => {
   const navigate = useNavigate();
@@ -30,6 +31,11 @@ const CreateShipment = ({ globalAuthId }) => {
   const [trackingNumber, setTrackingNumber] = useState('');
 
   const [facilities, setFacilities] = useState([]);
+
+  // Toast notification state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
 
   useEffect(() => {
   fetch(`${import.meta.env.VITE_API_URL}/getFacilityForCustomer`)
@@ -85,6 +91,12 @@ const CreateShipment = ({ globalAuthId }) => {
       if (data.success) {
         setSuccess(true);
         setTrackingNumber(data.tracking_number);
+
+        // Show toast notification
+        setToastMessage(`Shipment created successfully! Tracking number: ${data.tracking_number}`);
+        setToastType('success');
+        setShowToast(true);
+
         // Reset form
         setFormData({
           recipientFirstName: '',
@@ -102,10 +114,23 @@ const CreateShipment = ({ globalAuthId }) => {
           facility_id: ''
         });
       } else {
-        setError(data.message || 'Failed to create shipment');
+        const errorMsg = data.message || 'Failed to create shipment';
+        setError(errorMsg);
+
+        // Show toast notification
+        setToastMessage(errorMsg);
+        setToastType('error');
+        setShowToast(true);
       }
     } catch (err) {
-      setError('Failed to create shipment. Please try again.');
+      const errorMsg = 'Failed to create shipment. Please try again.';
+      setError(errorMsg);
+
+      // Show toast notification
+      setToastMessage(errorMsg);
+      setToastType('error');
+      setShowToast(true);
+
       console.error('Create shipment error:', err);
     } finally {
       setIsSubmitting(false);
@@ -344,8 +369,8 @@ const CreateShipment = ({ globalAuthId }) => {
 
         {/* Submit Button */}
         <div className="form-actions">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="submit-button"
             disabled={isSubmitting}
           >
@@ -353,6 +378,14 @@ const CreateShipment = ({ globalAuthId }) => {
           </button>
         </div>
       </form>
+
+      {/* Toast Notification */}
+      <Toast
+        show={showToast}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 };
