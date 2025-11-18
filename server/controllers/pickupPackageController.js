@@ -51,6 +51,18 @@ export const pickupPackageController = async (req, res) => {
   catch (error) {
     if (connection) await connection.rollback();
     console.error('Error picking up package:', error);
+
+    // Check if error is from the courier package limit trigger
+    if (error.sqlState === '45000' && error.message.includes('Courier cannot have more than 5 packages')) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({
+        success: false,
+        message: 'You cannot pick up more packages. Maximum limit of 5 packages reached.'
+      }));
+      return;
+    }
+
     badServerRequest(res);
   }
   finally {

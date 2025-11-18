@@ -11,14 +11,12 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
 
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [clerkFacilityAddressId, setClerkFacilityAddressId] = useState(null);
 
   // Modal states
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [rejectingRequestId, setRejectingRequestId] = useState(null);
-  const [eventType, setEventType] = useState('processing');
 
   // Toast notification state
   const [showToast, setShowToast] = useState(false);
@@ -38,21 +36,8 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
   };
 
   useEffect(() => {
-    fetchClerkFacility();
     fetchRequests();
   }, []);
-
-  const fetchClerkFacility = async () => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/getEmployeeId?authId=${authId}`);
-      const data = await response.json();
-      if (data.success && data.employee) {
-        setClerkFacilityAddressId(data.employee.facility_address_id);
-      }
-    } catch (err) {
-      console.error('Error fetching clerk facility:', err);
-    }
-  };
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -72,88 +57,30 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
   const openReviewModal = (request) => {
     setSelectedRequest(request);
     setShowReviewModal(true);
-    setEventType('out-for-delivery');
   };
 
-  const handleReviewRequest = async (e) => {
-    e.preventDefault();
-
-    // Ensure clerk facility address is loaded
-    if (!clerkFacilityAddressId) {
-      showErrorToast('Error: Clerk facility information not loaded. Please refresh the page.');
-      return;
-    }
-
-    // Define negative event types that should trigger rejection
-    const negativeEventTypes = ['lost', 'returned', 'undeliverable', 'failed-delivery', 'damaged'];
-    const shouldReject = negativeEventTypes.includes(eventType);
-
+  const handleApproveRequest = async () => {
     try {
-      // Step 1: Create tracking event first (using clerk's facility address)
-      const trackingResponse = await fetch(`${import.meta.env.VITE_API_URL}/createTrackingEvent`, {
+      const approveResponse = await fetch(`${import.meta.env.VITE_API_URL}/approveCourierRequest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          packageId: selectedRequest.package_id,
-          eventType,
-          locationId: clerkFacilityAddressId,
+          requestId: selectedRequest.request_id,
           authId
         })
       });
 
-      const trackingData = await trackingResponse.json();
-      if (!trackingData.success) {
-        showErrorToast('Error creating tracking event: ' + trackingData.message);
-        return;
-      }
-
-      // Step 2: Based on event type, approve or reject
-      if (shouldReject) {
-        // Automatically reject if it's a negative event
-        const rejectResponse = await fetch(`${import.meta.env.VITE_API_URL}/rejectCourierRequest`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            requestId: selectedRequest.request_id,
-            authId
-          })
-        });
-
-        const rejectData = await rejectResponse.json();
-        if (rejectData.success) {
-          showSuccessToast(`Tracking event created. Request automatically rejected due to "${eventType}" status.`);
-          setShowReviewModal(false);
-          fetchRequests();
-        } else {
-          showErrorToast('Tracking event created but rejection failed: ' + rejectData.message);
-          setShowReviewModal(false);
-          fetchRequests();
-        }
+      const approveData = await approveResponse.json();
+      if (approveData.success) {
+        showSuccessToast('Request approved successfully!');
+        setShowReviewModal(false);
+        fetchRequests();
       } else {
-        // Approve for positive events
-        const approveResponse = await fetch(`${import.meta.env.VITE_API_URL}/approveCourierRequest`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            requestId: selectedRequest.request_id,
-            authId
-          })
-        });
-
-        const approveData = await approveResponse.json();
-        if (approveData.success) {
-          showSuccessToast('Tracking event created and request approved successfully!');
-          setShowReviewModal(false);
-          fetchRequests();
-        } else {
-          showErrorToast('Tracking event created but approval failed: ' + approveData.message);
-          setShowReviewModal(false);
-          fetchRequests();
-        }
+        showErrorToast('Error: ' + approveData.message);
       }
     } catch (err) {
-      console.error('Error in review process:', err);
-      showErrorToast('Error processing request.');
+      console.error('Error approving request:', err);
+      showErrorToast('Error approving request.');
     }
   };
 
@@ -177,6 +104,7 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
       if (data.success) {
         showSuccessToast('Request rejected successfully!');
         setShowRejectModal(false);
+        setShowReviewModal(false);
         setRejectingRequestId(null);
         fetchRequests();
       } else {
@@ -240,12 +168,6 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
                       >
                         Review
                       </button>
-                      <button
-                        onClick={() => handleDirectReject(request.request_id)}
-                        className="btn-reject"
-                      >
-                        Reject
-                      </button>
                     </td>
                   </tr>
                 ))}
@@ -255,48 +177,36 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
         )}
       </div>
 
-      {/* Review Modal with Tracking Event */}
+      {/* Review Modal */}
       <Modal
         show={showReviewModal}
-        title="Review Request & Create Tracking Event"
+        title="Review Courier Request"
         onClose={() => setShowReviewModal(false)}
       >
         <p className="modal-subtitle">
-          {encodePackageId(selectedRequest?.package_id)}: {formatTrackingNumber(selectedRequest?.tracking_number)} |
+          Package: {encodePackageId(selectedRequest?.package_id)} - {formatTrackingNumber(selectedRequest?.tracking_number)} |
           Courier: {selectedRequest?.courier_first_name} {selectedRequest?.courier_last_name}
         </p>
 
-        <div className="info-box">
-          <p><strong>Note:</strong> Creating a tracking event with status 'lost', 'returned', 'undeliverable', 'failed-delivery', or 'damaged' will automatically reject the courier request.</p>
+        <div className="modal-actions">
+          <button onClick={handleApproveRequest} className="modal-submit-button">
+            Approve Request
+          </button>
+          <button
+            onClick={() => {
+              handleDirectReject(selectedRequest.request_id);
+            }}
+            className="btn-reject"
+          >
+            Reject Request
+          </button>
+          <button
+            onClick={() => setShowReviewModal(false)}
+            className="modal-cancel-button"
+          >
+            Cancel
+          </button>
         </div>
-
-        <form onSubmit={handleReviewRequest}>
-          <div className="form-group">
-            <label>Package Condition:</label>
-            <select value={eventType} onChange={(e) => setEventType(e.target.value)} required>
-              <option value="out-for-delivery">Good Condition - Ready for Delivery (Approve)</option>
-              <option value="lost">Lost (Auto-Reject)</option>
-              <option value="returned">Returned (Auto-Reject)</option>
-              <option value="undeliverable">Undeliverable (Auto-Reject)</option>
-              <option value="failed-delivery">Failed Delivery (Auto-Reject)</option>
-              <option value="damaged">Damaged (Auto-Reject)</option>
-            </select>
-            <small>Tracking event will be created at your facility</small>
-          </div>
-
-          <div className="modal-actions">
-            <button type="submit" className="modal-submit-button">
-              Create Event & Process
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowReviewModal(false)}
-              className="modal-cancel-button"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
       </Modal>
 
       {/* Reject Confirmation Modal */}

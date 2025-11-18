@@ -107,10 +107,9 @@ export const createPackageController = async (req, res) => {
       `INSERT INTO customer (
         first_name,
         last_name,
-        account_type,
         address_id,
         auth_id
-      ) VALUES (?, ?, 'guest', ?, NULL)`,
+      ) VALUES (?, ?, ?, NULL)`,
       [
         senderFirstName,
         senderLastName,
@@ -132,10 +131,9 @@ export const createPackageController = async (req, res) => {
       `INSERT INTO customer (
         first_name,
         last_name,
-        account_type,
         address_id,
         auth_id
-      ) VALUES (?, ?, 'guest', ?, NULL)`,
+      ) VALUES (?, ?, ?, NULL)`,
       [
         recipientFirstName,
         recipientLastName,

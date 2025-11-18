@@ -17,9 +17,9 @@ export const getAvailablePackagesForCourierController = async (req, res) => {
 
     connection = await pool.getConnection();
 
-    // Get courier's facility_id
+    // Get courier's facility_id and employee_id
     const [courierRows] = await connection.execute(
-      'SELECT facility_id FROM employee WHERE auth_id = ?',
+      'SELECT facility_id, employee_id FROM employee WHERE auth_id = ?',
       [authId]
     );
 
@@ -31,8 +31,10 @@ export const getAvailablePackagesForCourierController = async (req, res) => {
     }
 
     const courierFacilityId = courierRows[0].facility_id;
+    const courierId = courierRows[0].employee_id;
 
     // Get packages that are 'processing' at courier's facility and not assigned to any courier
+    // Exclude packages that this courier has already requested
     const query = `
       SELECT
         p.package_id,
@@ -54,10 +56,16 @@ export const getAvailablePackagesForCourierController = async (req, res) => {
       WHERE p.facility_id = ?
       AND p.package_status = 'processing'
       AND p.courier_id IS NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM courier_package_request cpr
+        WHERE cpr.package_id = p.package_id
+        AND cpr.courier_id = ?
+        AND cpr.request_status = 'pending'
+      )
       ORDER BY p.created_at DESC
     `;
 
-    const [packages] = await connection.execute(query, [courierFacilityId]);
+    const [packages] = await connection.execute(query, [courierFacilityId, courierId]);
 
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');

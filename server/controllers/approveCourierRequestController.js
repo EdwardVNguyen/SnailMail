@@ -81,6 +81,26 @@ export const approveCourierRequestController = async (req, res) => {
       return badClientRequest(res, { message: 'Package is no longer available for pickup' });
     }
 
+    // Check courier's current package count before approving
+    const [[{ package_count }]] = await connection.execute(
+      `SELECT COUNT(*) as package_count
+       FROM package
+       WHERE courier_id = ?
+       AND package_status NOT IN ('delivered', 'returned', 'lost', 'undeliverable')`,
+      [request.courier_id]
+    );
+
+    if (package_count >= 5) {
+      await connection.rollback();
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({
+        success: false,
+        message: 'Cannot approve request. Courier has reached the maximum limit of 5 packages.'
+      }));
+      return;
+    }
+
     // 1. Update request status to approved
     await connection.execute(
       `UPDATE courier_package_request
@@ -92,15 +112,7 @@ export const approveCourierRequestController = async (req, res) => {
       [clerk.employee_id, authId, requestId]
     );
 
-    // 2. Create tracking event for package assignment (using facility's address_id)
-    await connection.execute(
-      `INSERT INTO tracking_event
-       (package_id, event_type, location_id, event_time, created_by, updated_by)
-       VALUES (?, 'processing', ?, NOW(), ?, ?)`,
-      [request.package_id, pkg.facility_address_id, authId, authId]
-    );
-
-    // 3. Assign courier to package
+    // 2. Assign courier to package and set status to in-transit
     await connection.execute(
       `UPDATE package
        SET courier_id = ?,
@@ -124,6 +136,18 @@ export const approveCourierRequestController = async (req, res) => {
       await connection.rollback();
     }
     console.error('Error in approveCourierRequestController:', error);
+
+    // Check if error is from the courier package limit trigger
+    if (error.sqlState === '45000' && error.message.includes('Courier cannot have more than 5 packages')) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({
+        success: false,
+        message: 'Cannot approve request. Courier has reached the maximum limit of 5 packages.'
+      }));
+      return;
+    }
+
     badServerRequest(res);
   } finally {
     if (connection) connection.release();

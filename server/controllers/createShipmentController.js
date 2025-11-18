@@ -87,10 +87,9 @@ export const createShipmentController = async (req, res) => {
       `INSERT INTO customer (
         first_name,
         last_name,
-        account_type,
         address_id,
         auth_id
-      ) VALUES (?, ?, 'guest', ?, NULL)`,
+      ) VALUES (?, ?, ?, NULL)`,
       [
         recipientFirstName,
         recipientLastName,

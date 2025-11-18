@@ -25,7 +25,7 @@ export const getMyCourierPackagesController = async (req, res) => {
 
     const courierId = courierRows[0].employee_id;
 
-    // Get packages assigned to this courier that are in transit
+    // Get packages assigned to this courier that are in transit or out for delivery
     const query = `
       SELECT
         p.package_id,
@@ -42,7 +42,7 @@ export const getMyCourierPackagesController = async (req, res) => {
       LEFT JOIN customer recipient ON p.recipient_id = recipient.customer_id
       LEFT JOIN address recipient_addr ON recipient.address_id = recipient_addr.address_id
       WHERE p.courier_id = ?
-      AND p.package_status = 'in-transit'
+      AND p.package_status IN ('in-transit', 'out-for-delivery')
       ORDER BY p.created_at DESC
     `;
 
