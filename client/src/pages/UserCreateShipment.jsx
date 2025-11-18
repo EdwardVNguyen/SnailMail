@@ -4,6 +4,7 @@ import './UserCreateShipment.css';
 
 import StateSelect from '../components/StateSelect';
 import { Toast } from '../components/Toast';
+import { Modal } from '../components/Modal';
 
 const CreateShipment = ({ globalAuthId }) => {
   const navigate = useNavigate();
@@ -132,17 +133,38 @@ const CreateShipment = ({ globalAuthId }) => {
         onClose={() => setToast({ show: false, message: '', type: 'error' })}
       />
 
-      {/* Success Message */}
+      {/* Success Modal */}
       {success && (
-        <div className="success-message">
-          <h2>✓ Shipment Created Successfully!</h2>
-          <p>Your tracking number is: <strong>{trackingNumber}</strong></p>
-          <button
-            onClick={() => navigate(`/userTrackPackage/${trackingNumber}`)}
-            className="track-button"
+        <div className="modal-overlay" onClick={() => setSuccess(false)}>
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '400px', padding: '20px' }}
           >
-            Track This Package
-          </button>
+            <h2 className="modal-header" style={{ fontSize: '18px', marginBottom: '15px' }}>
+              ✓ Shipment Created Successfully!
+            </h2>
+            <p style={{ fontSize: '14px', marginBottom: '20px', textAlign: 'center' }}>
+              Your tracking number is: <br />
+              <strong style={{ fontSize: '16px' }}>{trackingNumber}</strong>
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                onClick={() => navigate(`/userTrackPackage/${trackingNumber}`)}
+                className="track-button"
+                style={{ margin: 0, padding: '8px 16px', fontSize: '14px' }}
+              >
+                Track Package
+              </button>
+              <button
+                onClick={() => setSuccess(false)}
+                className="submit-button"
+                style={{ margin: 0, padding: '8px 16px', fontSize: '14px', backgroundColor: '#6c757d' }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
