@@ -24,8 +24,6 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
-  const [accountType, setAccountType] = useState("");
-
   const navigate = useNavigate();
 
   // Toast notification state
@@ -81,7 +79,7 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/userSignUp`, {
                                    method: 'POST',
                                    headers: {'Content-Type': 'application/json' },
-                                   body: JSON.stringify( {email, password, street, city, state, zipCode, firstName, lastName, accountType })
+                                   body: JSON.stringify( {email, password, street, city, state, zipCode, firstName, lastName })
                                   });
     const data = await response.json();
 
@@ -115,7 +113,7 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
       setAuth(true);
 
       // send to different page depending on user credentials
-      if (data.account_type === 'individual' || data.account_type === 'prime' || data.account_type === 'business') {
+      if (data.account_type === 'customer') {
         navigate('/customerPage');
       } else if (data.account_type === 'clerk') {
         navigate('/employeePage');
@@ -173,7 +171,7 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
 
           <b className="bigText"> Ready to start your shipping journey?</b>
           <p className="description"> "A journey of a thousand miles begins with a single step."</p>
-          <form className="signUp" onSubmit={step === 4 ? handleSignUp : handleNext }>
+          <form className="signUp" onSubmit={step === 3 ? handleSignUp : handleNext }>
             {step === 1 && (
               <> 
               <AuthInput name="email" 
@@ -277,48 +275,13 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
                        onChange={ (e) => setLastName(e.target.value)}
                        required={true}
                        />
-                <p className="switch" /> 
+                <p className="switch" />
                 <div className="goBack">
                   <AuthButton text="Back" type="button" onClick={handleBack}/>
-                  <AuthButton text="Continue " type="submit"/> 
+                  <AuthButton text="Sign up" type="submit"/>
                 </div>
               </>
             )}
-          {step === 4 && (
-            <>
-              {/* Credit to CodingFlag for custom radio input */}
-            <div className="accountType">
-              <label className="formInput" htmlFor='individual-acc'>
-                    <input type="radio" name="accountType" id="individual-acc" value="individual" onChange={ (e) => setAccountType(e.target.value)} required/>
-                    <div className="title">Individual Account</div>
-                    <div className="price">Free</div>
-                    <p> Per Month</p>
-                    <div className="desc"> Perfect for personal use, giving you access to all basic features at no cost.</div>
-              </label>
-
-              <label className="formInput" htmlFor="prime-acc">
-                    <input type="radio" name="accountType" id="prime-acc" value="prime" onChange={ (e) => setAccountType(e.target.value)}/>
-                    <div className="title">Prime Account</div>
-                    <div className="price">$9.99</div>
-                    <p> Per Month</p>
-                    <div className="desc"> Enjoy enhanced features, priority support, and exclusive content for a low monthly fee.</div>
-              </label>
-
-              <label className="formInput" htmlFor="business-acc">
-                    <input type="radio" name="accountType" id="business-acc" value="business" onChange={ (e) => setAccountType(e.target.value)}/>
-                    <div className="title">Business Account</div>
-                    <div className="price">$24.99</div>
-                    <p> Per Month</p>
-                    <div className="desc"> Designed for teams and companies, offering advanced tools, analytics, and collaboration options.</div>
-                </label>
-            </div>
-
-              <div className="goBack">
-                <AuthButton text="Back" type="button" onClick={handleBack}/>
-                <AuthButton text="Sign up" type="submit"/> 
-              </div>
-            </>
-          )}
 
           </form>
           </>
