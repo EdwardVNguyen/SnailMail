@@ -20,7 +20,8 @@ export const getEmployeeIdController = async (req, res) => {
         e.employee_id,
         e.facility_id,
         e.account_type,
-        f.address_id AS facility_address_id
+        f.address_id AS facility_address_id,
+        f.facility_name
        FROM employee e
        LEFT JOIN facility f ON e.facility_id = f.facility_id
        WHERE e.auth_id = ?`,

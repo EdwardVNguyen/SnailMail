@@ -17,6 +17,7 @@ const CourierPackagePage = ({ globalAuthId }) => {
   // Available packages state
   const [availablePackages, setAvailablePackages] = useState([]);
   const [loadingAvailable, setLoadingAvailable] = useState(false);
+  const [facilityName, setFacilityName] = useState('');
 
   // My packages state
   const [myPackages, setMyPackages] = useState([]);
@@ -103,6 +104,19 @@ const CourierPackagePage = ({ globalAuthId }) => {
     }
   };
 
+  // Fetch courier's facility name
+  const fetchCourierFacility = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/getEmployeeId?authId=${authId}`);
+      const data = await response.json();
+      if (data.success && data.employee) {
+        setFacilityName(data.employee.facility_name || '');
+      }
+    } catch (err) {
+      console.error('Error fetching courier facility:', err);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'available') {
       fetchAvailablePackages();
@@ -113,6 +127,7 @@ const CourierPackagePage = ({ globalAuthId }) => {
 
   useEffect(() => {
     fetchFacilities();
+    fetchCourierFacility();
   }, []);
 
   // Open request modal
@@ -209,7 +224,7 @@ const CourierPackagePage = ({ globalAuthId }) => {
       {/* Available Packages Section */}
       {activeTab === 'available' && (
         <div className="packages-section">
-          <h2>Available Packages at Facilities</h2>
+          <h2>Available Packages at {facilityName || 'My Facility'}</h2>
           {loadingAvailable ? (
             <p>Loading...</p>
           ) : availablePackages.length === 0 ? (

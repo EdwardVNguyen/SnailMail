@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './EmployeePage.css';
 import { Modal } from '../components/Modal';
 import { Toast } from '../components/Toast';
+import Pagination from '../utils/Pagination';
 import { encodePackageId, formatTrackingNumber } from '../utils/idEncoder';
 
 const EmployeePage = ({ globalAuthId }) => {
@@ -12,6 +13,10 @@ const EmployeePage = ({ globalAuthId }) => {
   const [packages, setPackages] = useState([]);
   const [facilities, setFacilities] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [facilityName, setFacilityName] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 10;
 
   // Modal states
   const [showTrackingModal, setShowTrackingModal] = useState(false);
@@ -52,6 +57,7 @@ const EmployeePage = ({ globalAuthId }) => {
   useEffect(() => {
     fetchFacilities();
     fetchPackages();
+    fetchClerkFacility();
   }, []);
 
   const fetchFacilities = async () => {
@@ -66,14 +72,28 @@ const EmployeePage = ({ globalAuthId }) => {
     }
   };
 
-  const fetchPackages = async () => {
+  const fetchClerkFacility = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/getEmployeeId?authId=${authId}`);
+      const data = await response.json();
+      if (data.success && data.employee) {
+        setFacilityName(data.employee.facility_name || '');
+      }
+    } catch (err) {
+      console.error('Error fetching clerk facility:', err);
+    }
+  };
+
+  const fetchPackages = async (pageNum = 1) => {
     setLoading(true);
     try {
-      const url = `${import.meta.env.VITE_API_URL}/getPackagesAtFacilities?authId=${authId}`;
+      const url = `${import.meta.env.VITE_API_URL}/getPackagesAtFacilities?authId=${authId}&page=${pageNum}&limit=${limit}`;
       const response = await fetch(url);
       const data = await response.json();
       if (data.success) {
         setPackages(data.packages);
+        setTotalPages(data.totalPages);
+        setPage(pageNum);
       }
     } catch (err) {
       console.error('Error fetching packages:', err);
@@ -179,7 +199,13 @@ const EmployeePage = ({ globalAuthId }) => {
     <div className="clerk-package-container">
       {/* Packages Table */}
       <div className="packages-section">
-        <h2>Packages at My Facility</h2>
+        <h2>Packages at {facilityName || 'My Facility'}</h2>
+        <Pagination
+          currentPage={page}
+          totalCount={totalPages * limit}
+          pageSize={limit}
+          onPageChange={fetchPackages}
+        />
         {loading ? (
           <p>Loading packages...</p>
         ) : packages.length === 0 ? (
@@ -197,6 +223,7 @@ const EmployeePage = ({ globalAuthId }) => {
                   <th>Status</th>
                   <th>Weight (kg)</th>
                   <th>Courier</th>
+                  <th>Date Created</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -215,6 +242,7 @@ const EmployeePage = ({ globalAuthId }) => {
                     </td>
                     <td>{pkg.weight}</td>
                     <td>{pkg.courier_name || 'Not Assigned'}</td>
+                    <td>{new Date(pkg.created_at).toLocaleDateString()}</td>
                     <td className="action-buttons">
                       <button
                         onClick={() => openTrackingModal(pkg)}

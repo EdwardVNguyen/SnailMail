@@ -12,6 +12,16 @@ export const getPendingCourierRequestsController = async (req, res) => {
     // Parse query parameters
     const queryObject = url.parse(req.url, true).query;
     const facilityId = queryObject.facility_id;
+    const page = Number(queryObject.page) || 1;
+    const limit = Number(queryObject.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    let countQuery = `
+      SELECT COUNT(*) AS total
+      FROM courier_package_request cpr
+      JOIN package p ON cpr.package_id = p.package_id
+      WHERE cpr.request_status = 'pending'
+    `;
 
     let query = `
       SELECT
@@ -56,11 +66,17 @@ export const getPendingCourierRequestsController = async (req, res) => {
 
     // Filter by facility if provided
     if (facilityId) {
+      countQuery += ' AND p.facility_id = ?';
       query += ' AND p.facility_id = ?';
       params.push(facilityId);
     }
 
+    // Get total count
+    const [countResult] = await connection.execute(countQuery, params);
+    const total = countResult[0].total;
+
     query += ' ORDER BY cpr.request_date ASC';
+    query += ` LIMIT ${limit} OFFSET ${offset}`;
 
     const [requests] = await connection.execute(query, params);
 
@@ -68,6 +84,9 @@ export const getPendingCourierRequestsController = async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({
       success: true,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalItems: total,
       requests
     }));
 

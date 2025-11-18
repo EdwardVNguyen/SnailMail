@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './ClerkCourierApprovalPage.css';
 import { Modal } from '../components/Modal';
 import { Toast } from '../components/Toast';
+import Pagination from '../utils/Pagination';
 import { encodeCourierRequestId, encodePackageId, formatTrackingNumber } from '../utils/idEncoder';
 
 const ClerkCourierApprovalPage = ({ globalAuthId }) => {
@@ -11,6 +12,9 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
 
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 10;
 
   // Modal states
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -39,13 +43,15 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
     fetchRequests();
   }, []);
 
-  const fetchRequests = async () => {
+  const fetchRequests = async (pageNum = 1) => {
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/getPendingCourierRequests`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/getPendingCourierRequests?page=${pageNum}&limit=${limit}`);
       const data = await response.json();
       if (data.success) {
         setRequests(data.requests);
+        setTotalPages(data.totalPages);
+        setPage(pageNum);
       }
     } catch (err) {
       console.error('Error fetching courier requests:', err);
@@ -122,6 +128,12 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
       {/* Requests Table */}
       <div className="packages-section">
         <h2>Pending Courier Requests</h2>
+        <Pagination
+          currentPage={page}
+          totalCount={totalPages * limit}
+          pageSize={limit}
+          onPageChange={fetchRequests}
+        />
         {loading ? (
           <p>Loading requests...</p>
         ) : requests.length === 0 ? (

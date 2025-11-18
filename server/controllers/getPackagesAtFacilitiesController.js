@@ -7,6 +7,9 @@ export const getPackagesAtFacilitiesController = async (req, res) => {
   try {
     const queryObject = url.parse(req.url, true).query;
     const authId = queryObject.authId;
+    const page = Number(queryObject.page) || 1;
+    const limit = Number(queryObject.limit) || 10;
+    const offset = (page - 1) * limit;
 
     if (!authId) {
       res.statusCode = 400;
@@ -32,7 +35,14 @@ export const getPackagesAtFacilitiesController = async (req, res) => {
 
     const employeeFacilityId = employeeRows[0].facility_id;
 
-    // Get packages at the employee's facility only
+    // Get total count of packages at this facility
+    const [countResult] = await connection.execute(
+      `SELECT COUNT(*) AS total FROM package p WHERE p.facility_id = ?`,
+      [employeeFacilityId]
+    );
+    const total = countResult[0].total;
+
+    // Get paginated packages at the employee's facility only
     let query = `
       SELECT
         p.package_id,
@@ -53,13 +63,20 @@ export const getPackagesAtFacilitiesController = async (req, res) => {
       LEFT JOIN employee courier ON p.courier_id = courier.employee_id
       WHERE p.facility_id = ?
       ORDER BY p.created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
     `;
 
     const [packages] = await connection.execute(query, [employeeFacilityId]);
 
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ success: true, packages }));
+    res.end(JSON.stringify({
+      success: true,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalItems: total,
+      packages
+    }));
   }
   catch (error) {
     console.error('Error fetching packages at facilities:', error);
