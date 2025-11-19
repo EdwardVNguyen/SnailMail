@@ -14,7 +14,10 @@ export const Toast = ({ show, message, onClose, duration = 3000, type = 'success
   const [fadingOut, setFadingOut] = useState(false);
 
   useEffect(() => {
-    if (show && !fadingOut) {
+    if (show) {
+      // Reset fadingOut state when toast is shown
+      setFadingOut(false);
+
       const fadeTimer = setTimeout(() => {
         setFadingOut(true);
       }, duration - 300);
@@ -29,7 +32,7 @@ export const Toast = ({ show, message, onClose, duration = 3000, type = 'success
         clearTimeout(hideTimer);
       };
     }
-  }, [show, fadingOut, duration, onClose]);
+  }, [show, duration, onClose]);
 
   if (!show) return null;
 
