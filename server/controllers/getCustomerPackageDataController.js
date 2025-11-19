@@ -48,13 +48,17 @@ export const getCustomerPackageDataController = async (req, res) => {
         ra.street_name,
         ra.city_name,
         ra.state_name,
-        ra.zip_code
+        ra.zip_code,
+
+        (SELECT MAX(te.event_time)
+         FROM tracking_event te
+         WHERE te.package_id = p.package_id) as last_tracking_event_time
       FROM package p
       INNER JOIN customer s on p.sender_id = s.customer_id
       INNER JOIN customer r ON p.recipient_id = r.customer_id
       INNER JOIN address ra ON r.address_id = ra.address_id
       WHERE s.auth_id = ?
-      ORDER BY p.created_at DESC
+      ORDER BY last_tracking_event_time DESC, p.created_at DESC
       LIMIT ${limit} OFFSET ${offset};
       `,
       [authId]
