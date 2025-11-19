@@ -2,7 +2,7 @@ import http from 'node:http'
 import { handlePostRequest } from './routers/handlePostRequest.js'
 import { handleGetRequest } from './routers/handleGetRequest.js'
 
-const PORT = process.env.PORT || 8000 
+const PORT = process.env.PORT || 5000 
 
 const server = http.createServer( (req,res) => {
 

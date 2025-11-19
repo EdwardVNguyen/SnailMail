@@ -1,4 +1,5 @@
 import { getCustomerDataController } from '../controllers/getCustomerDataController.js'
+import { getEmployeeDataController } from '../controllers/getEmployeeDataController.js'
 import { getCustomerPackageDataController } from '../controllers/getCustomerPackageDataController.js'
 import { getAddressDataController } from '../controllers/getAddressDataController.js'
 import { getFacilitiesController } from '../controllers/getFacilitiesController.js'
@@ -20,7 +21,10 @@ export const handleGetRequest = (req, res) => {
   // get all info from customer relation
   if ( req.url.startsWith('/getCustomerData') ) {
     return getCustomerDataController(req, res)
-  // get all info from package relation
+    // get all info from employee relation
+  } else if ( req.url.startsWith('/getEmployeeData') ) {
+    return getEmployeeDataController(req, res)
+    // get all info from package relation
   } else if ( req.url.startsWith('/getCustomerPackageData')){
     return getCustomerPackageDataController(req, res)
   // get all info from address relation

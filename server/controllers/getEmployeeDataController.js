@@ -2,7 +2,7 @@ import pool from '../config/database.js';
 import { badClientRequest, badServerRequest } from '../utils/badRequest.js';
 import { parse } from 'node:url'
 
-export const getCustomerDataController = async (req, res) => {
+export const getEmployeeDataController = async (req, res) => {
   const connection = await pool.getConnection(); 
 
   try {
@@ -14,23 +14,23 @@ export const getCustomerDataController = async (req, res) => {
       return badClientRequest(res, 'authId is required');
     }
 
-    // SQL to get customer info, address, and authentication info
+    // SQL to get employee info, address, and authentication info
     const sql = `
       SELECT 
-        c.first_name, c.last_name, c.address_id,
-        c.auth_id, c.birth_date, c.customer_id,
+        e.first_name, e.last_name, e.address_id, e.phone_number,
+        e.auth_id, e.account_type, e.employee_id, e.employee_ssn, e.salary,
         a.street_name, a.city_name, a.state_name, a.zip_code,
         au.email, au.password
-      FROM customer c
-      LEFT JOIN address a ON c.address_id = a.address_id
-      LEFT JOIN authentication au ON c.auth_id = au.auth_id
-      WHERE c.auth_id = ?
+      FROM employee e
+      LEFT JOIN address a ON e.address_id = a.address_id
+      LEFT JOIN authentication au ON e.auth_id = au.auth_id
+      WHERE e.auth_id = ?
     `;
 
     const [rows] = await connection.execute(sql, [authId]);
 
     if (rows.length === 0) {
-      return badClientRequest(res, 'Customer not found');
+      return badClientRequest(res, 'Employee not found');
     }
 
     // Return the first (and only) row
@@ -38,7 +38,7 @@ export const getCustomerDataController = async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({
       success: true,
-      customer: rows[0]
+      employee: rows[0]
     }));
 
   } catch (error) {

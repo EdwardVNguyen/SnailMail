@@ -1,0 +1,133 @@
+@import './CustomerPage.css';
+
+/* Container and Header */
+.customerProfilePageContainer {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-columns: repeat(12, 1fr);
+}
+
+.profileHeader {
+  grid-column-start: 1;
+  grid-column-end: -1;
+  grid-row-start: 1;
+  grid-row-end: 2;
+  text-align: center;
+  padding: 30px 20px;
+  background: white;
+  color: #3C467B;
+}
+
+.profileHeader h1 {
+  font-size: 34px;
+  font-weight: 700;
+}
+
+/* Cards */
+.profileCard {
+  grid-column-start: 2;
+  grid-column-end: 8;
+  grid-row-start: 3;
+  grid-row-end: 6;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profileCard3 {
+  grid-column-start: 9;
+  grid-column-end: 12;
+  grid-row-start: 3;
+  grid-row-end: 10;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profileCard2 {
+  grid-column-start: 2;
+  grid-column-end: 8;
+  grid-row-start: 7;
+  grid-row-end: 10;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profileCard h2 {
+  font-size: 22px;
+  margin-bottom: 20px;
+  color: #3C467B;
+}
+
+/* Form styling */
+.profileForm {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.formRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.profileInput {
+  flex: 1;
+  min-width: 200px;
+  padding: 12px 14px;
+  font-size: 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  transition: border-color 0.3s ease;
+}
+
+.profileInput:focus {
+  border-color: #3C467B;
+}
+
+/* Buttons */
+.saveButton,
+.logoutButton {
+  grid-column-start: 2;
+  grid-column-end: -2;
+  grid-row-start: 11;
+  grid-row-end: 12;
+  padding: 14px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.saveButton {
+  background-color: #3C467B;
+  color: white;
+}
+
+.saveButton:hover {
+  background-color: #50589C;
+}
+
+.logoutButton {
+  display: block;
+  width: 100%;
+  background-color: #d9534f;
+  color: white;
+  margin-top: 10px;
+}
+
+.logoutButton:hover {
+  background-color: #c9302c;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .formRow {
+    flex-direction: column;
+  }
+
+  .profilePageContainer {
+    padding: 15px;
+  }
+}

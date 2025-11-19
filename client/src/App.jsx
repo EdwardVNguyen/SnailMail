@@ -9,7 +9,8 @@ import EmployeePage from './pages/EmployeePage';
 import CourierPage from './pages/CourierPage';
 import ManagerPage from './pages/ManagerPage';
 
-import UserProfile from './pages/UserProfile';
+import CustomerProfilePage from './pages/CustomerProfilePage';
+import EmployeeProfilePage from './pages/EmployeeProfilePage';
 import UserShipping from './pages/UserShipping';
 import UserTrackPackage from './pages/UserTrackPackage';
 import CreatePackage from './pages/CreatePackage';
@@ -74,7 +75,8 @@ const App = () => {
             <Route path='/employeePage' element={<EmployeePage globalAuthId={globalAuthId}/>} />
             <Route path='/courierPage' element={<CourierPage globalAuthId={globalAuthId}/>} />
             <Route path='/managerPage' element={<ManagerPage globalAuthId={globalAuthId}/>} />
-            <Route path='/userProfile' element={<UserProfile />} />
+            <Route path='/CustomerProfilePage' element={<CustomerProfilePage globalAuthId={globalAuthId}/>} />
+            <Route path='/EmployeeProfilePage' element={<EmployeeProfilePage globalAuthId={globalAuthId}/>} />
             <Route path='/userShipping' element={<UserShipping globalAuthId={globalAuthId}/>} />
             <Route path='/userTrackPackage' element={<UserTrackPackage globalAuthId={globalAuthId} />} />
             <Route path='/userTrackPackage/:trackingNumber' element={<UserTrackPackage globalAuthId={globalAuthId} />} />

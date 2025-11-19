@@ -79,10 +79,15 @@ const AuthNavBar = ( {globalAccountType} ) => {
       <nav>
         <ul>
           <li>
-            <NavLink to="/userProfile" className="signInOrLogIn">
-              <span>Profile</span>
-              <img className="profileIcon" src={profileIcon} alt="Profile icon"/>
-            </NavLink>
+             {/* Routes to different page depending on account type */}
+            { globalAccountType === 'courier'
+            ? <NavLink to="/EmployeeProfilePage" className="signInOrLogIn"><img className="profileIcon" src={profileIcon} alt="Courier page"/></NavLink>
+            : globalAccountType === 'clerk'
+            ? <NavLink to="/EmployeeProfilePage" className="signInOrLogIn"><img className="profileIcon" src={profileIcon} alt="Clerk page"/></NavLink>
+            : globalAccountType === 'manager'
+              ? <NavLink to="/EmployeeProfilePage" className="signInOrLogIn"><img className="profileIcon" src={profileIcon} alt="Manager page"/></NavLink>
+              : <NavLink to="/customerProfilePage" className="signInOrLogIn"><img className="profileIcon" src={profileIcon} alt="Customer page"/></NavLink>
+            }
           </li>
          </ul>
       </nav>
