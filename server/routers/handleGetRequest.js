@@ -10,8 +10,11 @@ import { checkEmployeeUniquenessController } from '../controllers/checkEmployeeU
 import { getNextFacilityIdController } from '../controllers/getNextFacilityIdController.js'
 import { checkFacilityUniquenessController } from '../controllers/checkFacilityUniquenessController.js'
 import { getFacilityReportController } from '../controllers/getFacilityReportController.js'
+import { getFacilityDetailsController } from '../controllers/getFacilityDetailsController.js'
 import { getClerkReportController } from '../controllers/getClerkReportController.js'
+import { getClerkDetailsController } from '../controllers/getClerkDetailsController.js'
 import { getCourierReportController } from '../controllers/getCourierReportController.js'
+import { getCourierDetailsController } from '../controllers/getCourierDetailsController.js'
 import { trackingController } from '../controllers/trackingController.js';
 import { getOutForDeliveryPackagesController } from '../controllers/getOutForDeliveryPackagesController.js'
 import { getFacilityForCustomerController } from '../controllers/getFacilityForCustomerController.js'
@@ -61,13 +64,25 @@ export const handleGetRequest = (req, res) => {
   else if ( req.url.startsWith('/getFacilityReport')) {
     return getFacilityReportController(req, res)
   }
+  // get facility details
+  else if ( req.url.startsWith('/getFacilityDetails')) {
+    return getFacilityDetailsController(req, res)
+  }
   // get clerk report
   else if ( req.url.startsWith('/getClerkReport')) {
     return getClerkReportController(req, res)
   }
+  // get clerk details
+  else if ( req.url.startsWith('/getClerkDetails')) {
+    return getClerkDetailsController(req, res)
+  }
   // get courier report
   else if ( req.url.startsWith('/getCourierReport')) {
     return getCourierReportController(req, res)
+  }
+  // get courier details
+  else if ( req.url.startsWith('/getCourierDetails')) {
+    return getCourierDetailsController(req, res)
   }
   // get tracking info for a package
   else if (req.url.startsWith('/tracking')) {

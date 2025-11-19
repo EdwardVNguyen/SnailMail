@@ -16,6 +16,10 @@ export const getClerkReportController = async (req, res) => {
       [startDate, endDate] = [endDate, startDate];
     }
 
+    // Add time to make startDate beginning of day and endDate end of day
+    startDate = startDate + ' 00:00:00';
+    endDate = endDate + ' 23:59:59';
+
     // Get comprehensive clerk statistics
     const sql = `
       SELECT
@@ -39,7 +43,6 @@ export const getClerkReportController = async (req, res) => {
         IFNULL(events_processing.count, 0) as events_processing,
         IFNULL(events_out_for_delivery.count, 0) as events_out_for_delivery,
         IFNULL(events_delivered.count, 0) as events_delivered,
-        IFNULL(events_in_transit.count, 0) as events_in_transit,
         IFNULL(events_total.count, 0) as events_total,
 
         -- Problem events (lost, returned, undeliverable, failed-delivery, damaged)
@@ -117,17 +120,6 @@ export const getClerkReportController = async (req, res) => {
         GROUP BY created_by
       ) events_delivered ON auth.auth_id = events_delivered.created_by
 
-      -- In transit events
-      LEFT JOIN (
-        SELECT
-          created_by,
-          COUNT(*) as count
-        FROM tracking_event
-        WHERE event_type = 'in-transit'
-          AND event_time BETWEEN ? AND ?
-        GROUP BY created_by
-      ) events_in_transit ON auth.auth_id = events_in_transit.created_by
-
       -- Total events
       LEFT JOIN (
         SELECT
@@ -138,15 +130,17 @@ export const getClerkReportController = async (req, res) => {
         GROUP BY created_by
       ) events_total ON auth.auth_id = events_total.created_by
 
-      -- Problem events
+      -- Problem packages (unique packages with problem events, excluding resolved ones)
       LEFT JOIN (
         SELECT
-          created_by,
-          COUNT(*) as count
-        FROM tracking_event
-        WHERE event_type IN ('lost', 'returned', 'undeliverable', 'failed-delivery', 'damaged')
-          AND event_time BETWEEN ? AND ?
-        GROUP BY created_by
+          te.created_by,
+          COUNT(DISTINCT te.package_id) as count
+        FROM tracking_event te
+        INNER JOIN package p ON te.package_id = p.package_id
+        WHERE te.event_type IN ('lost', 'undeliverable', 'failed-delivery', 'damaged')
+          AND te.event_time BETWEEN ? AND ?
+          AND p.package_status NOT IN ('delivered')
+        GROUP BY te.created_by
       ) events_problem ON auth.auth_id = events_problem.created_by
 
       -- Unique packages processed
@@ -183,7 +177,6 @@ export const getClerkReportController = async (req, res) => {
       startDate, endDate,  // events_processing
       startDate, endDate,  // events_out_for_delivery
       startDate, endDate,  // events_delivered
-      startDate, endDate,  // events_in_transit
       startDate, endDate,  // events_total
       startDate, endDate,  // events_problem
       startDate, endDate,  // unique_packages

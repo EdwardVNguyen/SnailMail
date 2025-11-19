@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
 import './ReportPage.css';
+import { Modal } from '../components/Modal';
+import { Toast } from '../components/Toast';
+import DetailSection from './ReportPage/components/DetailSection';
+import FacilityReport from './ReportPage/components/FacilityReport';
+import ClerkReport from './ReportPage/components/ClerkReport';
+import CourierReport from './ReportPage/components/CourierReport';
 
 const ReportPage = ({ globalAuthId }) => {
   const [activeReport, setActiveReport] = useState('facility');
@@ -13,6 +19,49 @@ const ReportPage = ({ globalAuthId }) => {
   const [clerkEndDate, setClerkEndDate] = useState('');
   const [courierStartDate, setCourierStartDate] = useState('');
   const [courierEndDate, setCourierEndDate] = useState('');
+
+  // Modal state
+  const [showFacilityModal, setShowFacilityModal] = useState(false);
+  const [selectedFacility, setSelectedFacility] = useState(null);
+  const [facilityDetails, setFacilityDetails] = useState(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+
+  const [showClerkModal, setShowClerkModal] = useState(false);
+  const [selectedClerk, setSelectedClerk] = useState(null);
+  const [clerkDetails, setClerkDetails] = useState(null);
+  const [loadingClerkDetails, setLoadingClerkDetails] = useState(false);
+
+  const [showCourierModal, setShowCourierModal] = useState(false);
+  const [selectedCourier, setSelectedCourier] = useState(null);
+  const [courierDetails, setCourierDetails] = useState(null);
+  const [loadingCourierDetails, setLoadingCourierDetails] = useState(false);
+
+  // Toast state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
+
+  // Sorting state for main facility table
+  const [facilitySortField, setFacilitySortField] = useState('facility_name');
+  const [facilitySortDirection, setFacilitySortDirection] = useState('asc');
+
+  // Collapsed sections state (all start collapsed)
+  const [collapsedSections, setCollapsedSections] = useState({
+    packagesReceived: true,
+    clerkCreatedEvents: true,
+    packagesDelivered: true,
+    packagesLost: true,
+    backlog: true,
+    statusInTransit: true,
+    statusOutForDelivery: true
+  });
+
+  // Sorting state for detail tables
+  const [detailSortField, setDetailSortField] = useState({});
+  const [detailSortDirection, setDetailSortDirection] = useState({});
+
+  // Pagination state for detail tables
+  const [detailPages, setDetailPages] = useState({});
 
   // Initialize dates on component mount
   useEffect(() => {
@@ -31,6 +80,242 @@ const ReportPage = ({ globalAuthId }) => {
     setCourierStartDate(startDate);
     setCourierEndDate(endDate);
   }, []);
+
+  // Helper function to get date range presets
+  const getDateRange = (preset) => {
+    const today = new Date();
+    const toDate = today.toISOString().split('T')[0];
+    let fromDate;
+
+    switch (preset) {
+      case 'all':
+        fromDate = '2000-01-01'; // Far past date for "all time"
+        break;
+      case 'year':
+        const oneYearAgo = new Date(today);
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        fromDate = oneYearAgo.toISOString().split('T')[0];
+        break;
+      case 'month':
+        const oneMonthAgo = new Date(today);
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        fromDate = oneMonthAgo.toISOString().split('T')[0];
+        break;
+      case 'week':
+        const oneWeekAgo = new Date(today);
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        fromDate = oneWeekAgo.toISOString().split('T')[0];
+        break;
+      default:
+        fromDate = toDate;
+    }
+
+    return { fromDate, toDate };
+  };
+
+  // Preset handlers for each report type
+  const setFacilityDateRange = (preset) => {
+    const { fromDate } = getDateRange(preset);
+    setFacilityEndDate(fromDate); // "To" field - the past date
+  };
+
+  const setClerkDateRange = (preset) => {
+    const { fromDate } = getDateRange(preset);
+    setClerkEndDate(fromDate); // "To" field - the past date
+  };
+
+  const setCourierDateRange = (preset) => {
+    const { fromDate } = getDateRange(preset);
+    setCourierEndDate(fromDate); // "To" field - the past date
+  };
+
+  // Sorting function for main facility table
+  const handleFacilitySort = (field) => {
+    if (facilitySortField === field) {
+      setFacilitySortDirection(facilitySortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setFacilitySortField(field);
+      setFacilitySortDirection('asc');
+    }
+  };
+
+
+  // Handle facility row click to show details modal
+  const handleFacilityRowClick = async (facility) => {
+    setSelectedFacility(facility);
+    setShowFacilityModal(true);
+    setLoadingDetails(true);
+    setFacilityDetails(null);
+
+    // Reset collapsed sections and pagination
+    setCollapsedSections({
+      packagesReceived: true,
+      clerkCreatedEvents: true,
+      packagesDelivered: true,
+      packagesLost: true,
+      packagesSent: true,
+      backlog: true,
+      statusInTransit: true,
+      statusOutForDelivery: true
+    });
+    setDetailPages({});
+    setDetailSortField({});
+    setDetailSortDirection({});
+
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/getFacilityDetails?facilityId=${facility.facility_id}&startDate=${facilityStartDate}&endDate=${facilityEndDate}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.success) {
+        setFacilityDetails(data);
+        const initialPages = {};
+        Object.keys(data.details).forEach(key => {
+          initialPages[key] = 1;
+        });
+        setDetailPages(initialPages);
+      } else {
+        setToastMessage(data.message || 'Failed to fetch facility details');
+        setToastType('error');
+        setShowToast(true);
+        setShowFacilityModal(false);
+      }
+    } catch (error) {
+      console.error('Error fetching facility details:', error);
+      setToastMessage('Failed to fetch facility details. Please try again.');
+      setToastType('error');
+      setShowToast(true);
+      setShowFacilityModal(false);
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  // Handle clerk row click to show details modal
+  const handleClerkRowClick = async (clerk) => {
+    setSelectedClerk(clerk);
+    setShowClerkModal(true);
+    setLoadingClerkDetails(true);
+    setClerkDetails(null);
+
+    setCollapsedSections({
+      reviewsApproved: true,
+      reviewsRejected: true,
+      trackingEvents: true,
+      problemPackages: true,
+      packagesProcessed: true
+    });
+    setDetailPages({});
+    setDetailSortField({});
+    setDetailSortDirection({});
+
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/getClerkDetails?employeeId=${clerk.employee_id}&startDate=${clerkStartDate}&endDate=${clerkEndDate}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.success) {
+        setClerkDetails(data);
+        const initialPages = {};
+        Object.keys(data.details).forEach(key => {
+          initialPages[key] = 1;
+        });
+        setDetailPages(initialPages);
+      } else {
+        setToastMessage(data.message || 'Failed to fetch clerk details');
+        setToastType('error');
+        setShowToast(true);
+        setShowClerkModal(false);
+      }
+    } catch (error) {
+      console.error('Error fetching clerk details:', error);
+      setToastMessage('Failed to fetch clerk details. Please try again.');
+      setToastType('error');
+      setShowToast(true);
+      setShowClerkModal(false);
+    } finally {
+      setLoadingClerkDetails(false);
+    }
+  };
+
+  // Handle courier row click to show details modal
+  const handleCourierRowClick = async (courier) => {
+    setSelectedCourier(courier);
+    setShowCourierModal(true);
+    setLoadingCourierDetails(true);
+    setCourierDetails(null);
+
+    setCollapsedSections({
+      packagesClaimed: true,
+      packagesDelivered: true,
+      packagesInTransit: true,
+      packagesLost: true,
+      facilityTransfers: true,
+      finalDeliveries: true,
+      allTrackingEvents: true
+    });
+    setDetailPages({});
+    setDetailSortField({});
+    setDetailSortDirection({});
+
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/getCourierDetails?employeeId=${courier.employee_id}&startDate=${courierStartDate}&endDate=${courierEndDate}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.success) {
+        setCourierDetails(data);
+        const initialPages = {};
+        Object.keys(data.details).forEach(key => {
+          initialPages[key] = 1;
+        });
+        setDetailPages(initialPages);
+      } else {
+        setToastMessage(data.message || 'Failed to fetch courier details');
+        setToastType('error');
+        setShowToast(true);
+        setShowCourierModal(false);
+      }
+    } catch (error) {
+      console.error('Error fetching courier details:', error);
+      setToastMessage('Failed to fetch courier details. Please try again.');
+      setToastType('error');
+      setShowToast(true);
+      setShowCourierModal(false);
+    } finally {
+      setLoadingCourierDetails(false);
+    }
+  };
+
+  // Toggle section collapse/expand
+  const handleSectionToggle = (section) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  // Handle sorting for detail tables
+  const handleDetailSort = (section, field) => {
+    if (detailSortField[section] === field) {
+      setDetailSortDirection(prev => ({
+        ...prev,
+        [section]: prev[section] === 'asc' ? 'desc' : 'asc'
+      }));
+    } else {
+      setDetailSortField(prev => ({ ...prev, [section]: field }));
+      setDetailSortDirection(prev => ({ ...prev, [section]: 'asc' }));
+    }
+  };
+
+  // Handle page change for detail tables
+  const handlePageChange = (section, direction) => {
+    setDetailPages(prev => {
+      const currentPage = prev[section] || 1;
+      const newPage = direction === 'next' ? currentPage + 1 : currentPage - 1;
+      return { ...prev, [section]: Math.max(1, newPage) };
+    });
+  };
 
   // Fetch report data when active report changes or dates change
   useEffect(() => {
@@ -98,307 +383,6 @@ const ReportPage = ({ globalAuthId }) => {
     };
   }, [activeReport, facilityStartDate, facilityEndDate, clerkStartDate, clerkEndDate, courierStartDate, courierEndDate]);
 
-  const renderFacilityReport = () => {
-    if (!reportData || !reportData.facilities) return <div>No data available</div>;
-
-    return (
-      <div className="reportContent">
-        <div className="reportHeader">
-          <h2>Facility Report</h2>
-          <p>Comprehensive facility performance and metrics</p>
-
-          <div className="dateRangeSelector">
-            <div className="dateInput">
-              <label>End Date (higher):</label>
-              <input
-                type="date"
-                value={facilityStartDate}
-                onChange={(e) => setFacilityStartDate(e.target.value)}
-              />
-            </div>
-            <div className="dateInput">
-              <label>Start Date (lower):</label>
-              <input
-                type="date"
-                value={facilityEndDate}
-                onChange={(e) => setFacilityEndDate(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="reportStats">
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.total_received}</div>
-              <div className="statLabel">Total Received</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.total_delivered}</div>
-              <div className="statLabel">Total Delivered</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.total_lost}</div>
-              <div className="statLabel">Lost Packages</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.total_backlog}</div>
-              <div className="statLabel">Current Backlog</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.avg_delivery_days}</div>
-              <div className="statLabel">Avg Delivery Days</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.overall_lost_rate}%</div>
-              <div className="statLabel">Lost Rate</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="tableContainer">
-          <table className="reportTable">
-            <thead>
-              <tr>
-                <th>Facility ID</th>
-                <th>Facility Name</th>
-                <th>Address</th>
-                <th>Received</th>
-                <th>Delivered</th>
-                <th>Lost</th>
-                <th>Lost Rate</th>
-                <th>Avg Days</th>
-                <th>Backlog</th>
-                <th>Processing</th>
-                <th>In Transit</th>
-                <th>Out for Delivery</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportData.facilities.map((facility) => (
-                <tr key={facility.facility_id}>
-                  <td>{facility.facility_id}</td>
-                  <td>{facility.facility_name}</td>
-                  <td>{facility.facility_address}</td>
-                  <td>{facility.packages_received}</td>
-                  <td>{facility.packages_delivered}</td>
-                  <td>{facility.packages_lost}</td>
-                  <td><span className={facility.lost_package_rate > 5 ? 'rate needs-improvement' : 'rate good'}>{facility.lost_package_rate}%</span></td>
-                  <td>{facility.avg_delivery_days != null ? Number(facility.avg_delivery_days).toFixed(1) : '0.0'}</td>
-                  <td className={facility.current_backlog > 50 ? 'backlog-critical' : facility.current_backlog > 20 ? 'backlog-warning' : ''}>{facility.current_backlog}</td>
-                  <td>{facility.status_processing}</td>
-                  <td>{facility.status_in_transit}</td>
-                  <td>{facility.status_out_for_delivery}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    );
-  };
-
-  const renderClerkReport = () => {
-    if (!reportData || !reportData.clerks) return <div>No data available</div>;
-
-    return (
-      <div className="reportContent">
-        <div className="reportHeader">
-          <h2>Clerk Report</h2>
-          <p>Clerk performance, reviews, and tracking activity</p>
-
-          <div className="dateRangeSelector">
-            <div className="dateInput">
-              <label>End Date (higher):</label>
-              <input
-                type="date"
-                value={clerkStartDate}
-                onChange={(e) => setClerkStartDate(e.target.value)}
-              />
-            </div>
-            <div className="dateInput">
-              <label>Start Date (lower):</label>
-              <input
-                type="date"
-                value={clerkEndDate}
-                onChange={(e) => setClerkEndDate(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="reportStats">
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.total_reviews}</div>
-              <div className="statLabel">Total Reviews</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.total_approved}</div>
-              <div className="statLabel">Approved</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.total_rejected}</div>
-              <div className="statLabel">Rejected</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.overall_approval_rate}%</div>
-              <div className="statLabel">Approval Rate</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.total_events}</div>
-              <div className="statLabel">Tracking Events</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.total_problem_packages}</div>
-              <div className="statLabel">Problem Packages</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="tableContainer">
-          <table className="reportTable">
-            <thead>
-              <tr>
-                <th>Employee ID</th>
-                <th>Clerk Name</th>
-                <th>Facility</th>
-                <th>Reviews</th>
-                <th>Approved</th>
-                <th>Rejected</th>
-                <th>Approval Rate</th>
-                <th>Events Created</th>
-                <th>Problem Pkgs</th>
-                <th>Packages Processed</th>
-                <th>Avg Review Time (hrs)</th>
-                <th>Activity/Day</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportData.clerks.map((clerk) => (
-                <tr key={clerk.employee_id}>
-                  <td>{clerk.employee_id}</td>
-                  <td>{clerk.clerk_name}</td>
-                  <td>{clerk.facility_name}</td>
-                  <td>{clerk.total_reviews}</td>
-                  <td>{clerk.reviews_approved}</td>
-                  <td>{clerk.reviews_rejected}</td>
-                  <td><span className={clerk.approval_rate >= 75 ? 'rate good' : 'rate needs-improvement'}>{clerk.approval_rate}%</span></td>
-                  <td>{clerk.events_total}</td>
-                  <td>{clerk.problem_packages}</td>
-                  <td>{clerk.unique_packages_processed}</td>
-                  <td>{clerk.avg_review_time_hours != null ? Number(clerk.avg_review_time_hours).toFixed(1) : '0.0'}</td>
-                  <td>{clerk.activity_per_day}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    );
-  };
-
-  const renderCourierReport = () => {
-    if (!reportData || !reportData.couriers) return <div>No data available</div>;
-
-    return (
-      <div className="reportContent">
-        <div className="reportHeader">
-          <h2>Courier Report</h2>
-          <p>Courier performance, deliveries, and package handling metrics</p>
-
-          <div className="dateRangeSelector">
-            <div className="dateInput">
-              <label>End Date (higher):</label>
-              <input
-                type="date"
-                value={courierStartDate}
-                onChange={(e) => setCourierStartDate(e.target.value)}
-              />
-            </div>
-            <div className="dateInput">
-              <label>Start Date (lower):</label>
-              <input
-                type="date"
-                value={courierEndDate}
-                onChange={(e) => setCourierEndDate(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="reportStats">
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.total_claimed}</div>
-              <div className="statLabel">Total Claimed</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.total_delivered}</div>
-              <div className="statLabel">Total Delivered</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.total_lost}</div>
-              <div className="statLabel">Lost Packages</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.overall_delivery_rate}%</div>
-              <div className="statLabel">Delivery Rate</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.overall_lost_rate}%</div>
-              <div className="statLabel">Lost Rate</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.summary.avg_delivery_days}</div>
-              <div className="statLabel">Avg Delivery Days</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="tableContainer">
-          <table className="reportTable">
-            <thead>
-              <tr>
-                <th>Employee ID</th>
-                <th>Courier Name</th>
-                <th>Claimed</th>
-                <th>Delivered</th>
-                <th>In Transit</th>
-                <th>Lost</th>
-                <th>Delivery Rate</th>
-                <th>Lost Rate</th>
-                <th>Total Moves</th>
-                <th>Facility Transfers</th>
-                <th>Final Deliveries</th>
-                <th>Avg Days</th>
-                <th>Avg Time Between Moves</th>
-                <th>On-Time Rate</th>
-                <th>Request Approval Rate</th>
-                <th>Pkgs/Day</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportData.couriers.map((courier) => (
-                <tr key={courier.employee_id}>
-                  <td>{courier.employee_id}</td>
-                  <td>{courier.courier_name}</td>
-                  <td>{courier.packages_claimed}</td>
-                  <td>{courier.packages_delivered}</td>
-                  <td>{courier.packages_in_transit}</td>
-                  <td>{courier.packages_lost}</td>
-                  <td><span className={courier.delivery_success_rate >= 90 ? 'rate excellent' : courier.delivery_success_rate >= 75 ? 'rate good' : 'rate needs-improvement'}>{courier.delivery_success_rate}%</span></td>
-                  <td><span className={courier.lost_package_rate > 5 ? 'rate needs-improvement' : 'rate good'}>{courier.lost_package_rate}%</span></td>
-                  <td>{courier.total_moves}</td>
-                  <td>{courier.facility_transfers}</td>
-                  <td>{courier.final_deliveries}</td>
-                  <td>{courier.avg_delivery_days != null ? Number(courier.avg_delivery_days).toFixed(1) : '0.0'}</td>
-                  <td>{courier.avg_time_between_moves != null ? Number(courier.avg_time_between_moves).toFixed(1) : '0.0'} hrs</td>
-                  <td><span className={courier.on_time_rate >= 80 ? 'rate excellent' : courier.on_time_rate >= 60 ? 'rate good' : 'rate needs-improvement'}>{courier.on_time_rate}%</span></td>
-                  <td>{courier.request_approval_rate}%</td>
-                  <td>{courier.packages_per_day}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="reportPageContainer">
@@ -437,15 +421,130 @@ const ReportPage = ({ globalAuthId }) => {
             <div className="loadingMessage">Loading report...</div>
           ) : reportData ? (
             <>
-              {activeReport === 'facility' && renderFacilityReport()}
-              {activeReport === 'clerk' && renderClerkReport()}
-              {activeReport === 'courier' && renderCourierReport()}
+              {activeReport === 'facility' && <FacilityReport reportData={reportData} facilityStartDate={facilityStartDate} facilityEndDate={facilityEndDate} setFacilityStartDate={setFacilityStartDate} setFacilityEndDate={setFacilityEndDate} setFacilityDateRange={setFacilityDateRange} facilitySortField={facilitySortField} facilitySortDirection={facilitySortDirection} handleFacilitySort={handleFacilitySort} handleFacilityRowClick={handleFacilityRowClick} />}
+              {activeReport === 'clerk' && <ClerkReport reportData={reportData} clerkStartDate={clerkStartDate} clerkEndDate={clerkEndDate} setClerkStartDate={setClerkStartDate} setClerkEndDate={setClerkEndDate} setClerkDateRange={setClerkDateRange} handleClerkRowClick={handleClerkRowClick} />}
+              {activeReport === 'courier' && <CourierReport reportData={reportData} courierStartDate={courierStartDate} courierEndDate={courierEndDate} setCourierStartDate={setCourierStartDate} setCourierEndDate={setCourierEndDate} setCourierDateRange={setCourierDateRange} handleCourierRowClick={handleCourierRowClick} />}
             </>
           ) : (
             <div className="loadingMessage">No data available</div>
           )}
         </div>
       </div>
+
+      {/* Facility Details Modal */}
+      {showFacilityModal && (
+        <Modal
+          show={true}
+          title={selectedFacility ? `${selectedFacility.facility_name} - Details` : 'Facility Details'}
+          onClose={() => setShowFacilityModal(false)}
+        >
+          {loadingDetails ? (
+            <div className="loadingMessage">Loading details...</div>
+          ) : facilityDetails ? (
+            <div className="facilityDetailsContent">
+              {/* Summary header */}
+              <div className="facilityDetailsSummary">
+                <p><strong>Address:</strong> {facilityDetails.facility.facility_address}</p>
+                <div className="summaryStats">
+                  <span><strong>Received:</strong> {facilityDetails.details.packagesReceived.length}</span>
+                  <span><strong>Clerk Events:</strong> {facilityDetails.details.clerkCreatedEvents.length}</span>
+                  <span><strong>Delivered:</strong> {facilityDetails.details.packagesDelivered.length}</span>
+                  <span><strong>Lost:</strong> {facilityDetails.details.packagesLost.length}</span>
+                  <span><strong>Backlog:</strong> {facilityDetails.details.backlog.length}</span>
+                </div>
+              </div>
+
+              {/* Collapsible sections */}
+              <DetailSection sectionKey="packagesReceived" title="Packages Received" data={facilityDetails.details.packagesReceived} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="clerkCreatedEvents" title="Clerk Created Events" data={facilityDetails.details.clerkCreatedEvents} extraColumn={[{ field: 'event_type', label: 'Event Type' }, { field: 'clerk_name', label: 'Clerk' }]} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesDelivered" title="Packages Delivered" data={facilityDetails.details.packagesDelivered} extraColumn={{ field: 'delivered_by', label: 'Delivered By' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesLost" title="Packages Lost" data={facilityDetails.details.packagesLost} extraColumn={{ field: 'last_courier', label: 'Last Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesSent" title="Packages Sent" data={facilityDetails.details.packagesSent} extraColumn={{ field: 'destination_facility', label: 'Destination Facility' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="backlog" title="Backlog" data={facilityDetails.details.backlog} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="statusInTransit" title="Status: In Transit" data={facilityDetails.details.statusInTransit} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="statusOutForDelivery" title="Status: Out for Delivery" data={facilityDetails.details.statusOutForDelivery} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+            </div>
+          ) : (
+            <div>No details available</div>
+          )}
+        </Modal>
+      )}
+
+      {/* Clerk Details Modal */}
+      {showClerkModal && (
+        <Modal
+          show={true}
+          title={selectedClerk ? `${selectedClerk.clerk_name} - Details` : 'Clerk Details'}
+          onClose={() => setShowClerkModal(false)}
+        >
+          {loadingClerkDetails ? (
+            <div className="loadingMessage">Loading details...</div>
+          ) : clerkDetails ? (
+            <div className="facilityDetailsContent">
+              <div className="facilityDetailsSummary">
+                <p><strong>Facility:</strong> {clerkDetails.clerk.facility_name}</p>
+                <div className="summaryStats">
+                  <span><strong>Approved:</strong> {clerkDetails.details.reviewsApproved.length}</span>
+                  <span><strong>Rejected:</strong> {clerkDetails.details.reviewsRejected.length}</span>
+                  <span><strong>Events:</strong> {clerkDetails.details.trackingEvents.length}</span>
+                  <span><strong>Problems:</strong> {clerkDetails.details.problemPackages.length}</span>
+                  <span><strong>Processed:</strong> {clerkDetails.details.packagesProcessed.length}</span>
+                </div>
+              </div>
+
+              <DetailSection sectionKey="reviewsApproved" title="Reviews Approved" data={clerkDetails.details.reviewsApproved} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="reviewsRejected" title="Reviews Rejected" data={clerkDetails.details.reviewsRejected} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="trackingEvents" title="Tracking Events Created" data={clerkDetails.details.trackingEvents} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="problemPackages" title="Problem Packages" data={clerkDetails.details.problemPackages} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesProcessed" title="Packages Processed" data={clerkDetails.details.packagesProcessed} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+            </div>
+          ) : (
+            <div>No details available</div>
+          )}
+        </Modal>
+      )}
+
+      {/* Courier Details Modal */}
+      {showCourierModal && (
+        <Modal
+          show={true}
+          title={selectedCourier ? `${selectedCourier.courier_name} - Details` : 'Courier Details'}
+          onClose={() => setShowCourierModal(false)}
+        >
+          {loadingCourierDetails ? (
+            <div className="loadingMessage">Loading details...</div>
+          ) : courierDetails ? (
+            <div className="facilityDetailsContent">
+              <div className="facilityDetailsSummary">
+                <div className="summaryStats">
+                  <span><strong>Claimed:</strong> {courierDetails.details.packagesClaimed.length}</span>
+                  <span><strong>Delivered:</strong> {courierDetails.details.packagesDelivered.length}</span>
+                  <span><strong>In Transit:</strong> {courierDetails.details.packagesInTransit.length}</span>
+                  <span><strong>Lost:</strong> {courierDetails.details.packagesLost.length}</span>
+                </div>
+              </div>
+
+              <DetailSection sectionKey="packagesClaimed" title="Packages Claimed" data={courierDetails.details.packagesClaimed} extraColumn={{ field: 'reviewed_by_name', label: 'Approved By' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesDelivered" title="Packages Delivered" data={courierDetails.details.packagesDelivered} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesInTransit" title="Packages In Transit" data={courierDetails.details.packagesInTransit} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesLost" title="Packages Lost" data={courierDetails.details.packagesLost} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="facilityTransfers" title="Facility Transfers" data={courierDetails.details.facilityTransfers} extraColumn={{ field: 'destination_facility', label: 'Destination' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="finalDeliveries" title="Final Deliveries" data={courierDetails.details.finalDeliveries} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="allTrackingEvents" title="All Tracking Events" data={courierDetails.details.allTrackingEvents} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+            </div>
+          ) : (
+            <div>No details available</div>
+          )}
+        </Modal>
+      )}
+
+      {/* Toast Notification */}
+      <Toast
+        show={showToast}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 };

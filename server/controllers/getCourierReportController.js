@@ -16,6 +16,10 @@ export const getCourierReportController = async (req, res) => {
       [startDate, endDate] = [endDate, startDate];
     }
 
+    // Add time to make startDate beginning of day and endDate end of day
+    startDate = startDate + ' 00:00:00';
+    endDate = endDate + ' 23:59:59';
+
     // Get comprehensive courier statistics
     const sql = `
       SELECT
@@ -158,16 +162,16 @@ export const getCourierReportController = async (req, res) => {
         GROUP BY te.created_by
       ) final_deliveries ON auth.auth_id = final_deliveries.created_by
 
-      -- Lost packages
+      -- Lost packages (packages assigned to courier that are now lost)
       LEFT JOIN (
         SELECT
-          created_by,
-          COUNT(DISTINCT package_id) as count
-        FROM tracking_event
-        WHERE event_type = 'lost'
-          AND event_time BETWEEN ? AND ?
-        GROUP BY created_by
-      ) packages_lost ON auth.auth_id = packages_lost.created_by
+          courier_id,
+          COUNT(*) as count
+        FROM package
+        WHERE package_status = 'lost'
+          AND courier_id IS NOT NULL
+        GROUP BY courier_id
+      ) packages_lost ON e.employee_id = packages_lost.courier_id
 
       -- Average delivery time
       LEFT JOIN (
@@ -248,7 +252,6 @@ export const getCourierReportController = async (req, res) => {
       startDate, endDate,  // total_moves
       startDate, endDate,  // facility_transfers
       startDate, endDate,  // final_deliveries
-      startDate, endDate,  // packages_lost
       startDate, endDate,  // delivery_time_stats
       startDate, endDate,  // move_time_stats
       startDate, endDate,  // on_time_deliveries
@@ -259,12 +262,13 @@ export const getCourierReportController = async (req, res) => {
     // Calculate summary statistics
     const totalClaimed = rows.reduce((sum, row) => sum + row.packages_claimed, 0);
     const totalDelivered = rows.reduce((sum, row) => sum + row.packages_delivered, 0);
+    const totalInTransit = rows.reduce((sum, row) => sum + row.packages_in_transit, 0);
     const totalLost = rows.reduce((sum, row) => sum + row.packages_lost, 0);
-    const totalMoves = rows.reduce((sum, row) => sum + row.total_moves, 0);
-    const rowsWithDeliveryTime = rows.filter(row => row.avg_delivery_days > 0);
-    const avgDeliveryTime = rowsWithDeliveryTime.length > 0
-      ? rows.reduce((sum, row) => sum + row.avg_delivery_days, 0) / rowsWithDeliveryTime.length
-      : 0;
+    const totalFacilityTransfers = rows.reduce((sum, row) => sum + row.facility_transfers, 0);
+    const totalFinalDeliveries = rows.reduce((sum, row) => sum + row.final_deliveries, 0);
+    const totalApproved = rows.reduce((sum, row) => sum + row.requests_approved, 0);
+    const totalRejected = rows.reduce((sum, row) => sum + row.requests_rejected, 0);
+    const totalRequests = totalApproved + totalRejected;
 
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
@@ -275,11 +279,12 @@ export const getCourierReportController = async (req, res) => {
       summary: {
         total_claimed: totalClaimed,
         total_delivered: totalDelivered,
+        total_in_transit: totalInTransit,
         total_lost: totalLost,
-        total_moves: totalMoves,
-        avg_delivery_days: avgDeliveryTime ? avgDeliveryTime.toFixed(1) : '0',
+        total_facility_transfers: totalFacilityTransfers,
+        total_final_deliveries: totalFinalDeliveries,
         overall_delivery_rate: totalClaimed > 0 ? ((totalDelivered / totalClaimed) * 100).toFixed(2) : '0',
-        overall_lost_rate: totalClaimed > 0 ? ((totalLost / totalClaimed) * 100).toFixed(2) : '0'
+        overall_approval_rate: totalRequests > 0 ? ((totalApproved / totalRequests) * 100).toFixed(2) : '0'
       }
     }));
 

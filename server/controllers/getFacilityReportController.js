@@ -16,6 +16,10 @@ export const getFacilityReportController = async (req, res) => {
       [startDate, endDate] = [endDate, startDate];
     }
 
+    // Add time to make startDate beginning of day and endDate end of day
+    startDate = startDate + ' 00:00:00';
+    endDate = endDate + ' 23:59:59';
+
     // Get comprehensive facility statistics
     const sql = `
       SELECT
@@ -42,11 +46,11 @@ export const getFacilityReportController = async (req, res) => {
         -- Average delivery time for packages delivered from this facility
         IFNULL(delivery_stats.avg_delivery_days, 0) as avg_delivery_days,
 
-        -- Current backlog (packages at facility not delivered/lost/returned)
-        IFNULL(current_backlog.count, 0) as current_backlog,
+        -- Packages sent to other facilities (transfers out)
+        IFNULL(packages_sent.count, 0) as packages_sent,
 
         -- Status distribution
-        IFNULL(status_processing.count, 0) as status_processing,
+        IFNULL(status_processing.count, 0) as backlog,
         IFNULL(status_in_transit.count, 0) as status_in_transit,
         IFNULL(status_out_for_delivery.count, 0) as status_out_for_delivery
 
@@ -90,16 +94,15 @@ export const getFacilityReportController = async (req, res) => {
         GROUP BY te_latest.location_id
       ) packages_delivered ON f.address_id = packages_delivered.location_id
 
-      -- Lost packages: packages marked as lost at this facility
+      -- Lost packages: packages currently lost at this facility
       LEFT JOIN (
         SELECT
-          te.location_id,
-          COUNT(DISTINCT te.package_id) as count
-        FROM tracking_event te
-        WHERE te.event_type = 'lost'
-          AND te.event_time BETWEEN ? AND ?
-        GROUP BY te.location_id
-      ) packages_lost ON f.address_id = packages_lost.location_id
+          p.facility_id,
+          COUNT(*) as count
+        FROM package p
+        WHERE p.package_status = 'lost'
+        GROUP BY p.facility_id
+      ) packages_lost ON f.facility_id = packages_lost.facility_id
 
       -- Average delivery time for packages delivered from this facility
       LEFT JOIN (
@@ -122,15 +125,25 @@ export const getFacilityReportController = async (req, res) => {
         GROUP BY te_delivered.location_id
       ) delivery_stats ON f.address_id = delivery_stats.location_id
 
-      -- Current backlog: packages currently at this facility (not delivered/lost/returned)
+      -- Packages sent to other facilities (count packages that left this facility for another facility)
       LEFT JOIN (
         SELECT
-          p.facility_id,
-          COUNT(DISTINCT p.package_id) as count
-        FROM package p
-        WHERE p.package_status NOT IN ('delivered', 'lost', 'returned')
-        GROUP BY p.facility_id
-      ) current_backlog ON f.facility_id = current_backlog.facility_id
+          f_from.facility_id as from_facility_id,
+          COUNT(DISTINCT te_dest.package_id) as count
+        FROM tracking_event te_dest
+        INNER JOIN facility f_to ON te_dest.location_id = f_to.address_id
+        INNER JOIN tracking_event te_prev ON te_dest.package_id = te_prev.package_id
+          AND te_prev.event_time = (
+            SELECT MAX(te_inner.event_time)
+            FROM tracking_event te_inner
+            WHERE te_inner.package_id = te_dest.package_id
+              AND te_inner.event_time < te_dest.event_time
+          )
+        INNER JOIN facility f_from ON te_prev.location_id = f_from.address_id
+        WHERE te_dest.event_time BETWEEN ? AND ?
+          AND f_from.facility_id != f_to.facility_id
+        GROUP BY f_from.facility_id
+      ) packages_sent ON f.facility_id = packages_sent.from_facility_id
 
       -- Status distribution: processing
       LEFT JOIN (
@@ -168,18 +181,21 @@ export const getFacilityReportController = async (req, res) => {
     const [rows] = await connection.execute(sql, [
       startDate, endDate,  // packages_received
       startDate, endDate,  // packages_delivered (latest event)
-      startDate, endDate,  // packages_lost
-      startDate, endDate   // delivery_stats
+      startDate, endDate,  // delivery_stats
+      startDate, endDate   // packages_sent
     ]);
 
     // Calculate summary statistics
     const totalReceived = rows.reduce((sum, row) => sum + row.packages_received, 0);
+    const totalSent = rows.reduce((sum, row) => sum + row.packages_sent, 0);
     const totalDelivered = rows.reduce((sum, row) => sum + row.packages_delivered, 0);
     const totalLost = rows.reduce((sum, row) => sum + row.packages_lost, 0);
-    const totalBacklog = rows.reduce((sum, row) => sum + row.current_backlog, 0);
+    const totalBacklog = rows.reduce((sum, row) => sum + row.backlog, 0);
+    const totalInTransit = rows.reduce((sum, row) => sum + row.status_in_transit, 0);
+    const totalOutForDelivery = rows.reduce((sum, row) => sum + row.status_out_for_delivery, 0);
     const rowsWithDeliveryTime = rows.filter(row => row.avg_delivery_days > 0);
     const avgDeliveryTime = rowsWithDeliveryTime.length > 0
-      ? rows.reduce((sum, row) => sum + row.avg_delivery_days, 0) / rowsWithDeliveryTime.length
+      ? rowsWithDeliveryTime.reduce((sum, row) => sum + row.avg_delivery_days, 0) / rowsWithDeliveryTime.length
       : 0;
 
     res.statusCode = 200;
@@ -190,11 +206,12 @@ export const getFacilityReportController = async (req, res) => {
       count: rows.length,
       summary: {
         total_received: totalReceived,
+        total_sent: totalSent,
         total_delivered: totalDelivered,
         total_lost: totalLost,
         total_backlog: totalBacklog,
-        avg_delivery_days: avgDeliveryTime ? avgDeliveryTime.toFixed(1) : '0',
-        overall_lost_rate: totalReceived > 0 ? ((totalLost / totalReceived) * 100).toFixed(2) : '0'
+        total_in_transit: totalInTransit,
+        total_out_for_delivery: totalOutForDelivery
       }
     }));
 
