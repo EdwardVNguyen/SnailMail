@@ -15,11 +15,12 @@ import UserShipping from './pages/UserShipping';
 import UserTrackPackage from './pages/UserTrackPackage';
 import CreatePackage from './pages/CreatePackage';
 import UserCreateShipment from './pages/UserCreateShipment';
-import ElectronicShop from './pages/ElectronicShop';
 import MovePackages from './pages/MovePackages';
 import ReportPage from './pages/ReportPage';
 import EmployeesPage from './pages/EmployeesPage';
 import FacilitiesPage from './pages/FacilitiesPage';
+import CourierPackagePage from './pages/CourierPackagePage';
+import ClerkCourierApprovalPage from './pages/ClerkCourierApprovalPage';
 
 const Tracking = lazy( () => import('./pages/Tracking'));
 const About = lazy( () => import('./pages/About'));
@@ -74,13 +75,14 @@ const App = () => {
             <Route path='/customerPage' element={<CustomerPage globalAuthId={globalAuthId}/>} />
             <Route path='/employeePage' element={<EmployeePage globalAuthId={globalAuthId}/>} />
             <Route path='/courierPage' element={<CourierPage globalAuthId={globalAuthId}/>} />
+            <Route path='/courierPackage' element={<CourierPackagePage globalAuthId={globalAuthId}/>} />
+            <Route path='/clerkCourierApproval' element={<ClerkCourierApprovalPage globalAuthId={globalAuthId}/>} />
             <Route path='/managerPage' element={<ManagerPage globalAuthId={globalAuthId}/>} />
             <Route path='/CustomerProfilePage' element={<CustomerProfilePage globalAuthId={globalAuthId}/>} />
             <Route path='/EmployeeProfilePage' element={<EmployeeProfilePage globalAuthId={globalAuthId}/>} />
             <Route path='/userShipping' element={<UserShipping globalAuthId={globalAuthId}/>} />
             <Route path='/userTrackPackage' element={<UserTrackPackage globalAuthId={globalAuthId} />} />
             <Route path='/userTrackPackage/:trackingNumber' element={<UserTrackPackage globalAuthId={globalAuthId} />} />
-            <Route path='/ecommercePage' element={<ElectronicShop/>} />
             <Route path='/movePackages' element={<MovePackages globalAuthId={globalAuthId}/>} />
             <Route path='/reportPage' element={<ReportPage globalAuthId={globalAuthId}/>} />
             <Route path='/employeesPage' element={<EmployeesPage globalAuthId={globalAuthId}/>} />

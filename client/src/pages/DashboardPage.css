@@ -1,0 +1,386 @@
+/* ========================================
+   DASHBOARD PAGE SHARED STYLES
+   Used by: ClerkPage.jsx, CourierPage.jsx
+   Uses design system variables from /styles/variables.css
+   ======================================== */
+
+/* ========================================
+   DASHBOARD CONTAINER & HEADER
+   ======================================== */
+
+.dashboard-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 24px;
+  min-height: calc(100vh - 80px);
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 48px;
+  padding: 32px 0;
+}
+
+.dashboard-header h1 {
+  font-size: 48px;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.02em;
+}
+
+.welcome-text {
+  font-size: 18px;
+  color: var(--text-secondary);
+  margin: 0;
+  font-weight: 500;
+}
+
+/* ========================================
+   STATS GRID & STAT CARDS
+   ======================================== */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 48px;
+}
+
+.stat-card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.stat-card:hover::before {
+  transform: scaleX(1);
+}
+
+.stat-card.urgent {
+  border-left: 4px solid var(--color-error);
+  background: linear-gradient(135deg, var(--color-error-light) 0%, var(--bg-primary) 100%);
+}
+
+.stat-icon {
+  font-size: 48px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.stat-content h3 {
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.02em;
+}
+
+.stat-content p {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ========================================
+   ACTIONS SECTION & ACTION CARDS
+   ======================================== */
+
+.actions-section {
+  margin-bottom: 48px;
+}
+
+.actions-section h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 24px 0;
+  letter-spacing: -0.01em;
+}
+
+.action-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.action-card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+}
+
+.action-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(60, 70, 123, 0.05) 0%, rgba(99, 108, 203, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.action-card:hover::before {
+  opacity: 1;
+}
+
+.action-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary-accent);
+}
+
+.action-card.primary {
+  border-color: var(--color-primary);
+  background: linear-gradient(135deg, rgba(60, 70, 123, 0.02) 0%, var(--bg-primary) 100%);
+}
+
+.action-card.primary:hover {
+  border-color: var(--color-primary-dark);
+}
+
+.action-icon {
+  font-size: 56px;
+  line-height: 1;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+  position: relative;
+  z-index: 1;
+}
+
+.action-card h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+  letter-spacing: -0.01em;
+  position: relative;
+  z-index: 1;
+}
+
+.action-card p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--color-error) 0%, var(--color-error-dark) 100%);
+  color: var(--text-inverse);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 16px;
+  box-shadow: 0 4px 6px rgba(220, 53, 69, 0.3);
+  position: relative;
+  z-index: 1;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* ========================================
+   INFO SECTION & INFO GRID
+   ======================================== */
+
+.info-section {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+}
+
+.info-section h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 32px 0;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 32px;
+}
+
+.info-item {
+  padding: 24px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--color-primary);
+  transition: all 0.3s ease;
+}
+
+.info-item:hover {
+  background: var(--bg-tertiary);
+  transform: translateX(4px);
+}
+
+.info-item h4 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+  letter-spacing: -0.01em;
+}
+
+.info-item p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 24px 16px;
+  }
+
+  .dashboard-header {
+    margin-bottom: 32px;
+    padding: 20px 0;
+  }
+
+  .dashboard-header h1 {
+    font-size: 36px;
+  }
+
+  .welcome-text {
+    font-size: 16px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    padding: 20px 24px;
+  }
+
+  .stat-icon {
+    font-size: 40px;
+  }
+
+  .stat-content h3 {
+    font-size: 28px;
+  }
+
+  .action-cards {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .action-card {
+    padding: 24px;
+  }
+
+  .action-icon {
+    font-size: 48px;
+  }
+
+  .action-card h3 {
+    font-size: 20px;
+  }
+
+  .info-section {
+    padding: 24px;
+  }
+
+  .info-section h2 {
+    font-size: 24px;
+    margin-bottom: 24px;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .info-item {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header h1 {
+    font-size: 28px;
+  }
+
+  .welcome-text {
+    font-size: 14px;
+  }
+
+  .stat-content h3 {
+    font-size: 24px;
+  }
+
+  .action-card h3 {
+    font-size: 18px;
+  }
+
+  .action-card p {
+    font-size: 14px;
+  }
+}

@@ -4,17 +4,17 @@ import signUpImg from '../assets/signupImg.svg';
 
 import AuthInput from '../components/AuthInput';
 import AuthButton from '../components/AuthButton';
+import { Toast } from '../components/Toast';
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom'
 
 const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
-  const [mode, switchMode] = useState("Login"); 
+  const [mode, switchMode] = useState("Login");
   const [step, setStep] = useState(1)
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
 
   const [street, setStreet] = useState("");
   const [city, setCity] = useState("");
@@ -22,12 +22,20 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
   const [zipCode, setZipCode] = useState("");
 
   const [firstName, setFirstName] = useState("");
-  const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
 
-  const [accountType, setAccountType] = useState("");
-
   const navigate = useNavigate();
+
+  // Toast notification state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
+
+  const showErrorToast = (message) => {
+    setToastMessage(message);
+    setToastType('error');
+    setShowToast(true);
+  };
 
   // on sign up, go to next slide
   const handleNext = async (e) => {
@@ -46,11 +54,11 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
         if (!data.exists) {
           setStep(2); // no other email exists, so move forward
         } else {
-          alert("This email is already registered");
+          showErrorToast("This email is already registered");
         }
       } catch (err) {
         console.log("error checking email", err);
-        alert("Something went wrong, please try again");
+        showErrorToast("Something went wrong, please try again");
       }
     } else {
       // goes forward after email is valid
@@ -71,7 +79,7 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/userSignUp`, {
                                    method: 'POST',
                                    headers: {'Content-Type': 'application/json' },
-                                   body: JSON.stringify( {email, password, phoneNumber, street, city, state, zipCode, firstName, middleName, lastName, accountType })
+                                   body: JSON.stringify( {email, password, street, city, state, zipCode, firstName, lastName })
                                   });
     const data = await response.json();
 
@@ -80,7 +88,7 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
       setGlobalAuthId(data.auth_id);
       navigate('/customerPage');
     } else {
-      alert('Something went wrong with user sign up');
+      showErrorToast('Something went wrong with user sign up');
     }
   };
 
@@ -105,7 +113,7 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
       setAuth(true);
 
       // send to different page depending on user credentials
-      if (data.account_type === 'individual' || data.account_type === 'prime' || data.account_type === 'business') {
+      if (data.account_type === 'customer') {
         navigate('/customerPage');
       } else if (data.account_type === 'clerk') {
         navigate('/employeePage');
@@ -115,10 +123,10 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
         navigate('/managerPage');
       } else {
         setAuth(false);
-        alert('Invalid account type when logging in')
+        showErrorToast('Invalid account type when logging in');
       }
     } else {
-      alert('Invalid email or password.');
+      showErrorToast('Invalid email or password.');
     }
   };
    
@@ -163,7 +171,7 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
 
           <b className="bigText"> Ready to start your shipping journey?</b>
           <p className="description"> "A journey of a thousand miles begins with a single step."</p>
-          <form className="signUp" onSubmit={step === 4 ? handleSignUp : handleNext }>
+          <form className="signUp" onSubmit={step === 3 ? handleSignUp : handleNext }>
             {step === 1 && (
               <> 
               <AuthInput name="email" 
@@ -184,17 +192,6 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
                        value={password}
                        onChange={ (e) => setPassword(e.target.value)}
                        required={true}
-                       />
-              <AuthInput type="tel" 
-                       name="phone"
-                       id="phone-1" 
-                       htmlFor="phone-1" 
-                       text="Phone Number - optional" 
-                       maxLength={10}
-                       minLength={10}
-                       pattern="[0-9]*"
-                       value={phoneNumber}
-                       onChange={ (e) => setPhoneNumber(e.target.value)}
                        />
                 <p className="switch"> Already have an account,
                   <span className="click" onClick={()=>{switchMode("Login")}}> click here </span>
@@ -269,15 +266,7 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
                        onChange={ (e) => setFirstName(e.target.value)}
                        required={true}
                        />
-              <AuthInput type="text" 
-                       name="middle-name"
-                       id="mname-1" 
-                       htmlFor="mname-1" 
-                       text="Middle Name - optional" 
-                       value={middleName}
-                       onChange={ (e) => setMiddleName(e.target.value)}
-                       />
-              <AuthInput type="text" 
+              <AuthInput type="text"
                        name="last-name"
                        id="lname-1" 
                        htmlFor="lname-1" 
@@ -286,48 +275,13 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
                        onChange={ (e) => setLastName(e.target.value)}
                        required={true}
                        />
-                <p className="switch" /> 
+                <p className="switch" />
                 <div className="goBack">
                   <AuthButton text="Back" type="button" onClick={handleBack}/>
-                  <AuthButton text="Continue " type="submit"/> 
+                  <AuthButton text="Sign up" type="submit"/>
                 </div>
               </>
             )}
-          {step === 4 && (
-            <>
-              {/* Credit to CodingFlag for custom radio input */}
-            <div className="accountType">
-              <label className="formInput" htmlFor='individual-acc'>
-                    <input type="radio" name="accountType" id="individual-acc" value="individual" onChange={ (e) => setAccountType(e.target.value)} required/>
-                    <div className="title">Individual Account</div>
-                    <div className="price">Free</div>
-                    <p> Per Month</p>
-                    <div className="desc"> Perfect for personal use, giving you access to all basic features at no cost.</div>
-              </label>
-
-              <label className="formInput" htmlFor="prime-acc">
-                    <input type="radio" name="accountType" id="prime-acc" value="prime" onChange={ (e) => setAccountType(e.target.value)}/>
-                    <div className="title">Prime Account</div>
-                    <div className="price">$9.99</div>
-                    <p> Per Month</p>
-                    <div className="desc"> Enjoy enhanced features, priority support, and exclusive content for a low monthly fee.</div>
-              </label>
-
-              <label className="formInput" htmlFor="business-acc">
-                    <input type="radio" name="accountType" id="business-acc" value="business" onChange={ (e) => setAccountType(e.target.value)}/>
-                    <div className="title">Business Account</div>
-                    <div className="price">$24.99</div>
-                    <p> Per Month</p>
-                    <div className="desc"> Designed for teams and companies, offering advanced tools, analytics, and collaboration options.</div>
-                </label>
-            </div>
-
-              <div className="goBack">
-                <AuthButton text="Back" type="button" onClick={handleBack}/>
-                <AuthButton text="Sign up" type="submit"/> 
-              </div>
-            </>
-          )}
 
           </form>
           </>
@@ -338,6 +292,14 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
         <img className="signUpImg" src={signUpImg} alt="image of Company Logo and man carrying packages"/>
       </div>
     </div>
+
+    {/* Toast Notification */}
+    <Toast
+      show={showToast}
+      message={toastMessage}
+      type={toastType}
+      onClose={() => setShowToast(false)}
+    />
     </div>
   );
 };

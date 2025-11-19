@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState , useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './UserCreateShipment.css';
 
 import StateSelect from '../components/StateSelect';
+import { Toast } from '../components/Toast';
+import { Modal } from '../components/Modal';
 
 const CreateShipment = ({ globalAuthId }) => {
   const navigate = useNavigate();
@@ -10,9 +12,7 @@ const CreateShipment = ({ globalAuthId }) => {
   // Form state
   const [formData, setFormData] = useState({
     recipientFirstName: '',
-    recipientMiddleName: '',
     recipientLastName: '',
-    recipientPhone: '',
     recipientEmail: '',
     recipientStreet: '',
     recipientCity: '',
@@ -22,14 +22,37 @@ const CreateShipment = ({ globalAuthId }) => {
     weight: '',
     length: '',
     width: '',
-    height: ''
+    height: '',
+    facility_id: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
 
+  const [facilities, setFacilities] = useState([]);
+
+  useEffect(() => {
+  fetch(`${import.meta.env.VITE_API_URL}/getFacilityForCustomer`)
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("Facility API Response:", data);
+      // Make sure it's an array before setting
+      if (data.success && Array.isArray(data.facilities)) {
+        setFacilities(data.facilities);
+      } else {
+        console.error("Unexpected API response:", data);
+        setFacilities([]); // fallback to empty array
+      }
+    })
+    .catch((err) => {
+      console.error("Error loading facilities:", err);
+      setFacilities([]); // also fallback on error
+    });
+  }, []);
+  
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -68,9 +91,7 @@ const CreateShipment = ({ globalAuthId }) => {
         // Reset form
         setFormData({
           recipientFirstName: '',
-          recipientMiddleName: '',
           recipientLastName: '',
-          recipientPhone: '',
           recipientEmail: '',
           recipientStreet: '',
           recipientCity: '',
@@ -80,10 +101,18 @@ const CreateShipment = ({ globalAuthId }) => {
           weight: '',
           length: '',
           width: '',
-          height: ''
+          height: '',
+          facility_id: ''
         });
       } else {
-        setError(data.message || 'Failed to create shipment');
+        // Show toast for dimension/weight errors
+        if (data.errorType === 'dimension_length' ||
+            data.errorType === 'dimension_width_height' ||
+            data.errorType === 'weight') {
+          setToast({ show: true, message: data.message, type: 'error' });
+        } else {
+          setError(data.message || 'Failed to create shipment');
+        }
       }
     } catch (err) {
       setError('Failed to create shipment. Please try again.');
@@ -95,18 +124,47 @@ const CreateShipment = ({ globalAuthId }) => {
 
   return (
     <div className="create-shipment-container">
+      {/* Toast Notification */}
+      <Toast
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        duration={5000}
+        onClose={() => setToast({ show: false, message: '', type: 'error' })}
+      />
 
-      {/* Success Message */}
+      {/* Success Modal */}
       {success && (
-        <div className="success-message">
-          <h2>✓ Shipment Created Successfully!</h2>
-          <p>Your tracking number is: <strong>{trackingNumber}</strong></p>
-          <button 
-            onClick={() => navigate(`/userTrackPackage/${trackingNumber}`)}
-            className="track-button"
+        <div className="modal-overlay" onClick={() => setSuccess(false)}>
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '400px', padding: '20px' }}
           >
-            Track This Package
-          </button>
+            <h2 className="modal-header" style={{ fontSize: '18px', marginBottom: '15px' }}>
+              ✓ Shipment Created Successfully!
+            </h2>
+            <p style={{ fontSize: '14px', marginBottom: '20px', textAlign: 'center' }}>
+              Your tracking number is: <br />
+              <strong style={{ fontSize: '16px' }}>{trackingNumber}</strong>
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                onClick={() => navigate(`/userTrackPackage/${trackingNumber}`)}
+                className="track-button"
+                style={{ margin: 0, padding: '8px 16px', fontSize: '14px' }}
+              >
+                Track Package
+              </button>
+              <button
+                onClick={() => setSuccess(false)}
+                className="submit-button"
+                style={{ margin: 0, padding: '8px 16px', fontSize: '14px', backgroundColor: '#6c757d' }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -134,18 +192,6 @@ const CreateShipment = ({ globalAuthId }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="senderMiddleName">Middle Name</label>
-              <input
-                type="text"
-                id="recipientMiddleName"
-                name="recipientMiddleName"
-                value={formData.recipientMiddleName}
-                onChange={handleInputChange}
-                placeholder="Optional"
-              />
-            </div>
-
-            <div className="form-group">
               <label htmlFor="recipientLastName">Last Name *</label>
               <input
                 type="text"
@@ -156,10 +202,7 @@ const CreateShipment = ({ globalAuthId }) => {
                 required
               />
             </div>
-          </div>
 
-
-          <div className="form-row">
             <div className="form-group">
               <label htmlFor="recipientEmail">Email *</label>
               <input
@@ -169,21 +212,6 @@ const CreateShipment = ({ globalAuthId }) => {
                 value={formData.recipientEmail}
                 onChange={handleInputChange}
                 required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="recipientPhone">Phone Number</label>
-              <input
-                type="tel"
-                id="recipientPhone"
-                name="recipientPhone"
-                value={formData.recipientPhone}
-                maxLength={10}
-                minLength={10}
-                pattern="[0-9]*"
-                onChange={handleInputChange}
-                placeholder="Optional"
               />
             </div>
           </div>
@@ -322,7 +350,36 @@ const CreateShipment = ({ globalAuthId }) => {
               />
             </div>
           </div>
+
+
+
+
         </div>
+
+        <div className="form-section">
+          <h2>Drop Off Location</h2>
+        
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="facilitySelect">Select Facility:</label>
+                <select
+                  id="facilitySelect"
+                  name="facility_id"
+                  value={formData.facility_id}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">-- Choose a Facility --</option>
+                  {facilities.map((facility) => (
+                    <option key={facility.facility_id} value={facility.facility_id}>
+                      {facility.facility_name}
+                    </option>
+                  ))}
+                </select>
+           </div>
+          </div>
+        </div>
+
 
         {/* Submit Button */}
         <div className="form-actions">

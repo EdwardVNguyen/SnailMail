@@ -23,7 +23,7 @@ export const getPackagesByFacilityController = async (req, res) => {
        INNER JOIN tracking_event te ON p.package_id = te.package_id
        INNER JOIN facility f ON te.location_id = f.address_id
        WHERE f.facility_id = ?
-       AND p.package_status IN ('in transit', 'pre-shipment', 'out for delivery')
+       AND p.package_status IN ('in transit', 'pre-shipment', 'out for delivery', 'Out for Delivery')
        AND te.tracking_event_id = (
          SELECT MAX(te2.tracking_event_id)
          FROM tracking_event te2

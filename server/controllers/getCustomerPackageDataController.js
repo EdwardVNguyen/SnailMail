@@ -30,15 +30,16 @@ export const getCustomerPackageDataController = async (req, res) => {
     // Fetch paginated packages
     const [rows] = await connection.execute(
       `
-      SELECT 
-        p.package_id, 
-        p.package_type, 
-        p.weight, 
-        p.length, 
-        p.width, 
+      SELECT
+        p.package_id,
+        p.tracking_number,
+        p.package_type,
+        p.weight,
+        p.length,
+        p.width,
         p.height,
-        p.package_status, 
-        p.created_at, 
+        p.package_status,
+        p.created_at,
         p.last_updated,
 
         r.first_name,

@@ -37,7 +37,9 @@ export const createPackageController = async (req, res) => {
       weight,
       length,
       width,
-      height;
+      height,
+
+      facility_id;
 
   // Parse request body
   try {
@@ -72,12 +74,14 @@ export const createPackageController = async (req, res) => {
     width = body.width;
     height = body.height;
 
+    facility_id = body.facility_id;
+
     // Validate required fields
     if (!senderFirstName || !senderLastName || !senderEmail || 
         !senderStreet || !senderCity || !senderState || !senderZipCode ||
         !recipientFirstName || !recipientLastName || !recipientEmail || !recipientStreet || 
         !recipientCity || !recipientState || !recipientZipCode || 
-        !packageType || !weight) {
+        !packageType || !weight || !facility_id) {
       return badClientRequest(res, { message: 'Missing required fields' });
     }
   } catch (err) {
@@ -101,19 +105,14 @@ export const createPackageController = async (req, res) => {
     // Insert sender as guest customer
     const [senderCustomerResult] = await connection.execute(
       `INSERT INTO customer (
-        first_name, 
-        middle_name, 
-        last_name, 
-        phone_number, 
-        account_type, 
-        address_id, 
-        auth_id 
-      ) VALUES (?, ?, ?, ?, 'guest', ?, NULL)`,
+        first_name,
+        last_name,
+        address_id,
+        auth_id
+      ) VALUES (?, ?, ?, NULL)`,
       [
         senderFirstName,
-        toNullIfBlank(senderMiddleName),
         senderLastName,
-        toNullIfBlank(senderPhone),
         sender_address_id
       ]
     );
@@ -130,19 +129,14 @@ export const createPackageController = async (req, res) => {
     // Insert recipient as guest customer
     const [recipientCustomerResult] = await connection.execute(
       `INSERT INTO customer (
-        first_name, 
-        middle_name, 
-        last_name, 
-        phone_number, 
-        account_type, 
-        address_id, 
-        auth_id 
-      ) VALUES (?, ?, ?, ?, 'guest', ?, NULL)`,
+        first_name,
+        last_name,
+        address_id,
+        auth_id
+      ) VALUES (?, ?, ?, NULL)`,
       [
         recipientFirstName,
-        toNullIfBlank(recipientMiddleName),
         recipientLastName,
-        toNullIfBlank(recipientPhone),
         recipient_address_id
       ]
     );
@@ -176,8 +170,9 @@ export const createPackageController = async (req, res) => {
         package_status,
         tracking_number,
         created_by,
-        updated_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'processing', ?, NULL, NULL)`, 
+        updated_by,
+        facility_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'processing', ?, NULL, NULL,?)`, 
       [
         sender_id,
         recipient_id,
@@ -186,7 +181,8 @@ export const createPackageController = async (req, res) => {
         length,
         width,
         height,
-        tracking_number
+        tracking_number,
+        facility_id
       ]
     );
 
@@ -205,6 +201,39 @@ export const createPackageController = async (req, res) => {
       await connection.rollback();
     }
     console.error('Create package error:', error);
+
+    // Check if error is from the dimension/weight validation triggers
+    if (error.sqlState === '45000') {
+      if (error.message.includes('Package too large: Exceeds length')) {
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          success: false,
+          message: 'Package too large: Exceeds length (100in)',
+          errorType: 'dimension_length'
+        }));
+        return;
+      } else if (error.message.includes('Package too large: Exceeds width or height')) {
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          success: false,
+          message: 'Package too large: Exceeds width or height (35in)',
+          errorType: 'dimension_width_height'
+        }));
+        return;
+      } else if (error.message.includes('Package too heavy')) {
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          success: false,
+          message: 'Package too heavy: Weight exceeds limit (100lbs)',
+          errorType: 'weight'
+        }));
+        return;
+      }
+    }
+
     badServerRequest(res);
   } finally {
     if (connection) connection.release();

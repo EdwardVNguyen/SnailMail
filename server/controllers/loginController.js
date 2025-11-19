@@ -41,14 +41,14 @@ export const loginController = async (req, res) => {
     let accountType = null;
 
     const [customerRows] = await connection.execute(
-      `SELECT account_type FROM customer WHERE auth_id = ?`,
+      `SELECT customer_id FROM customer WHERE auth_id = ?`,
       [authId]
     );
 
     // check if auth_id exists in customer relation
     if (customerRows.length > 0) {
-      accountType = customerRows[0].account_type;
-    } 
+      accountType = 'customer';
+    }
     // check if auth_id exists in employee relation
     else {
       const [employeeRows] = await connection.execute(
@@ -59,8 +59,8 @@ export const loginController = async (req, res) => {
       if (employeeRows.length > 0) {
         accountType = employeeRows[0].account_type;
       }
-    } 
-    
+    }
+
     if (!accountType) {
       return badServerRequest(res, 'Account type not found');
     }

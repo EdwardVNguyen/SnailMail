@@ -1,25 +1,32 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './UserShipping.css';
 import './FacilitiesPage.css';
+import './CreatePackage.css';
+import { isValidZipCode, isValidState } from '../utils/validation';
+import { Modal } from '../components/Modal';
+import { Toast } from '../components/Toast';
+import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
+import { encodeFacilityId, encodeEmployeeId } from '../utils/idEncoder';
 
-import { AgGridReact } from 'ag-grid-react';
-import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
-import "ag-grid-community/styles/ag-theme-alpine.css";
-
-ModuleRegistry.registerModules([AllCommunityModule]);
+const DAYS_OF_WEEK = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
 const FacilitiesPage = ({ globalAuthId }) => {
   const authId = globalAuthId;
+  const navigate = useNavigate();
 
-  // Tab state
-  const [activeTab, setActiveTab] = useState('add'); // 'add' or 'edit'
+  // Modal state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingFacility, setEditingFacility] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingFacility, setDeletingFacility] = useState(null);
 
   // Form state for Add Facility
-  const [facilityId, setFacilityId] = useState('');
   const [facilityName, setFacilityName] = useState('');
   const [facilityType, setFacilityType] = useState('post_office');
   const [status, setStatus] = useState('active');
-  const [daysOfWeek, setDaysOfWeek] = useState('monday');
+  const [selectedDays, setSelectedDays] = useState(new Set(['monday'])); // SET type - multiple days
   const [openingHours, setOpeningHours] = useState('');
   const [closingHours, setClosingHours] = useState('');
   const [managerId, setManagerId] = useState('');
@@ -28,180 +35,229 @@ const FacilitiesPage = ({ globalAuthId }) => {
   const [stateName, setStateName] = useState('');
   const [zipCode, setZipCode] = useState('');
 
-  // Edit Facilities state
-  const [typeFilter, setTypeFilter] = useState('all'); // 'all', 'warehouse', 'post_office'
-  const [statusFilter, setStatusFilter] = useState('active'); // 'all', 'active', 'inactive'
-  const [facilities, setFacilities] = useState([]);
-  const [loadingFacilities, setLoadingFacilities] = useState(false);
-  const [safetyLock, setSafetyLock] = useState(true); // Safety lock for ID editing
-  const [deleteMode, setDeleteMode] = useState(false); // Toggle delete mode
-  const [deletingFacilityId, setDeletingFacilityId] = useState(null); // Track which facility is being deleted
+  // Edit form state
+  const [editFacilityName, setEditFacilityName] = useState('');
+  const [editFacilityType, setEditFacilityType] = useState('post_office');
+  const [editStatus, setEditStatus] = useState('active');
+  const [editSelectedDays, setEditSelectedDays] = useState(new Set(['monday']));
+  const [editOpeningHours, setEditOpeningHours] = useState('');
+  const [editClosingHours, setEditClosingHours] = useState('');
+  const [editManagerId, setEditManagerId] = useState('');
+  const [editStreetName, setEditStreetName] = useState('');
+  const [editCityName, setEditCityName] = useState('');
+  const [editStateName, setEditStateName] = useState('');
+  const [editZipCode, setEditZipCode] = useState('');
 
-  const [nextFacilityId, setNextFacilityId] = useState(null);
+  // Facilities grid state
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [facilities, setFacilities] = useState([]);
+  const [filteredFacilities, setFilteredFacilities] = useState([]);
+  const [loadingFacilities, setLoadingFacilities] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Fetch the next available facility_id
-  useEffect(() => {
-    const fetchNextFacilityId = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/getNextFacilityId`);
-        const data = await response.json();
-        if (data.success) {
-          setNextFacilityId(data.nextFacilityId);
-          setFacilityId(data.nextFacilityId.toString());
-        }
-      }
-      catch (err) {
-        console.error('Error fetching next facility ID:', err);
-      }
-    };
+  // Sorting state
+  const [sortField, setSortField] = useState('facility_id');
+  const [sortDirection, setSortDirection] = useState('asc');
 
-    fetchNextFacilityId();
+  // Toast notification state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
+
+  const showSuccessToast = (message) => {
+    setToastMessage(message);
+    setToastType('success');
+    setShowToast(true);
+  };
+
+  const showErrorToast = (message) => {
+    setToastMessage(message);
+    setToastType('error');
+    setShowToast(true);
+  };
+
+  // Handle day checkbox toggle
+  const handleDayToggle = (day) => {
+    const newSelectedDays = new Set(selectedDays);
+    if (newSelectedDays.has(day)) {
+      newSelectedDays.delete(day);
+    } else {
+      newSelectedDays.add(day);
+    }
+    setSelectedDays(newSelectedDays);
+  };
+
+  // Handle edit day checkbox toggle
+  const handleEditDayToggle = (day) => {
+    const newSelectedDays = new Set(editSelectedDays);
+    if (newSelectedDays.has(day)) {
+      newSelectedDays.delete(day);
+    } else {
+      newSelectedDays.add(day);
+    }
+    setEditSelectedDays(newSelectedDays);
+  };
+
+  // Fetch facilities on mount
+  useEffect(() => {
+    fetchFacilities();
   }, []);
 
-  // Fetch facilities when on edit tab (with debouncing)
+  // Filter and sort facilities when search/filter changes
   useEffect(() => {
-    if (activeTab === 'edit') {
-      // Debounce the fetch to prevent rapid requests
-      const timeoutId = setTimeout(() => {
-        fetchFacilities();
-      }, 300);
+    let filtered = [...facilities];
 
-      return () => clearTimeout(timeoutId);
+    // Apply type filter
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(fac => fac.facility_type === typeFilter);
     }
-  }, [activeTab, typeFilter, statusFilter]);
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(fac => fac.status === statusFilter);
+    }
+
+    // Apply search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(fac =>
+        fac.facility_name?.toLowerCase().includes(query) ||
+        fac.facility_type?.toLowerCase().includes(query) ||
+        fac.manager_name?.toLowerCase().includes(query) ||
+        fac.city_name?.toLowerCase().includes(query) ||
+        fac.street_name?.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aVal = a[sortField];
+      let bVal = b[sortField];
+
+      // Handle null values
+      if (aVal === null || aVal === undefined) aVal = '';
+      if (bVal === null || bVal === undefined) bVal = '';
+
+      // String comparison
+      if (typeof aVal === 'string') {
+        aVal = aVal.toLowerCase();
+        bVal = bVal.toLowerCase();
+      }
+
+      if (sortDirection === 'asc') {
+        return aVal > bVal ? 1 : -1;
+      } else {
+        return aVal < bVal ? 1 : -1;
+      }
+    });
+
+    setFilteredFacilities(filtered);
+  }, [facilities, typeFilter, statusFilter, searchQuery, sortField, sortDirection]);
 
   const fetchFacilities = async () => {
     setLoadingFacilities(true);
     try {
-      let url = `${import.meta.env.VITE_API_URL}/getFacilities?`;
-      const params = [];
-
-      if (typeFilter !== 'all') {
-        params.push(`type=${typeFilter}`);
-      }
-      if (statusFilter !== 'all') {
-        params.push(`status=${statusFilter}`);
-      }
-
-      url += params.join('&');
-
-      const response = await fetch(url);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/getFacilities`);
       const data = await response.json();
 
       if (data.success) {
         setFacilities(data.facilities);
-      }
-      else {
+      } else {
         console.error('Failed to fetch facilities:', data.message);
       }
-    }
-    catch (err) {
+    } catch (err) {
       console.error('Error fetching facilities:', err);
-    }
-    finally {
+    } finally {
       setLoadingFacilities(false);
     }
   };
 
-  // AG Grid callback for unique row IDs
-  const getRowId = useCallback((params) => {
-    return params.data.facility_id.toString();
-  }, []);
-
-  // Handle cell value change
-  const onCellValueChanged = async (params) => {
-    const updatedFacility = params.data;
-    const field = params.colDef.field;
-    const newValue = params.newValue;
-    const oldValue = params.oldValue;
-
-    // Check if editing ID (requires uniqueness check)
-    if (field === 'facility_id') {
-      // Confirm the change
-      const confirmed = window.confirm(
-        `Are you sure you want to change Facility ID from ${oldValue} to ${newValue}?\n\nThis will check for uniqueness before applying.`
-      );
-
-      if (!confirmed) {
-        // Revert the change
-        fetchFacilities();
-        return;
-      }
-
-      // Check uniqueness
-      try {
-        const checkResponse = await fetch(
-          `${import.meta.env.VITE_API_URL}/checkFacilityUniqueness?field=${field}&value=${newValue}&currentId=${updatedFacility.facility_id}`
-        );
-        const checkData = await checkResponse.json();
-
-        if (!checkData.isUnique) {
-          alert(`This Facility ID is already in use. Change reverted.`);
-          fetchFacilities();
-          return;
-        }
-      }
-      catch (err) {
-        console.error('Error checking uniqueness:', err);
-        alert('Error checking uniqueness. Change reverted.');
-        fetchFacilities();
-        return;
-      }
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
     }
+  };
 
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/updateFacility`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          facilityId: updatedFacility.facility_id,
-          field: field,
-          value: newValue,
-          updatedBy: authId
-        })
-      });
+  const getSortIcon = (field) => {
+    if (sortField !== field) return '⇅';
+    return sortDirection === 'asc' ? '↑' : '↓';
+  };
 
-      const data = await response.json();
-
-      if (!data.success) {
-        alert('Error updating facility: ' + data.message);
-        // Refresh to revert changes
-        fetchFacilities();
-      }
-    }
-    catch (err) {
-      console.error('Error updating facility:', err);
-      alert('Error updating facility.');
-      fetchFacilities();
-    }
+  const handleEditClick = (facility) => {
+    setEditingFacility(facility);
+    setEditFacilityName(facility.facility_name || '');
+    setEditFacilityType(facility.facility_type || 'post_office');
+    setEditStatus(facility.status || 'active');
+    // Parse days_of_week from comma-separated string to Set
+    const daysArray = facility.days_of_week ? facility.days_of_week.split(',') : ['monday'];
+    setEditSelectedDays(new Set(daysArray));
+    setEditOpeningHours(facility.opening_hours || '');
+    setEditClosingHours(facility.closing_hours || '');
+    setEditManagerId(facility.manager_id || '');
+    setEditStreetName(facility.street_name || '');
+    setEditCityName(facility.city_name || '');
+    setEditStateName(facility.state_name || '');
+    setEditZipCode(facility.zip_code || '');
+    setShowEditModal(true);
   };
 
   const validateForm = () => {
     // Required fields
-    if (!facilityId || !facilityName || !facilityType || !status || !daysOfWeek ||
+    if (!facilityName || !facilityType || !status || selectedDays.size === 0 ||
         !openingHours || !closingHours || !streetName || !cityName || !stateName || !zipCode) {
-      alert('Please fill in all required fields.');
+      showErrorToast('Please fill in all required fields and select at least one day of the week.');
       return false;
     }
 
-    // Zip code validation (5 digits)
-    const zipRegex = /^\d{5}$/;
-    if (!zipRegex.test(zipCode)) {
-      alert('Please enter a valid 5-digit zip code.');
+    // Zip code validation
+    if (!isValidZipCode(zipCode)) {
+      showErrorToast('Please enter a valid 5-digit zip code.');
       return false;
     }
 
-    // State validation (2 uppercase letters)
-    const stateRegex = /^[A-Z]{2}$/;
-    if (!stateName.match(stateRegex)) {
-      alert('Please enter a valid 2-letter state code (e.g., TX, CA).');
+    // State validation
+    if (!isValidState(stateName)) {
+      showErrorToast('Please enter a valid 2-letter state code (e.g., TX, CA).');
       return false;
     }
 
     // Manager ID validation (optional but if provided must be positive integer)
     if (managerId && (isNaN(managerId) || parseInt(managerId) < 0)) {
-      alert('Please enter a valid manager ID.');
+      showErrorToast('Please enter a valid manager ID.');
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateEditForm = () => {
+    // Required fields
+    if (!editFacilityName || !editFacilityType || !editStatus || editSelectedDays.size === 0 ||
+        !editOpeningHours || !editClosingHours || !editStreetName || !editCityName || !editStateName || !editZipCode) {
+      showErrorToast('Please fill in all required fields and select at least one day of the week.');
+      return false;
+    }
+
+    // Zip code validation
+    if (!isValidZipCode(editZipCode)) {
+      showErrorToast('Please enter a valid 5-digit zip code.');
+      return false;
+    }
+
+    // State validation
+    if (!isValidState(editStateName)) {
+      showErrorToast('Please enter a valid 2-letter state code (e.g., TX, CA).');
+      return false;
+    }
+
+    // Manager ID validation (optional but if provided must be positive integer)
+    if (editManagerId && (isNaN(editManagerId) || parseInt(editManagerId) < 0)) {
+      showErrorToast('Please enter a valid manager ID.');
       return false;
     }
 
@@ -218,15 +274,17 @@ const FacilitiesPage = ({ globalAuthId }) => {
     setLoading(true);
 
     try {
+      // Convert Set to comma-separated string for MySQL SET type
+      const daysOfWeekString = Array.from(selectedDays).join(',');
+
       const response = await fetch(`${import.meta.env.VITE_API_URL}/addFacility`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          facilityId: parseInt(facilityId),
           facilityName,
           facilityType,
           status,
-          daysOfWeek,
+          daysOfWeek: daysOfWeekString,
           openingHours,
           closingHours,
           managerId: managerId ? parseInt(managerId) : null,
@@ -245,7 +303,7 @@ const FacilitiesPage = ({ globalAuthId }) => {
         setFacilityName('');
         setFacilityType('post_office');
         setStatus('active');
-        setDaysOfWeek('monday');
+        setSelectedDays(new Set(['monday']));
         setOpeningHours('');
         setClosingHours('');
         setManagerId('');
@@ -253,50 +311,87 @@ const FacilitiesPage = ({ globalAuthId }) => {
         setCityName('');
         setStateName('');
         setZipCode('');
-        // Fetch new next facility ID
-        const nextIdResponse = await fetch(`${import.meta.env.VITE_API_URL}/getNextFacilityId`);
-        const nextIdData = await nextIdResponse.json();
-        if (nextIdData.success) {
-          setNextFacilityId(nextIdData.nextFacilityId);
-          setFacilityId(nextIdData.nextFacilityId.toString());
-        }
+
+        setShowAddModal(false);
+        fetchFacilities();
+        showSuccessToast('Facility added successfully!');
       }
       else {
-        alert('Error adding facility: ' + data.message);
+        showErrorToast('Error adding facility: ' + data.message);
       }
     }
     catch (err) {
       console.error('Error adding facility:', err);
-      alert('Error adding facility.');
+      showErrorToast('Error adding facility.');
     }
     finally {
       setLoading(false);
     }
   };
 
-  // Handle archive facility
-  const handleDeleteFacility = async (facilityId) => {
-    // Prevent multiple clicks
-    if (deletingFacilityId === facilityId) {
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateEditForm()) {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Are you sure you want to DELETE facility ID ${facilityId}?\n\nThis action cannot be undone!`
-    );
+    setLoading(true);
 
-    if (!confirmed) {
-      return;
+    try {
+      // Convert Set to comma-separated string for MySQL SET type
+      const daysOfWeekString = Array.from(editSelectedDays).join(',');
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/updateFacilityFull`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          facilityId: editingFacility.facility_id,
+          facilityName: editFacilityName,
+          facilityType: editFacilityType,
+          status: editStatus,
+          daysOfWeek: daysOfWeekString,
+          openingHours: editOpeningHours,
+          closingHours: editClosingHours,
+          managerId: editManagerId ? parseInt(editManagerId) : null,
+          streetName: editStreetName,
+          cityName: editCityName,
+          stateName: editStateName,
+          zipCode: editZipCode,
+          updatedBy: authId
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setShowEditModal(false);
+        setEditingFacility(null);
+        fetchFacilities();
+        showSuccessToast('Facility updated successfully!');
+      } else {
+        showErrorToast('Error updating facility: ' + data.message);
+      }
+    } catch (err) {
+      console.error('Error updating facility:', err);
+      showErrorToast('Error updating facility.');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    setDeletingFacilityId(facilityId);
+  const handleDeleteClick = (facility) => {
+    setDeletingFacility(facility);
+    setShowDeleteModal(true);
+  };
 
+  const handleDeleteConfirm = async () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/deleteFacility`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          facilityId: facilityId,
+          facilityId: deletingFacility.facility_id,
           deletedBy: authId
         })
       });
@@ -304,119 +399,37 @@ const FacilitiesPage = ({ globalAuthId }) => {
       const data = await response.json();
 
       if (data.success) {
-        alert('Facility deleted successfully!');
+        setShowDeleteModal(false);
+        setDeletingFacility(null);
         fetchFacilities();
+        showSuccessToast('Facility deleted successfully!');
+      } else {
+        showErrorToast('Error deleting facility: ' + data.message);
       }
-      else {
-        alert('Error deleting facility: ' + data.message);
-      }
-    }
-    catch (err) {
+    } catch (err) {
       console.error('Error deleting facility:', err);
-      alert('Error deleting facility.');
-    }
-    finally {
-      setDeletingFacilityId(null);
+      showErrorToast('Error deleting facility.');
     }
   };
 
-  // Column definitions for AG Grid
-  const columnDefs = [
-    { field: 'facility_id', headerName: 'ID', sortable: true, filter: true, editable: !safetyLock, width: 100 },
-    { field: 'facility_name', headerName: 'Facility Name', sortable: true, filter: true, editable: true, flex: 1.5 },
-    { field: 'facility_type', headerName: 'Type', sortable: true, filter: true, editable: true, width: 120,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['warehouse', 'post_office']
-      }
-    },
-    { field: 'status', headerName: 'Status', sortable: true, filter: true, editable: true, width: 110,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['active', 'inactive']
-      }
-    },
-    { field: 'days_of_week', headerName: 'Days', sortable: true, filter: true, editable: true, width: 130,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: {
-        values: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-      }
-    },
-    { field: 'opening_hours', headerName: 'Opens', sortable: true, filter: true, editable: true, width: 100 },
-    { field: 'closing_hours', headerName: 'Closes', sortable: true, filter: true, editable: true, width: 100 },
-    { field: 'manager_id', headerName: 'Manager ID', sortable: true, filter: true, editable: true, width: 120 },
-    { field: 'manager_name', headerName: 'Manager Name', sortable: true, filter: true, editable: false, flex: 1 },
-    { field: 'street_name', headerName: 'Street', sortable: true, filter: true, editable: true, flex: 1.5 },
-    { field: 'city_name', headerName: 'City', sortable: true, filter: true, editable: true, width: 150 },
-    { field: 'state_name', headerName: 'State', sortable: true, filter: true, editable: true, width: 80 },
-    { field: 'zip_code', headerName: 'Zip', sortable: true, filter: true, editable: true, width: 100 }
-  ];
-
   return (
-    <div style={{ marginTop: '30px', width: '100%', padding: '20px' }}>
-      <div style={{ width: '100%', maxWidth: '1400px', margin: '0 auto' }}>
-        <div className="userShippingTop">
-          <div className="userShippingDesc">
-            Facilities <span>Manage facility information</span>
-          </div>
-        </div>
-
-        {/* Tab Navigation */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-          <button
-            onClick={() => setActiveTab('add')}
-            style={{
-              padding: '10px 20px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              backgroundColor: activeTab === 'add' ? '#50589C' : '#e0e0e0',
-              color: activeTab === 'add' ? 'white' : '#333',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            Add Facility
+    <div className="create-package-container">
+      <div className="facility-page-header">
+        <h1>Facilities</h1>
+        <div className="facility-header-buttons">
+          <button onClick={() => setShowAddModal(true)} className="facility-add-button">
+            + Add Facility
           </button>
-          <button
-            onClick={() => setActiveTab('edit')}
-            style={{
-              padding: '10px 20px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              backgroundColor: activeTab === 'edit' ? '#50589C' : '#e0e0e0',
-              color: activeTab === 'edit' ? 'white' : '#333',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            Edit Facilities
+          <button onClick={() => navigate('/managerPage')} className="facility-back-button">
+            ← Back to Manager
           </button>
         </div>
+      </div>
 
-        {/* Add Facility Section */}
-        {activeTab === 'add' && (
-        <div style={{ padding: '20px', border: '1px solid rgba(0,0,0,0.2)', marginBottom: '20px' }}>
-          <h2 style={{ marginTop: 0, marginBottom: '20px', color: '#50589C' }}>Add Facility</h2>
-
-          <form onSubmit={handleSubmit}>
+      {/* Add Facility Modal */}
+      <Modal show={showAddModal} title="Add New Facility" onClose={() => setShowAddModal(false)}>
+        <form onSubmit={handleSubmit}>
             <div className="facility-form-grid">
-              {/* Facility ID */}
-              <div className="facility-form-field">
-                <label>
-                  Facility ID: <span className="required-asterisk">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={facilityId}
-                  onChange={(e) => setFacilityId(e.target.value)}
-                  placeholder={nextFacilityId ? `Auto: ${nextFacilityId}` : 'Loading...'}
-                  required
-                />
-                <small>Auto-calculated, but you can enter your own</small>
-              </div>
-
               {/* Facility Type */}
               <div className="facility-form-field">
                 <label>
@@ -460,24 +473,24 @@ const FacilitiesPage = ({ globalAuthId }) => {
                 </select>
               </div>
 
-              {/* Days of Week */}
-              <div className="facility-form-field">
+              {/* Days of Week - Multiple Selection with Checkboxes */}
+              <div className="facility-form-field facility-form-field-full">
                 <label>
                   Days of Week: <span className="required-asterisk">*</span>
                 </label>
-                <select
-                  value={daysOfWeek}
-                  onChange={(e) => setDaysOfWeek(e.target.value)}
-                  required
-                >
-                  <option value="monday">Monday</option>
-                  <option value="tuesday">Tuesday</option>
-                  <option value="wednesday">Wednesday</option>
-                  <option value="thursday">Thursday</option>
-                  <option value="friday">Friday</option>
-                  <option value="saturday">Saturday</option>
-                  <option value="sunday">Sunday</option>
-                </select>
+                <div className="days-checkbox-container">
+                  {DAYS_OF_WEEK.map((day) => (
+                    <label key={day} className="days-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={selectedDays.has(day)}
+                        onChange={() => handleDayToggle(day)}
+                      />
+                      <span>{day}</span>
+                    </label>
+                  ))}
+                </div>
+                <small>Select all days the facility is open</small>
               </div>
 
               {/* Manager ID */}
@@ -518,7 +531,7 @@ const FacilitiesPage = ({ globalAuthId }) => {
               </div>
 
               {/* Street Name */}
-              <div className="facility-form-field">
+              <div className="facility-form-field facility-form-field-full">
                 <label>
                   Street Address: <span className="required-asterisk">*</span>
                 </label>
@@ -574,182 +587,352 @@ const FacilitiesPage = ({ globalAuthId }) => {
               </div>
             </div>
 
+          {/* Modal Actions */}
+          <div className="modal-actions">
             <button
               type="submit"
               disabled={loading}
-              style={{
-                marginTop: '20px',
-                padding: '12px 30px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                backgroundColor: loading ? '#ccc' : '#50589C',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: loading ? 'not-allowed' : 'pointer'
-              }}
+              className="modal-submit-button"
             >
-              {loading ? 'Adding Facility...' : 'Add Facility'}
+              {loading ? 'Adding...' : 'Add Facility'}
             </button>
-          </form>
-        </div>
-        )}
-
-        {/* Edit Facilities Section */}
-        {activeTab === 'edit' && (
-        <div style={{ padding: '20px', border: '1px solid rgba(0,0,0,0.2)', marginBottom: '20px' }}>
-          <h2 style={{ marginTop: 0, marginBottom: '20px', color: '#50589C' }}>Edit Facilities</h2>
-
-          <div style={{ display: 'flex', gap: '20px', marginBottom: '15px', alignItems: 'flex-start' }}>
-            {/* Type Filter Dropdown */}
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                Filter by Type:
-              </label>
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                style={{ padding: '8px', fontSize: '14px', minWidth: '200px' }}
-              >
-                <option value="all">All Types</option>
-                <option value="warehouse">Warehouse</option>
-                <option value="post_office">Post Office</option>
-              </select>
-            </div>
-
-            {/* Status Filter Dropdown */}
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                Filter by Status:
-              </label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                style={{ padding: '8px', fontSize: '14px', minWidth: '200px' }}
-              >
-                <option value="all">All Statuses</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-
-            {/* Safety Lock Toggle */}
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                Safety Lock (ID):
-              </label>
-              <button
-                onClick={() => setSafetyLock(!safetyLock)}
-                style={{
-                  padding: '8px 16px',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  backgroundColor: safetyLock ? '#50589C' : 'white',
-                  color: safetyLock ? 'white' : '#333',
-                  border: '2px solid #50589C',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  minWidth: '120px',
-                  boxSizing: 'border-box'
-                }}
-              >
-                {safetyLock ? 'Locked' : 'Unlocked'}
-              </button>
-              <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                {safetyLock ? 'ID cannot be edited' : 'ID can be edited'}
-              </div>
-            </div>
-
-            {/* Delete Mode Toggle */}
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                Delete Mode:
-              </label>
-              <button
-                onClick={() => setDeleteMode(!deleteMode)}
-                style={{
-                  padding: '8px 16px',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  backgroundColor: deleteMode ? '#dc3545' : 'white',
-                  color: deleteMode ? 'white' : '#333',
-                  border: '2px solid #dc3545',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  minWidth: '120px',
-                  boxSizing: 'border-box'
-                }}
-              >
-                {deleteMode ? 'Enabled' : 'Disabled'}
-              </button>
-              <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                {deleteMode ? 'Delete mode active' : 'Delete mode inactive'}
-              </div>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowAddModal(false)}
+              className="modal-cancel-button"
+            >
+              Cancel
+            </button>
           </div>
+        </form>
+      </Modal>
 
-          {loadingFacilities ? (
-            <div style={{ textAlign: 'center', padding: '40px', fontSize: '18px' }}>
-              Loading facilities...
-            </div>
-          ) : deleteMode ? (
-            /* Archive Table */
-            <div>
-              <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '5px', color: '#856404' }}>
-                <strong>Delete Mode:</strong> Double-click any row to delete that facility
-              </div>
-              <div className="ag-theme-alpine" style={{ height: 500, width: "100%" }}>
-                <AgGridReact
-                  rowData={facilities}
-                  columnDefs={columnDefs}
-                  defaultColDef={{
-                    sortable: true,
-                    filter: true,
-                    editable: false
-                  }}
-                  getRowId={getRowId}
-                  onRowDoubleClicked={(params) => handleDeleteFacility(params.data.facility_id)}
-                  rowClass="archive-mode-row"
-                  getRowStyle={(params) => {
-                    if (deletingFacilityId === params.data.facility_id) {
-                      return {
-                        backgroundColor: '#f8d7da',
-                        opacity: 0.6,
-                        cursor: 'not-allowed',
-                        pointerEvents: 'none'
-                      };
-                    }
-                  }}
-                  readOnlyEdit={true}
-                  suppressClickEdit={true}
-                  pagination={true}
-                  paginationPageSize={20}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="ag-theme-alpine" style={{ height: 500, width: "100%" }}>
-              <AgGridReact
-                rowData={facilities}
-                columnDefs={columnDefs}
-                defaultColDef={{
-                  sortable: true,
-                  filter: true
-                }}
-                getRowId={getRowId}
-                onCellValueChanged={onCellValueChanged}
-                pagination={true}
-                paginationPageSize={20}
-              />
-            </div>
-          )}
-
-          <p style={{ marginTop: '15px', color: '#666', fontSize: '14px' }}>
-            Double-click on any cell to edit. Press Enter to save changes.
-          </p>
+      {/* Facilities Table */}
+      <div className="facility-edit-container">
+        {/* Search and Filter Controls */}
+        <div className="facility-controls">
+          <div className="facility-search-container">
+            <input
+              type="text"
+              placeholder="Search by name, type, manager, or address..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="facility-search-input"
+            />
+          </div>
+          <div>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="facility-filter-select"
+            >
+              <option value="all">All Types</option>
+              <option value="warehouse">Warehouse</option>
+              <option value="post_office">Post Office</option>
+            </select>
+          </div>
+          <div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="facility-filter-select"
+            >
+              <option value="all">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
         </div>
+
+        {loadingFacilities ? (
+          <div className="facility-loading">
+            Loading facilities...
+          </div>
+        ) : (
+          <>
+            <div className="facilities-table-container">
+              <table className="facilities-table">
+                <thead>
+                  <tr>
+                    <th onClick={() => handleSort('facility_id')} className="sortable">
+                      ID {getSortIcon('facility_id')}
+                    </th>
+                    <th onClick={() => handleSort('facility_name')} className="sortable">
+                      Name {getSortIcon('facility_name')}
+                    </th>
+                    <th onClick={() => handleSort('facility_type')} className="sortable">
+                      Type {getSortIcon('facility_type')}
+                    </th>
+                    <th onClick={() => handleSort('status')} className="sortable">
+                      Status {getSortIcon('status')}
+                    </th>
+                    <th>
+                      Days Open
+                    </th>
+                    <th>
+                      Hours
+                    </th>
+                    <th onClick={() => handleSort('manager_name')} className="sortable">
+                      Manager {getSortIcon('manager_name')}
+                    </th>
+                    <th>
+                      Address
+                    </th>
+                    <th>
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredFacilities.length === 0 ? (
+                    <tr>
+                      <td colSpan="9" className="empty-state">
+                        {searchQuery || typeFilter !== 'all' || statusFilter !== 'all' ? 'No facilities match your search criteria.' : 'No facilities found.'}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredFacilities.map(facility => (
+                      <tr key={facility.facility_id}>
+                        <td>{encodeFacilityId(facility.facility_id)}</td>
+                        <td>{facility.facility_name}</td>
+                        <td className="capitalize">{facility.facility_type?.replace('_', ' ')}</td>
+                        <td className="capitalize">{facility.status}</td>
+                        <td>{facility.days_of_week?.split(',').map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ')}</td>
+                        <td>{facility.opening_hours} - {facility.closing_hours}</td>
+                        <td>{facility.manager_name || 'N/A'}</td>
+                        <td>
+                          {facility.street_name}, {facility.city_name}, {facility.state_name} {facility.zip_code}
+                        </td>
+                        <td>
+                          <div className="facility-table-actions">
+                            <button
+                              onClick={() => handleEditClick(facility)}
+                              className="facility-edit-btn"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteClick(facility)}
+                              className="facility-delete-btn"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <p className="facility-table-stats">
+              Showing {filteredFacilities.length} of {facilities.length} facilities. Click column headers to sort.
+            </p>
+          </>
         )}
       </div>
+
+      {/* Edit Facility Modal */}
+      <Modal
+        show={showEditModal && editingFacility !== null}
+        title={editingFacility ? `Edit Facility ${encodeFacilityId(editingFacility.facility_id)}` : 'Edit Facility'}
+        onClose={() => setShowEditModal(false)}
+      >
+        <form onSubmit={handleEditSubmit}>
+              <div className="facility-form-grid">
+                {/* Facility Type */}
+                <div className="facility-form-field">
+                  <label>
+                    Facility Type: <span className="required-asterisk">*</span>
+                  </label>
+                  <select
+                    value={editFacilityType}
+                    onChange={(e) => setEditFacilityType(e.target.value)}
+                    required
+                  >
+                    <option value="post_office">Post Office</option>
+                    <option value="warehouse">Warehouse</option>
+                  </select>
+                </div>
+
+                {/* Facility Name */}
+                <div className="facility-form-field">
+                  <label>
+                    Facility Name: <span className="required-asterisk">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editFacilityName}
+                    onChange={(e) => setEditFacilityName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* Status */}
+                <div className="facility-form-field">
+                  <label>
+                    Status: <span className="required-asterisk">*</span>
+                  </label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value)}
+                    required
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+
+                {/* Days of Week */}
+                <div className="facility-form-field facility-form-field-full">
+                  <label>
+                    Days of Week: <span className="required-asterisk">*</span>
+                  </label>
+                  <div className="days-checkbox-container">
+                    {DAYS_OF_WEEK.map((day) => (
+                      <label key={day} className="days-checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={editSelectedDays.has(day)}
+                          onChange={() => handleEditDayToggle(day)}
+                        />
+                        <span>{day}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <small>Select all days the facility is open</small>
+                </div>
+
+                {/* Manager ID */}
+                <div className="facility-form-field">
+                  <label>Manager ID:</label>
+                  <input
+                    type="number"
+                    value={editManagerId}
+                    onChange={(e) => setEditManagerId(e.target.value)}
+                    placeholder="Optional"
+                  />
+                </div>
+
+                {/* Opening Hours */}
+                <div className="facility-form-field">
+                  <label>
+                    Opening Hours: <span className="required-asterisk">*</span>
+                  </label>
+                  <input
+                    type="time"
+                    value={editOpeningHours}
+                    onChange={(e) => setEditOpeningHours(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* Closing Hours */}
+                <div className="facility-form-field">
+                  <label>
+                    Closing Hours: <span className="required-asterisk">*</span>
+                  </label>
+                  <input
+                    type="time"
+                    value={editClosingHours}
+                    onChange={(e) => setEditClosingHours(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* Street Name */}
+                <div className="facility-form-field facility-form-field-full">
+                  <label>
+                    Street Address: <span className="required-asterisk">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editStreetName}
+                    onChange={(e) => setEditStreetName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* City */}
+                <div className="facility-form-field">
+                  <label>
+                    City: <span className="required-asterisk">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editCityName}
+                    onChange={(e) => setEditCityName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* State */}
+                <div className="facility-form-field">
+                  <label>
+                    State (2 letters): <span className="required-asterisk">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editStateName}
+                    onChange={(e) => setEditStateName(e.target.value.toUpperCase())}
+                    placeholder="TX"
+                    maxLength="2"
+                    required
+                  />
+                </div>
+
+                {/* Zip Code */}
+                <div className="facility-form-field">
+                  <label>
+                    Zip Code (5 digits): <span className="required-asterisk">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editZipCode}
+                    onChange={(e) => setEditZipCode(e.target.value)}
+                    placeholder="12345"
+                    maxLength="5"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="modal-actions">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="modal-submit-button"
+                >
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="modal-cancel-button"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        show={showDeleteModal && deletingFacility !== null}
+        entityType="Facility"
+        entityName={deletingFacility ? deletingFacility.facility_name : ''}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setShowDeleteModal(false)}
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        show={showToast}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 };
