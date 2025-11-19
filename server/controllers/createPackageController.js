@@ -162,6 +162,7 @@ export const createPackageController = async (req, res) => {
       `INSERT INTO package (
         sender_id,
         recipient_id,
+        recipient_email,
         package_type,
         weight,
         length,
@@ -172,10 +173,11 @@ export const createPackageController = async (req, res) => {
         created_by,
         updated_by,
         facility_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'processing', ?, NULL, NULL,?)`, 
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'processing', ?, NULL, NULL,?)`, 
       [
         sender_id,
         recipient_id,
+        recipientEmail,
         packageType,
         weight,
         length,
