@@ -1,5 +1,6 @@
 import pool from '../config/database.js';
 import { sendPackageCreatedEmail } from '../utils/sendEmail.js';
+import { sendPackageIssueEmail } from '../utils/sendEmail.js';
 
 export const processEmailQueue = async () => {
   let connection;
@@ -35,10 +36,29 @@ export const processEmailQueue = async () => {
             email.tracking_number,
             email.recipient_name
           );
-        }
-        // Add other email types here in the future
+        } else if (email.email_type === 'package_issue') {
+          // Query package table to get current status
+          const [packageInfo] = await connection.execute(
+            `SELECT package_status FROM package WHERE tracking_number = ?`,
+            [email.tracking_number]
+          );
 
-        if (emailResult.success) {
+          if (packageInfo.length === 0) {
+            throw new Error('Package not found');
+          }
+
+          const packageStatus = packageInfo[0].package_status;
+
+          // Send customized email based on current status
+          emailResult = await sendPackageIssueEmail(
+            email.recipient_email,
+            email.tracking_number,
+            email.recipient_name,
+            packageStatus
+          );
+        }      
+
+        if (emailResult && emailResult.success) {
           // Mark as sent
           await connection.execute(
             `UPDATE email_queue 
@@ -67,7 +87,7 @@ export const processEmailQueue = async () => {
           [newStatus, newAttempts, error.message, email.queue_id]
         );
         failCount++;
-        console.error(`✗ Email failed: ${email.recipient_email} - ${error.message}`);
+        console.error(`Email failed: ${email.recipient_email} - ${error.message}`);
       }
     }
 
