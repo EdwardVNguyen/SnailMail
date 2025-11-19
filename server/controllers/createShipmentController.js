@@ -88,9 +88,8 @@ export const createShipmentController = async (req, res) => {
         first_name,
         last_name,
         address_id,
-        auth_id,
-        account_type
-      ) VALUES (?, ?, ?, NULL, 'guest')`,
+        auth_id
+      ) VALUES (?, ?, ?, NULL)`,
       [
         recipientFirstName,
         recipientLastName,
@@ -137,9 +136,9 @@ export const createShipmentController = async (req, res) => {
         recipientEmail,
         packageType,
         weight,
-        length || null,
-        width || null,
-        height || null,
+        length || 0,
+        width || 0,
+        height || 0,
         tracking_number,
         authId,
         authId,
