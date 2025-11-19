@@ -55,8 +55,8 @@ export const createCourierRequestController = async (req, res) => {
       return badClientRequest(res, { message: 'Package is not at your facility' });
     }
 
-    // Verify package is available (processing status and no courier assigned)
-    if (pkg.package_status !== 'processing' || pkg.courier_id !== null) {
+    // Verify package is available (processing or pre-shipment status and no courier assigned)
+    if ((pkg.package_status !== 'processing' && pkg.package_status !== 'pre-shipment') || pkg.courier_id !== null) {
       await connection.rollback();
       return badClientRequest(res, { message: 'Package is not available for pickup' });
     }

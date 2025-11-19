@@ -158,7 +158,15 @@ const EmployeePage = ({ globalAuthId }) => {
         setShowDimensionsModal(false);
         fetchPackages();
       } else {
-        showErrorToast('Error: ' + data.message);
+        // Show error toast for dimension/weight constraint violations
+        if (data.errorType === 'dimension_length' ||
+            data.errorType === 'dimension_width_height' ||
+            data.errorType === 'weight') {
+          setShowDimensionsModal(false); // Close modal so toast is visible
+          showErrorToast(data.message);
+        } else {
+          showErrorToast('Error: ' + data.message);
+        }
       }
     } catch (err) {
       console.error('Error updating dimensions:', err);
@@ -217,6 +225,7 @@ const EmployeePage = ({ globalAuthId }) => {
                 <tr>
                   <th>Package ID</th>
                   <th>Tracking Number</th>
+                  <th>Type</th>
                   <th>From</th>
                   <th>To</th>
                   <th>Current Location</th>
@@ -232,6 +241,7 @@ const EmployeePage = ({ globalAuthId }) => {
                   <tr key={pkg.package_id}>
                     <td>{encodePackageId(pkg.package_id)}</td>
                     <td className="tracking-number">{formatTrackingNumber(pkg.tracking_number)}</td>
+                    <td style={{ textTransform: 'capitalize' }}>{pkg.package_type || 'N/A'}</td>
                     <td>{pkg.sender_name}</td>
                     <td>{pkg.recipient_name}</td>
                     <td>{pkg.facility_name || 'Unknown'}</td>

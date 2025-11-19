@@ -35,20 +35,24 @@ export const getPackagesAtFacilitiesController = async (req, res) => {
 
     const employeeFacilityId = employeeRows[0].facility_id;
 
-    // Get total count of packages at this facility
+    // Get total count of packages at this facility (including NULL facility_id for new packages)
     const [countResult] = await connection.execute(
-      `SELECT COUNT(*) AS total FROM package p WHERE p.facility_id = ?`,
+      `SELECT COUNT(*) AS total FROM package p WHERE (p.facility_id = ? OR p.facility_id IS NULL)`,
       [employeeFacilityId]
     );
     const total = countResult[0].total;
 
-    // Get paginated packages at the employee's facility only
+    // Get paginated packages at the employee's facility (including new packages with NULL facility_id)
     let query = `
       SELECT
         p.package_id,
         p.tracking_number,
         p.package_status,
+        p.package_type,
         p.weight,
+        p.length,
+        p.width,
+        p.height,
         p.created_at,
         CONCAT(sender.first_name, ' ', sender.last_name) as sender_name,
         CONCAT(recipient.first_name, ' ', recipient.last_name) as recipient_name,
@@ -61,7 +65,7 @@ export const getPackagesAtFacilitiesController = async (req, res) => {
       LEFT JOIN customer recipient ON p.recipient_id = recipient.customer_id
       LEFT JOIN facility f ON p.facility_id = f.facility_id
       LEFT JOIN employee courier ON p.courier_id = courier.employee_id
-      WHERE p.facility_id = ?
+      WHERE (p.facility_id = ? OR p.facility_id IS NULL)
       ORDER BY p.created_at DESC
       LIMIT ${limit} OFFSET ${offset}
     `;

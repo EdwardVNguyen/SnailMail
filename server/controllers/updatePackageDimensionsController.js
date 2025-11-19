@@ -60,6 +60,54 @@ export const updatePackageDimensionsController = async (req, res) => {
       return;
     }
 
+    // Validate dimension and weight constraints (same as customer constraints)
+    // Length limit: 100 inches = 254 cm
+    if (length && parseFloat(length) > 254) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({
+        success: false,
+        message: 'Package too large: Exceeds length (100in)',
+        errorType: 'dimension_length'
+      }));
+      return;
+    }
+
+    // Width/Height limit: 35 inches = 88.9 cm
+    if (width && parseFloat(width) > 88.9) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({
+        success: false,
+        message: 'Package too large: Exceeds width or height (35in)',
+        errorType: 'dimension_width_height'
+      }));
+      return;
+    }
+
+    if (height && parseFloat(height) > 88.9) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({
+        success: false,
+        message: 'Package too large: Exceeds width or height (35in)',
+        errorType: 'dimension_width_height'
+      }));
+      return;
+    }
+
+    // Weight limit: 100 lbs = 45.36 kg
+    if (weight && parseFloat(weight) > 45.36) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({
+        success: false,
+        message: 'Package too heavy: Weight exceeds limit (100lbs)',
+        errorType: 'weight'
+      }));
+      return;
+    }
+
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
@@ -90,6 +138,39 @@ export const updatePackageDimensionsController = async (req, res) => {
   catch (error) {
     if (connection) await connection.rollback();
     console.error('Error updating package dimensions:', error);
+
+    // Check if error is from the dimension/weight validation triggers
+    if (error.sqlState === '45000') {
+      if (error.message.includes('Package too large: Exceeds length')) {
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          success: false,
+          message: 'Package too large: Exceeds length (100in)',
+          errorType: 'dimension_length'
+        }));
+        return;
+      } else if (error.message.includes('Package too large: Exceeds width or height')) {
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          success: false,
+          message: 'Package too large: Exceeds width or height (35in)',
+          errorType: 'dimension_width_height'
+        }));
+        return;
+      } else if (error.message.includes('Package too heavy')) {
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          success: false,
+          message: 'Package too heavy: Weight exceeds limit (100lbs)',
+          errorType: 'weight'
+        }));
+        return;
+      }
+    }
+
     badServerRequest(res);
   }
   finally {

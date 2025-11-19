@@ -51,7 +51,7 @@ export const pickupPackageController = async (req, res) => {
     await connection.execute(
       `UPDATE package
        SET courier_id = ?, package_status = 'in-transit', updated_by = ?
-       WHERE package_id = ? AND package_status = 'processing' AND courier_id IS NULL`,
+       WHERE package_id = ? AND package_status IN ('processing', 'pre-shipment') AND courier_id IS NULL`,
       [courierId, authId, packageId]
     );
 
