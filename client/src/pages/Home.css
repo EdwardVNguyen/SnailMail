@@ -15,7 +15,7 @@
    font-size: 1.25rem;
  }
  .section1 .subSection1 .line {
-   background-color: #3C467B;
+   background-color: var(--color-primary);
    height: 2px;
    border-radius: 4px;
    width: 15vw;
@@ -30,7 +30,7 @@
 
 /* From Uiverse.io by mrhyddenn */ 
 .section1 .subSection1 button {
-  background: #636CCB;
+  background: var(--color-primary-accent);
   border: none;
   margin: 10px 0px;
   padding: 10px 20px;
@@ -41,7 +41,7 @@
   text-transform: uppercase;
   cursor: pointer;
   transform: skew(-21deg);
-  color: white;
+  color: var(--text-inverse);
 }
 
 .section1 .subSection1 span {
@@ -56,14 +56,14 @@
   bottom: 0;
   right: 100%;
   left: 0;
-  background: #3C467B;
+  background: var(--color-primary);
   opacity: 0;
   z-index: -1;
   transition: all 0.5s;
 }
  
 .section1 .subSection1 button:hover {
-  color: #fff;
+  color: var(--color-white);
 }
 
 .section1 .subSection1 button:hover::before {

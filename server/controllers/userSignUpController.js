@@ -7,29 +7,23 @@ export const userSignUpController = async (req, res) => {
 
   let email,
       password,
-      phoneNumber,
       street,
       city,
       state,
       zipCode,
       firstName,
-      middleName,
-      lastName,
-      accountType
+      lastName
 
   try {
     const body = await getJSONRequestBody(req)
     email = body.email
     password = body.password
-    phoneNumber = body.phoneNumber
     street = body.street
     city = body.city
     state = body.state
     zipCode = body.zipCode
     firstName = body.firstName
-    middleName = body.middleName
     lastName = body.lastName
-    accountType = body.accountType
   } catch (err) {
     badClientRequest(res, err)
     return
@@ -59,15 +53,12 @@ export const userSignUpController = async (req, res) => {
 
     // insert tuple into customer relation
     await connection.execute(
-      `INSERT INTO customer(first_name, middle_name, last_name, phone_number, account_type, address_id, auth_id, created_by, updated_by)
-       VALUES (?, ?, ?, ?, ? ,? ,?, ?, ?)`,
+      `INSERT INTO customer(first_name, last_name, address_id, auth_id, created_by, updated_by)
+       VALUES (?, ?, ?, ?, ?, ?)`,
       [
-        firstName, 
-        toNullIfBlank(middleName), 
-        lastName, 
-        toNullIfBlank(phoneNumber), 
-        accountType, 
-        address.insertId, 
+        firstName,
+        lastName,
+        address.insertId,
         authentication.insertId,
         authentication.insertId,
         authentication.insertId

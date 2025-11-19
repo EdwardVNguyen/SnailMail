@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from 'react-router-dom';
 import './MovePackages.css';
+import { Toast } from '../components/Toast';
+import { encodePackageId } from '../utils/idEncoder';
 
 import { AgGridReact } from 'ag-grid-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
@@ -12,6 +14,23 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 const MovePackages = ( {globalAuthId} ) => {
   const authId = globalAuthId;
   const navigate = useNavigate();
+
+  // Toast notification state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
+
+  const showSuccessToast = (message) => {
+    setToastMessage(message);
+    setToastType('success');
+    setShowToast(true);
+  };
+
+  const showErrorToast = (message) => {
+    setToastMessage(message);
+    setToastType('error');
+    setShowToast(true);
+  };
 
   // Provide unique row ID to maintain selection state
   const getRowId = useCallback((params) => {
@@ -93,15 +112,15 @@ const MovePackages = ( {globalAuthId} ) => {
   // Handle move packages submission
   const handleMovePackages = async () => {
     if (selectedPackages.length === 0) {
-      alert('Please select at least one package to move.');
+      showErrorToast('Please select at least one package to move.');
       return;
     }
     if (!destinationFacility) {
-      alert('Please select a destination facility.');
+      showErrorToast('Please select a destination facility.');
       return;
     }
     if (!travelTime) {
-      alert('Please enter estimated travel time.');
+      showErrorToast('Please enter estimated travel time.');
       return;
     }
 
@@ -120,7 +139,8 @@ const MovePackages = ( {globalAuthId} ) => {
       const data = await response.json();
 
       if (data.success) {
-        // Reset state without showing popup
+        showSuccessToast('Tracking events created successfully!');
+        // Reset state
         setSelectedPackages([]);
         setDestinationFacility('');
         setTravelTime('');
@@ -128,18 +148,18 @@ const MovePackages = ( {globalAuthId} ) => {
         // Refresh packages list
         fetchPackagesAtFacility();
       } else {
-        alert('Error creating tracking events: ' + data.message);
+        showErrorToast('Error creating tracking events: ' + data.message);
       }
     } catch (err) {
       console.error("Error creating tracking events:", err);
-      alert('Error creating tracking events.');
+      showErrorToast('Error creating tracking events.');
     }
   };
 
   // Row data for AG Grid
   const rowData = packages.map(pkg => ({
     package_id: pkg.package_id,
-    ID: pkg.package_id,
+    ID: encodePackageId(pkg.package_id),
     Sender: pkg.sender_name,
     Recipient: pkg.recipient_name,
     Type: pkg.package_type,
@@ -313,6 +333,14 @@ const MovePackages = ( {globalAuthId} ) => {
           Please select a current facility location to view packages
         </div>
       )}
+
+      {/* Toast Notification */}
+      <Toast
+        show={showToast}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 };

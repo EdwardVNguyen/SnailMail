@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './Tracking.css';
+import { formatTrackingNumber } from '../utils/idEncoder';
 
 const Tracking = () => {
   const [trackingNumber, setTrackingNumber] = useState('');
@@ -96,7 +97,7 @@ const Tracking = () => {
           <div className="package-summary">
             <div className="tracking-number-display">
               <span className="label">Tracking Number:</span>
-              <span className="value">{trackingData.package.tracking_number}</span>
+              <span className="value">{formatTrackingNumber(trackingData.package.tracking_number)}</span>
             </div>
             
             <div className="status-section">
@@ -142,22 +143,36 @@ const Tracking = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {trackingData.tracking_events.map((event) => (
-                    <tr key={event.tracking_event_id}>
-                      <td className="date-time-cell">
-                        <div className="date">{formatDate(event.event_time)}</div>
-                        <div className="time">{formatTime(event.event_time)}</div>
-                      </td>
-                      <td className="activity-cell">
-                        {event.event_type}
-                      </td>
-                      <td className="location-cell">
-                        {event.city_name && event.state_name 
-                          ? `${event.city_name}, ${event.state_name}`
-                          : 'N/A'}
-                      </td>
-                    </tr>
-                  ))}
+                  {trackingData.tracking_events.map((event) => {
+                    // Determine location display based on event type
+                    let locationDisplay = 'N/A';
+
+                    if (event.city_name && event.state_name) {
+                      // For delivered events, show full address
+                      if (event.event_type === 'delivered' && event.street_name) {
+                        locationDisplay = `${event.street_name}, ${event.city_name}, ${event.state_name} ${event.zip_code}`;
+                      }
+                      // For other events (facility-based), show city and state only
+                      else {
+                        locationDisplay = `${event.city_name}, ${event.state_name}`;
+                      }
+                    }
+
+                    return (
+                      <tr key={event.tracking_event_id}>
+                        <td className="date-time-cell">
+                          <div className="date">{formatDate(event.event_time)}</div>
+                          <div className="time">{formatTime(event.event_time)}</div>
+                        </td>
+                        <td className="activity-cell">
+                          {event.event_type}
+                        </td>
+                        <td className="location-cell">
+                          {locationDisplay}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             ) : (
