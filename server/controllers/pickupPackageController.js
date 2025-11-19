@@ -27,6 +27,26 @@ export const pickupPackageController = async (req, res) => {
 
     const courierId = courierRows[0].employee_id;
 
+    // Check courier's current package count before picking up
+    const [[{ package_count }]] = await connection.execute(
+      `SELECT COUNT(*) as package_count
+       FROM package
+       WHERE courier_id = ?
+       AND package_status NOT IN ('delivered', 'returned', 'lost', 'undeliverable')`,
+      [courierId]
+    );
+
+    if (package_count >= 5) {
+      await connection.rollback();
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({
+        success: false,
+        message: 'You cannot pick up more packages. Maximum limit of 5 packages reached.'
+      }));
+      return;
+    }
+
     // Update package: assign courier and change status to 'in-transit'
     await connection.execute(
       `UPDATE package
@@ -51,18 +71,6 @@ export const pickupPackageController = async (req, res) => {
   catch (error) {
     if (connection) await connection.rollback();
     console.error('Error picking up package:', error);
-
-    // Check if error is from the courier package limit trigger
-    if (error.sqlState === '45000' && error.message.includes('Courier cannot have more than 5 packages')) {
-      res.statusCode = 400;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({
-        success: false,
-        message: 'You cannot pick up more packages. Maximum limit of 5 packages reached.'
-      }));
-      return;
-    }
-
     badServerRequest(res);
   }
   finally {

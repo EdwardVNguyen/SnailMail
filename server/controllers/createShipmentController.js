@@ -161,6 +161,39 @@ export const createShipmentController = async (req, res) => {
       await connection.rollback();
     }
     console.error('Create shipment error:', error);
+
+    // Check if error is from the dimension/weight validation triggers
+    if (error.sqlState === '45000') {
+      if (error.message.includes('Package too large: Exceeds length')) {
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          success: false,
+          message: 'Package too large: Exceeds length (100in)',
+          errorType: 'dimension_length'
+        }));
+        return;
+      } else if (error.message.includes('Package too large: Exceeds width or height')) {
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          success: false,
+          message: 'Package too large: Exceeds width or height (35in)',
+          errorType: 'dimension_width_height'
+        }));
+        return;
+      } else if (error.message.includes('Package too heavy')) {
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          success: false,
+          message: 'Package too heavy: Weight exceeds limit (100lbs)',
+          errorType: 'weight'
+        }));
+        return;
+      }
+    }
+
     badServerRequest(res);
   } finally {
     if (connection) connection.release();

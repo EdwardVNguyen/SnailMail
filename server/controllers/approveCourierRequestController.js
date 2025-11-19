@@ -122,6 +122,13 @@ export const approveCourierRequestController = async (req, res) => {
       [request.courier_id, authId, request.package_id]
     );
 
+    // 3. Create tracking event for out-for-delivery status
+    await connection.execute(
+      `INSERT INTO tracking_event (package_id, event_type, location_id, event_time, created_by, updated_by)
+       VALUES (?, 'out-for-delivery', ?, NOW(), ?, ?)`,
+      [request.package_id, pkg.facility_address_id, authId, authId]
+    );
+
     await connection.commit();
 
     res.statusCode = 200;
@@ -136,18 +143,6 @@ export const approveCourierRequestController = async (req, res) => {
       await connection.rollback();
     }
     console.error('Error in approveCourierRequestController:', error);
-
-    // Check if error is from the courier package limit trigger
-    if (error.sqlState === '45000' && error.message.includes('Courier cannot have more than 5 packages')) {
-      res.statusCode = 400;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({
-        success: false,
-        message: 'Cannot approve request. Courier has reached the maximum limit of 5 packages.'
-      }));
-      return;
-    }
-
     badServerRequest(res);
   } finally {
     if (connection) connection.release();
