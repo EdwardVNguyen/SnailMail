@@ -14,9 +14,8 @@ const UserProfile = ({ globalAuthId }) => {
 
   const [contactForm, setContactForm] = useState({
     firstName: '',
-    middleName: '',
     lastName: '',
-    phoneNumber: '',
+    birthDate: '',
     streetName: '',
     cityName: '',
     stateName: '',
@@ -33,16 +32,21 @@ const UserProfile = ({ globalAuthId }) => {
   useEffect(() => {
     const fetchCustomerData = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/getCustomerData?authId=${globalAuthId}`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/getCustomerData?authId=${globalAuthId}`);
         const data = await response.json();
-        
+        console.log('Fetched customer data:', data);
         if (data.success) {
           setCustomerData(data.customer);
+          let formattedBirthDate = '';
+          if (data.customer.birth_date) {
+            const date = new Date(data.customer.birth_date);
+            formattedBirthDate = date.toISOString().split('T')[0];
+          }
+          console.log('Formatted birth date:', formattedBirthDate);
           setContactForm({
             firstName: data.customer.first_name || '',
-            middleName: data.customer.middle_name || '',
             lastName: data.customer.last_name || '',
-            phoneNumber: data.customer.phone_number || '',
+            birthDate: formattedBirthDate,
             streetName: data.customer.street_name || '',
             cityName: data.customer.city_name || '',
             stateName: data.customer.state_name || '',
@@ -75,7 +79,7 @@ const UserProfile = ({ globalAuthId }) => {
     setErrorMessage('');
 
     try {
-      const response = await fetch('http://localhost:8000/updateCustomer', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/updateCustomer`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -83,9 +87,8 @@ const UserProfile = ({ globalAuthId }) => {
         body: JSON.stringify({
           authId: globalAuthId,
           firstName: contactForm.firstName,
-          middleName: contactForm.middleName,
           lastName: contactForm.lastName,
-          phoneNumber: contactForm.phoneNumber,
+          birthDate: contactForm.birthDate,
           streetName: contactForm.streetName,
           cityName: contactForm.cityName,
           stateName: contactForm.stateName,
@@ -118,7 +121,7 @@ const UserProfile = ({ globalAuthId }) => {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/updateSecurity', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/updateSecurity`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -169,16 +172,20 @@ const UserProfile = ({ globalAuthId }) => {
   }
   const refetchCustomerData = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/getCustomerData?authId=${globalAuthId}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/getCustomerData?authId=${globalAuthId}`);
       const data = await response.json();
       
       if (data.success) {
         setCustomerData(data.customer);
+        let formattedBirthDate = '';
+          if (data.customer.birth_date) {
+            const date = new Date(data.customer.birth_date);
+            formattedBirthDate = date.toISOString().split('T')[0];
+          }
         setContactForm({
           firstName: data.customer.first_name || '',
-          middleName: data.customer.middle_name || '',
           lastName: data.customer.last_name || '',
-          phoneNumber: data.customer.phone_number || '',
+          birthDate: formattedBirthDate,
           streetName: data.customer.street_name || '',
           cityName: data.customer.city_name || '',
           stateName: data.customer.state_name || '',
@@ -324,16 +331,6 @@ const UserProfile = ({ globalAuthId }) => {
                     </div>
 
                     <div className="form-group">
-                      <label>Middle Name</label>
-                      <input
-                        type="text"
-                        name="middleName"
-                        value={contactForm.middleName}
-                        onChange={handleContactChange}
-                      />
-                    </div>
-
-                    <div className="form-group">
                       <label>Last Name *</label>
                       <input
                         type="text"
@@ -346,11 +343,11 @@ const UserProfile = ({ globalAuthId }) => {
                   </div>
 
                   <div className="form-group">
-                    <label>Phone Number</label>
+                    <label>Birth Date</label>
                     <input
-                      type="tel"
-                      name="phoneNumber"
-                      value={contactForm.phoneNumber}
+                      type="date"
+                      name="birthDate"
+                      value={contactForm.birthDate}
                       onChange={handleContactChange}
                     />
                   </div>

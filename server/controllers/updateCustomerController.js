@@ -6,9 +6,8 @@ import { toNullIfBlank } from '../utils/toNullIfBlank.js';
 export const updateCustomerController = async (req, res) => {
   let authId,
       firstName,
-      middleName,
       lastName,
-      phoneNumber,
+      birthDate,
       streetName,
       cityName,
       stateName,
@@ -18,9 +17,8 @@ export const updateCustomerController = async (req, res) => {
     const body = await getJSONRequestBody(req);
     authId = body.authId;
     firstName = body.firstName;
-    middleName = body.middleName;
     lastName = body.lastName;
-    phoneNumber = body.phoneNumber;
+    birthDate = body.birthDate;
     streetName = body.streetName;
     cityName = body.cityName;
     stateName = body.stateName;
@@ -51,13 +49,12 @@ export const updateCustomerController = async (req, res) => {
     await connection.execute(
       `UPDATE customer 
        SET first_name = ?, 
-           middle_name = ?, 
            last_name = ?, 
-           phone_number = ?,
+           birth_date = ?,
            updated_by = ?,
            last_updated = CURRENT_TIMESTAMP
        WHERE auth_id = ?`,
-      [firstName, toNullIfBlank(middleName), lastName, toNullIfBlank(phoneNumber), authId, authId]
+      [firstName, lastName, birthDate, authId, authId]
     );
 
     await connection.execute(
