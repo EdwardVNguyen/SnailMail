@@ -20,6 +20,8 @@ import { approveCourierRequestController } from '../controllers/approveCourierRe
 import { rejectCourierRequestController } from '../controllers/rejectCourierRequestController.js'
 import { markPackagesDeliveredController } from '../controllers/markPackagesDeliveredController.js'
 import { updatePackageDimensionsController } from '../controllers/updatePackageDimensionsController.js'
+import { updateCustomerController } from '../controllers/updateCustomerController.js'
+import { updateSecurityController } from '../controllers/updateSecurityController.js'
 
 export const handlePostRequest= (req, res) => {
 
@@ -110,6 +112,14 @@ export const handlePostRequest= (req, res) => {
   // update package dimensions
   else if (req.url.startsWith('/updatePackageDimensions')) {
     return updatePackageDimensionsController(req, res)
+  }
+  // update customer contact information
+  else if (req.url.startsWith('/updateCustomer')) {
+    return updateCustomerController(req, res)
+  }
+  // update security (email/password)
+  else if (req.url.startsWith('/updateSecurity')) {
+    return updateSecurityController(req, res)
   }
   // if an api call is made to a url that isn't any of the above, return 404
   else {
