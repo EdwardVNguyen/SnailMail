@@ -106,9 +106,6 @@ const ManagerPage = ({ globalAuthId }) => {
             <div className="action-icon">📈</div>
             <h3>View Reports</h3>
             <p>Access analytics, problem packages, and performance metrics</p>
-            {stats.problemPackages > 0 && (
-              <span className="badge">{stats.problemPackages} issues</span>
-            )}
           </div>
         </div>
       </div>

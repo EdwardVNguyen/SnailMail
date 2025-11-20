@@ -75,10 +75,10 @@ export const approveCourierRequestController = async (req, res) => {
       return badClientRequest(res, { message: 'Package already assigned to another courier' });
     }
 
-    // Accept packages in 'processing' or 'out-for-delivery' status (clerk may have just created tracking event)
-    if (pkg.package_status !== 'processing' && pkg.package_status !== 'out-for-delivery') {
+    // Package must be in 'pre-shipment' status before clerk can approve courier request
+    if (pkg.package_status !== 'pre-shipment') {
       await connection.rollback();
-      return badClientRequest(res, { message: 'Package is no longer available for pickup' });
+      return badClientRequest(res, { message: 'Package must be in pre-shipment status before approval. Please create a pre-shipment tracking event first.' });
     }
 
     // Check courier's current package count before approving

@@ -1,18 +1,67 @@
 import { useState, useEffect } from 'react';
 import './ReportPage.css';
+import { Modal } from '../components/Modal';
+import { Toast } from '../components/Toast';
+import DetailSection from './ReportPage/components/DetailSection';
+import FacilityReport from './ReportPage/components/FacilityReport';
+import ClerkReport from './ReportPage/components/ClerkReport';
+import CourierReport from './ReportPage/components/CourierReport';
 
 const ReportPage = ({ globalAuthId }) => {
-  const [activeReport, setActiveReport] = useState('problems');
+  const [activeReport, setActiveReport] = useState('facility');
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState(null);
 
   // Date range states
-  const [backlogStartDate, setBacklogStartDate] = useState('');
-  const [backlogEndDate, setBacklogEndDate] = useState('');
-  const [deliveryStartDate, setDeliveryStartDate] = useState('');
-  const [deliveryEndDate, setDeliveryEndDate] = useState('');
+  const [facilityStartDate, setFacilityStartDate] = useState('');
+  const [facilityEndDate, setFacilityEndDate] = useState('');
+  const [clerkStartDate, setClerkStartDate] = useState('');
+  const [clerkEndDate, setClerkEndDate] = useState('');
   const [courierStartDate, setCourierStartDate] = useState('');
   const [courierEndDate, setCourierEndDate] = useState('');
+
+  // Modal state
+  const [showFacilityModal, setShowFacilityModal] = useState(false);
+  const [selectedFacility, setSelectedFacility] = useState(null);
+  const [facilityDetails, setFacilityDetails] = useState(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+
+  const [showClerkModal, setShowClerkModal] = useState(false);
+  const [selectedClerk, setSelectedClerk] = useState(null);
+  const [clerkDetails, setClerkDetails] = useState(null);
+  const [loadingClerkDetails, setLoadingClerkDetails] = useState(false);
+
+  const [showCourierModal, setShowCourierModal] = useState(false);
+  const [selectedCourier, setSelectedCourier] = useState(null);
+  const [courierDetails, setCourierDetails] = useState(null);
+  const [loadingCourierDetails, setLoadingCourierDetails] = useState(false);
+
+  // Toast state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
+
+  // Sorting state for main facility table
+  const [facilitySortField, setFacilitySortField] = useState('facility_name');
+  const [facilitySortDirection, setFacilitySortDirection] = useState('asc');
+
+  // Collapsed sections state (all start collapsed)
+  const [collapsedSections, setCollapsedSections] = useState({
+    packagesReceived: true,
+    clerkCreatedEvents: true,
+    packagesDelivered: true,
+    packagesLost: true,
+    backlog: true,
+    statusInTransit: true,
+    statusOutForDelivery: true
+  });
+
+  // Sorting state for detail tables
+  const [detailSortField, setDetailSortField] = useState({});
+  const [detailSortDirection, setDetailSortDirection] = useState({});
+
+  // Pagination state for detail tables
+  const [detailPages, setDetailPages] = useState({});
 
   // Initialize dates on component mount
   useEffect(() => {
@@ -24,13 +73,249 @@ const ReportPage = ({ globalAuthId }) => {
     thirtyDaysBack.setDate(thirtyDaysBack.getDate() - 30);
     const endDate = thirtyDaysBack.toISOString().split('T')[0];
 
-    setBacklogStartDate(startDate);
-    setBacklogEndDate(endDate);
-    setDeliveryStartDate(startDate);
-    setDeliveryEndDate(endDate);
+    setFacilityStartDate(startDate);
+    setFacilityEndDate(endDate);
+    setClerkStartDate(startDate);
+    setClerkEndDate(endDate);
     setCourierStartDate(startDate);
     setCourierEndDate(endDate);
   }, []);
+
+  // Helper function to get date range presets
+  const getDateRange = (preset) => {
+    const today = new Date();
+    const toDate = today.toISOString().split('T')[0];
+    let fromDate;
+
+    switch (preset) {
+      case 'all':
+        fromDate = '2000-01-01'; // Far past date for "all time"
+        break;
+      case 'year':
+        const oneYearAgo = new Date(today);
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        fromDate = oneYearAgo.toISOString().split('T')[0];
+        break;
+      case 'month':
+        const oneMonthAgo = new Date(today);
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        fromDate = oneMonthAgo.toISOString().split('T')[0];
+        break;
+      case 'week':
+        const oneWeekAgo = new Date(today);
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        fromDate = oneWeekAgo.toISOString().split('T')[0];
+        break;
+      default:
+        fromDate = toDate;
+    }
+
+    return { fromDate, toDate };
+  };
+
+  // Preset handlers for each report type
+  const setFacilityDateRange = (preset) => {
+    const { fromDate } = getDateRange(preset);
+    setFacilityEndDate(fromDate); // "To" field - the past date
+  };
+
+  const setClerkDateRange = (preset) => {
+    const { fromDate } = getDateRange(preset);
+    setClerkEndDate(fromDate); // "To" field - the past date
+  };
+
+  const setCourierDateRange = (preset) => {
+    const { fromDate } = getDateRange(preset);
+    setCourierEndDate(fromDate); // "To" field - the past date
+  };
+
+  // Sorting function for main facility table
+  const handleFacilitySort = (field) => {
+    if (facilitySortField === field) {
+      setFacilitySortDirection(facilitySortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setFacilitySortField(field);
+      setFacilitySortDirection('asc');
+    }
+  };
+
+
+  // Handle facility row click to show details modal
+  const handleFacilityRowClick = async (facility) => {
+    setSelectedFacility(facility);
+    setShowFacilityModal(true);
+    setLoadingDetails(true);
+    setFacilityDetails(null);
+
+    // Reset collapsed sections and pagination
+    setCollapsedSections({
+      packagesReceived: true,
+      clerkCreatedEvents: true,
+      packagesDelivered: true,
+      packagesLost: true,
+      packagesSent: true,
+      backlog: true,
+      statusInTransit: true,
+      statusOutForDelivery: true
+    });
+    setDetailPages({});
+    setDetailSortField({});
+    setDetailSortDirection({});
+
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/getFacilityDetails?facilityId=${facility.facility_id}&startDate=${facilityStartDate}&endDate=${facilityEndDate}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.success) {
+        setFacilityDetails(data);
+        const initialPages = {};
+        Object.keys(data.details).forEach(key => {
+          initialPages[key] = 1;
+        });
+        setDetailPages(initialPages);
+      } else {
+        setToastMessage(data.message || 'Failed to fetch facility details');
+        setToastType('error');
+        setShowToast(true);
+        setShowFacilityModal(false);
+      }
+    } catch (error) {
+      console.error('Error fetching facility details:', error);
+      setToastMessage('Failed to fetch facility details. Please try again.');
+      setToastType('error');
+      setShowToast(true);
+      setShowFacilityModal(false);
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  // Handle clerk row click to show details modal
+  const handleClerkRowClick = async (clerk) => {
+    setSelectedClerk(clerk);
+    setShowClerkModal(true);
+    setLoadingClerkDetails(true);
+    setClerkDetails(null);
+
+    setCollapsedSections({
+      reviewsApproved: true,
+      reviewsRejected: true,
+      trackingEvents: true,
+      problemPackages: true,
+      packagesProcessed: true
+    });
+    setDetailPages({});
+    setDetailSortField({});
+    setDetailSortDirection({});
+
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/getClerkDetails?employeeId=${clerk.employee_id}&startDate=${clerkStartDate}&endDate=${clerkEndDate}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.success) {
+        setClerkDetails(data);
+        const initialPages = {};
+        Object.keys(data.details).forEach(key => {
+          initialPages[key] = 1;
+        });
+        setDetailPages(initialPages);
+      } else {
+        setToastMessage(data.message || 'Failed to fetch clerk details');
+        setToastType('error');
+        setShowToast(true);
+        setShowClerkModal(false);
+      }
+    } catch (error) {
+      console.error('Error fetching clerk details:', error);
+      setToastMessage('Failed to fetch clerk details. Please try again.');
+      setToastType('error');
+      setShowToast(true);
+      setShowClerkModal(false);
+    } finally {
+      setLoadingClerkDetails(false);
+    }
+  };
+
+  // Handle courier row click to show details modal
+  const handleCourierRowClick = async (courier) => {
+    setSelectedCourier(courier);
+    setShowCourierModal(true);
+    setLoadingCourierDetails(true);
+    setCourierDetails(null);
+
+    setCollapsedSections({
+      packagesClaimed: true,
+      packagesDelivered: true,
+      packagesInTransit: true,
+      packagesLost: true,
+      facilityTransfers: true,
+      finalDeliveries: true,
+      allTrackingEvents: true
+    });
+    setDetailPages({});
+    setDetailSortField({});
+    setDetailSortDirection({});
+
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/getCourierDetails?employeeId=${courier.employee_id}&startDate=${courierStartDate}&endDate=${courierEndDate}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.success) {
+        setCourierDetails(data);
+        const initialPages = {};
+        Object.keys(data.details).forEach(key => {
+          initialPages[key] = 1;
+        });
+        setDetailPages(initialPages);
+      } else {
+        setToastMessage(data.message || 'Failed to fetch courier details');
+        setToastType('error');
+        setShowToast(true);
+        setShowCourierModal(false);
+      }
+    } catch (error) {
+      console.error('Error fetching courier details:', error);
+      setToastMessage('Failed to fetch courier details. Please try again.');
+      setToastType('error');
+      setShowToast(true);
+      setShowCourierModal(false);
+    } finally {
+      setLoadingCourierDetails(false);
+    }
+  };
+
+  // Toggle section collapse/expand
+  const handleSectionToggle = (section) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  // Handle sorting for detail tables
+  const handleDetailSort = (section, field) => {
+    if (detailSortField[section] === field) {
+      setDetailSortDirection(prev => ({
+        ...prev,
+        [section]: prev[section] === 'asc' ? 'desc' : 'asc'
+      }));
+    } else {
+      setDetailSortField(prev => ({ ...prev, [section]: field }));
+      setDetailSortDirection(prev => ({ ...prev, [section]: 'asc' }));
+    }
+  };
+
+  // Handle page change for detail tables
+  const handlePageChange = (section, direction) => {
+    setDetailPages(prev => {
+      const currentPage = prev[section] || 1;
+      const newPage = direction === 'next' ? currentPage + 1 : currentPage - 1;
+      return { ...prev, [section]: Math.max(1, newPage) };
+    });
+  };
 
   // Fetch report data when active report changes or dates change
   useEffect(() => {
@@ -38,8 +323,8 @@ const ReportPage = ({ globalAuthId }) => {
 
     const fetchReportData = async (reportType) => {
       // Don't fetch if dates aren't initialized yet
-      if (reportType === 'backlog' && (!backlogStartDate || !backlogEndDate)) return;
-      if (reportType === 'delivery' && (!deliveryStartDate || !deliveryEndDate)) return;
+      if (reportType === 'facility' && (!facilityStartDate || !facilityEndDate)) return;
+      if (reportType === 'clerk' && (!clerkStartDate || !clerkEndDate)) return;
       if (reportType === 'courier' && (!courierStartDate || !courierEndDate)) return;
 
       setLoading(true);
@@ -50,25 +335,21 @@ const ReportPage = ({ globalAuthId }) => {
         let url = '';
 
         switch (reportType) {
-          case 'problems':
-            endpoint = 'getProblemsReport';
-            url = `${import.meta.env.VITE_API_URL}/${endpoint}`;
+          case 'facility':
+            endpoint = 'getFacilityReport';
+            url = `${import.meta.env.VITE_API_URL}/${endpoint}?startDate=${facilityStartDate}&endDate=${facilityEndDate}`;
             break;
-          case 'backlog':
-            endpoint = 'getFacilityBacklogReport';
-            url = `${import.meta.env.VITE_API_URL}/${endpoint}?startDate=${backlogStartDate}&endDate=${backlogEndDate}`;
-            break;
-          case 'delivery':
-            endpoint = 'getDeliveryTimeReport';
-            url = `${import.meta.env.VITE_API_URL}/${endpoint}?startDate=${deliveryStartDate}&endDate=${deliveryEndDate}`;
+          case 'clerk':
+            endpoint = 'getClerkReport';
+            url = `${import.meta.env.VITE_API_URL}/${endpoint}?startDate=${clerkStartDate}&endDate=${clerkEndDate}`;
             break;
           case 'courier':
-            endpoint = 'getCourierPerformanceReport';
+            endpoint = 'getCourierReport';
             url = `${import.meta.env.VITE_API_URL}/${endpoint}?startDate=${courierStartDate}&endDate=${courierEndDate}`;
             break;
           default:
-            endpoint = 'getProblemsReport';
-            url = `${import.meta.env.VITE_API_URL}/${endpoint}`;
+            endpoint = 'getFacilityReport';
+            url = `${import.meta.env.VITE_API_URL}/${endpoint}?startDate=${facilityStartDate}&endDate=${facilityEndDate}`;
         }
 
         const response = await fetch(url);
@@ -100,290 +381,8 @@ const ReportPage = ({ globalAuthId }) => {
     return () => {
       cancelled = true;
     };
-  }, [activeReport, backlogStartDate, backlogEndDate, deliveryStartDate, deliveryEndDate, courierStartDate, courierEndDate]);
+  }, [activeReport, facilityStartDate, facilityEndDate, clerkStartDate, clerkEndDate, courierStartDate, courierEndDate]);
 
-  const renderProblemsReport = () => {
-    if (!reportData || !reportData.packages) return <div>No data available</div>;
-
-    return (
-      <div className="reportContent">
-        <div className="reportHeader">
-          <h2>Problem Packages Report</h2>
-          <p>Packages with issues: Returned, Undeliverable, Failed Delivery, Lost, or Damaged</p>
-          <div className="reportStats">
-            <div className="statCard">
-              <div className="statValue">{reportData.count}</div>
-              <div className="statLabel">Total Problem Packages</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="tableContainer">
-          <table className="reportTable">
-            <thead>
-              <tr>
-                <th>Package ID</th>
-                <th>Recipient</th>
-                <th>Status</th>
-                <th>Type</th>
-                <th>Weight (lbs)</th>
-                <th>Days Old</th>
-                <th>Sender Address</th>
-                <th>Recipient Address</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportData.packages.map((pkg) => (
-                <tr key={pkg.package_id}>
-                  <td>{pkg.package_id}</td>
-                  <td>{pkg.recipient_name}</td>
-                  <td><span className={`status ${pkg.package_status.replace(/\s+/g, '-').toLowerCase()}`}>{pkg.package_status}</span></td>
-                  <td>{pkg.package_type}</td>
-                  <td>{pkg.weight}</td>
-                  <td>{pkg.days_since_creation}</td>
-                  <td>{pkg.sender_address}</td>
-                  <td>{pkg.recipient_address}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    );
-  };
-
-  const renderBacklogReport = () => {
-    if (!reportData || !reportData.facilities) return <div>No data available</div>;
-
-    return (
-      <div className="reportContent">
-        <div className="reportHeader">
-          <h2>Facility Backlog Report</h2>
-          <p>Facilities with package processing backlogs</p>
-
-          <div className="dateRangeSelector">
-            <div className="dateInput">
-              <label>Start Date:</label>
-              <input
-                type="date"
-                value={backlogStartDate}
-                onChange={(e) => setBacklogStartDate(e.target.value)}
-              />
-            </div>
-            <div className="dateInput">
-              <label>End Date:</label>
-              <input
-                type="date"
-                value={backlogEndDate}
-                onChange={(e) => setBacklogEndDate(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="reportStats">
-            <div className="statCard">
-              <div className="statValue">{reportData.count}</div>
-              <div className="statLabel">Total Facilities</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="tableContainer">
-          <table className="reportTable">
-            <thead>
-              <tr>
-                <th>Facility ID</th>
-                <th>Facility Name</th>
-                <th>Address</th>
-                <th>Packages In (30d)</th>
-                <th>Packages Out (30d)</th>
-                <th>Current Backlog</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportData.facilities.map((facility) => {
-                const backlog = facility.backlog;
-                const backlogStatus = backlog > 50 ? 'critical' : backlog > 20 ? 'warning' : 'normal';
-
-                return (
-                  <tr key={facility.facility_id}>
-                    <td>{facility.facility_id}</td>
-                    <td>{facility.facility_name}</td>
-                    <td>{facility.facility_address}</td>
-                    <td>{facility.packages_in}</td>
-                    <td>{facility.packages_out}</td>
-                    <td className={`backlog-${backlogStatus}`}>{backlog}</td>
-                    <td><span className={`status ${backlogStatus}`}>
-                      {backlogStatus === 'critical' ? 'Critical' : backlogStatus === 'warning' ? 'Warning' : 'Normal'}
-                    </span></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    );
-  };
-
-  const renderDeliveryTimeReport = () => {
-    if (!reportData || !reportData.packages) return <div>No data available</div>;
-
-    return (
-      <div className="reportContent">
-        <div className="reportHeader">
-          <h2>Average Delivery Time Report</h2>
-          <p>Delivered packages</p>
-
-          <div className="dateRangeSelector">
-            <div className="dateInput">
-              <label>Start Date:</label>
-              <input
-                type="date"
-                value={deliveryStartDate}
-                onChange={(e) => setDeliveryStartDate(e.target.value)}
-              />
-            </div>
-            <div className="dateInput">
-              <label>End Date:</label>
-              <input
-                type="date"
-                value={deliveryEndDate}
-                onChange={(e) => setDeliveryEndDate(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="reportStats">
-            <div className="statCard">
-              <div className="statValue">{reportData.stats.average_days}</div>
-              <div className="statLabel">Average Days</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.stats.min_days}</div>
-              <div className="statLabel">Fastest Delivery</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.stats.max_days}</div>
-              <div className="statLabel">Slowest Delivery</div>
-            </div>
-            <div className="statCard">
-              <div className="statValue">{reportData.stats.total_packages}</div>
-              <div className="statLabel">Total Packages</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="tableContainer">
-          <table className="reportTable">
-            <thead>
-              <tr>
-                <th>Package ID</th>
-                <th>Recipient</th>
-                <th>Type</th>
-                <th>Origin</th>
-                <th>Destination</th>
-                <th>Ship Date</th>
-                <th>Delivery Date</th>
-                <th>Days to Deliver</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportData.packages.map((pkg) => (
-                <tr key={pkg.package_id}>
-                  <td>{pkg.package_id}</td>
-                  <td>{pkg.recipient_name}</td>
-                  <td>{pkg.package_type}</td>
-                  <td>{pkg.origin}</td>
-                  <td>{pkg.destination}</td>
-                  <td>{new Date(pkg.ship_date).toLocaleDateString()}</td>
-                  <td>{new Date(pkg.last_updated).toLocaleDateString()}</td>
-                  <td className={pkg.delivery_days > 7 ? 'slow-delivery' : ''}>{pkg.delivery_days}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    );
-  };
-
-  const renderCourierPerformanceReport = () => {
-    if (!reportData || !reportData.couriers) return <div>No data available</div>;
-
-    return (
-      <div className="reportContent">
-        <div className="reportHeader">
-          <h2>Courier Performance Report</h2>
-          <p>Courier statistics</p>
-
-          <div className="dateRangeSelector">
-            <div className="dateInput">
-              <label>Start Date:</label>
-              <input
-                type="date"
-                value={courierStartDate}
-                onChange={(e) => setCourierStartDate(e.target.value)}
-              />
-            </div>
-            <div className="dateInput">
-              <label>End Date:</label>
-              <input
-                type="date"
-                value={courierEndDate}
-                onChange={(e) => setCourierEndDate(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="reportStats">
-            <div className="statCard">
-              <div className="statValue">{reportData.count}</div>
-              <div className="statLabel">Active Couriers</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="tableContainer">
-          <table className="reportTable">
-            <thead>
-              <tr>
-                <th>Employee ID</th>
-                <th>Courier Name</th>
-                <th>Phone Number</th>
-                <th>Total Packages</th>
-                <th>Delivered</th>
-                <th>In Transit</th>
-                <th>Out for Delivery</th>
-                <th>Delivery Rate</th>
-                <th>Avg. Days</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportData.couriers.map((courier) => {
-                const rateClass = courier.delivery_rate >= 90 ? 'excellent' : courier.delivery_rate >= 75 ? 'good' : 'needs-improvement';
-
-                return (
-                  <tr key={courier.employee_id}>
-                    <td>{courier.employee_id}</td>
-                    <td>{courier.courier_name}</td>
-                    <td>{courier.phone_number || 'N/A'}</td>
-                    <td>{courier.total_packages}</td>
-                    <td>{courier.delivered_packages}</td>
-                    <td>{courier.in_transit_packages}</td>
-                    <td>{courier.out_for_delivery_packages}</td>
-                    <td><span className={`rate ${rateClass}`}>{courier.delivery_rate}%</span></td>
-                    <td>{courier.avg_delivery_days ? courier.avg_delivery_days.toFixed(1) : 'N/A'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="reportPageContainer">
@@ -392,35 +391,27 @@ const ReportPage = ({ globalAuthId }) => {
         {/* Left side accordion menu */}
         <div className="reportMenu">
           <div
-            className={`reportMenuItem ${activeReport === 'problems' ? 'active' : ''}`}
-            onClick={() => setActiveReport('problems')}
+            className={`reportMenuItem ${activeReport === 'facility' ? 'active' : ''}`}
+            onClick={() => setActiveReport('facility')}
           >
-            <div className="menuItemTitle">Problem Packages</div>
-            <div className="menuItemDesc">Returned & undeliverable items</div>
+            <div className="menuItemTitle">Facility Report</div>
+            <div className="menuItemDesc">Performance, throughput, and backlog</div>
           </div>
 
           <div
-            className={`reportMenuItem ${activeReport === 'backlog' ? 'active' : ''}`}
-            onClick={() => setActiveReport('backlog')}
+            className={`reportMenuItem ${activeReport === 'clerk' ? 'active' : ''}`}
+            onClick={() => setActiveReport('clerk')}
           >
-            <div className="menuItemTitle">Facility Backlogs</div>
-            <div className="menuItemDesc">Facility capacity analysis</div>
-          </div>
-
-          <div
-            className={`reportMenuItem ${activeReport === 'delivery' ? 'active' : ''}`}
-            onClick={() => setActiveReport('delivery')}
-          >
-            <div className="menuItemTitle">Delivery Times</div>
-            <div className="menuItemDesc">Average delivery performance</div>
+            <div className="menuItemTitle">Clerk Report</div>
+            <div className="menuItemDesc">Reviews, approvals, and activity</div>
           </div>
 
           <div
             className={`reportMenuItem ${activeReport === 'courier' ? 'active' : ''}`}
             onClick={() => setActiveReport('courier')}
           >
-            <div className="menuItemTitle">Courier Performance</div>
-            <div className="menuItemDesc">Employee delivery metrics</div>
+            <div className="menuItemTitle">Courier Report</div>
+            <div className="menuItemDesc">Deliveries and performance metrics</div>
           </div>
         </div>
 
@@ -430,16 +421,130 @@ const ReportPage = ({ globalAuthId }) => {
             <div className="loadingMessage">Loading report...</div>
           ) : reportData ? (
             <>
-              {activeReport === 'problems' && renderProblemsReport()}
-              {activeReport === 'backlog' && renderBacklogReport()}
-              {activeReport === 'delivery' && renderDeliveryTimeReport()}
-              {activeReport === 'courier' && renderCourierPerformanceReport()}
+              {activeReport === 'facility' && <FacilityReport reportData={reportData} facilityStartDate={facilityStartDate} facilityEndDate={facilityEndDate} setFacilityStartDate={setFacilityStartDate} setFacilityEndDate={setFacilityEndDate} setFacilityDateRange={setFacilityDateRange} facilitySortField={facilitySortField} facilitySortDirection={facilitySortDirection} handleFacilitySort={handleFacilitySort} handleFacilityRowClick={handleFacilityRowClick} />}
+              {activeReport === 'clerk' && <ClerkReport reportData={reportData} clerkStartDate={clerkStartDate} clerkEndDate={clerkEndDate} setClerkStartDate={setClerkStartDate} setClerkEndDate={setClerkEndDate} setClerkDateRange={setClerkDateRange} handleClerkRowClick={handleClerkRowClick} />}
+              {activeReport === 'courier' && <CourierReport reportData={reportData} courierStartDate={courierStartDate} courierEndDate={courierEndDate} setCourierStartDate={setCourierStartDate} setCourierEndDate={setCourierEndDate} setCourierDateRange={setCourierDateRange} handleCourierRowClick={handleCourierRowClick} />}
             </>
           ) : (
             <div className="loadingMessage">No data available</div>
           )}
         </div>
       </div>
+
+      {/* Facility Details Modal */}
+      {showFacilityModal && (
+        <Modal
+          show={true}
+          title={selectedFacility ? `${selectedFacility.facility_name} - Details` : 'Facility Details'}
+          onClose={() => setShowFacilityModal(false)}
+        >
+          {loadingDetails ? (
+            <div className="loadingMessage">Loading details...</div>
+          ) : facilityDetails ? (
+            <div className="facilityDetailsContent">
+              {/* Summary header */}
+              <div className="facilityDetailsSummary">
+                <p><strong>Address:</strong> {facilityDetails.facility.facility_address}</p>
+                <div className="summaryStats">
+                  <span><strong>Received:</strong> {facilityDetails.details.packagesReceived.length}</span>
+                  <span><strong>Clerk Events:</strong> {facilityDetails.details.clerkCreatedEvents.length}</span>
+                  <span><strong>Delivered:</strong> {facilityDetails.details.packagesDelivered.length}</span>
+                  <span><strong>Lost:</strong> {facilityDetails.details.packagesLost.length}</span>
+                  <span><strong>Backlog:</strong> {facilityDetails.details.backlog.length}</span>
+                </div>
+              </div>
+
+              {/* Collapsible sections */}
+              <DetailSection sectionKey="packagesReceived" title="Packages Received" data={facilityDetails.details.packagesReceived} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="clerkCreatedEvents" title="Clerk Created Events" data={facilityDetails.details.clerkCreatedEvents} extraColumn={[{ field: 'event_type', label: 'Event Type' }, { field: 'clerk_name', label: 'Clerk' }]} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesDelivered" title="Packages Delivered" data={facilityDetails.details.packagesDelivered} extraColumn={{ field: 'delivered_by', label: 'Delivered By' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesLost" title="Problem Packages" data={facilityDetails.details.packagesLost} extraColumn={[{ field: 'marked_by', label: 'Marked By' }, { field: 'last_courier', label: 'Last Courier' }]} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesSent" title="Packages Sent" data={facilityDetails.details.packagesSent} extraColumn={{ field: 'destination_facility', label: 'Destination Facility' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="backlog" title="Backlog" data={facilityDetails.details.backlog} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="statusInTransit" title="Status: In Transit" data={facilityDetails.details.statusInTransit} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="statusOutForDelivery" title="Status: Out for Delivery" data={facilityDetails.details.statusOutForDelivery} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+            </div>
+          ) : (
+            <div>No details available</div>
+          )}
+        </Modal>
+      )}
+
+      {/* Clerk Details Modal */}
+      {showClerkModal && (
+        <Modal
+          show={true}
+          title={selectedClerk ? `${selectedClerk.clerk_name} - Details` : 'Clerk Details'}
+          onClose={() => setShowClerkModal(false)}
+        >
+          {loadingClerkDetails ? (
+            <div className="loadingMessage">Loading details...</div>
+          ) : clerkDetails ? (
+            <div className="facilityDetailsContent">
+              <div className="facilityDetailsSummary">
+                <p><strong>Facility:</strong> {clerkDetails.clerk.facility_name}</p>
+                <div className="summaryStats">
+                  <span><strong>Approved:</strong> {clerkDetails.details.reviewsApproved.length}</span>
+                  <span><strong>Rejected:</strong> {clerkDetails.details.reviewsRejected.length}</span>
+                  <span><strong>Events:</strong> {clerkDetails.details.trackingEvents.length}</span>
+                  <span><strong>Problems:</strong> {clerkDetails.details.problemPackages.length}</span>
+                  <span><strong>Processed:</strong> {clerkDetails.details.packagesProcessed.length}</span>
+                </div>
+              </div>
+
+              <DetailSection sectionKey="reviewsApproved" title="Reviews Approved" data={clerkDetails.details.reviewsApproved} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="reviewsRejected" title="Reviews Rejected" data={clerkDetails.details.reviewsRejected} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="trackingEvents" title="Tracking Events Created" data={clerkDetails.details.trackingEvents} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="problemPackages" title="Problem Packages" data={clerkDetails.details.problemPackages} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesProcessed" title="Packages Processed" data={clerkDetails.details.packagesProcessed} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+            </div>
+          ) : (
+            <div>No details available</div>
+          )}
+        </Modal>
+      )}
+
+      {/* Courier Details Modal */}
+      {showCourierModal && (
+        <Modal
+          show={true}
+          title={selectedCourier ? `${selectedCourier.courier_name} - Details` : 'Courier Details'}
+          onClose={() => setShowCourierModal(false)}
+        >
+          {loadingCourierDetails ? (
+            <div className="loadingMessage">Loading details...</div>
+          ) : courierDetails ? (
+            <div className="facilityDetailsContent">
+              <div className="facilityDetailsSummary">
+                <div className="summaryStats">
+                  <span><strong>Claimed:</strong> {courierDetails.details.packagesClaimed.length}</span>
+                  <span><strong>Delivered:</strong> {courierDetails.details.packagesDelivered.length}</span>
+                  <span><strong>In Transit:</strong> {courierDetails.details.packagesInTransit.length}</span>
+                  <span><strong>Lost:</strong> {courierDetails.details.packagesLost.length}</span>
+                </div>
+              </div>
+
+              <DetailSection sectionKey="packagesClaimed" title="Packages Claimed" data={courierDetails.details.packagesClaimed} extraColumn={{ field: 'reviewed_by_name', label: 'Approved By' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesDelivered" title="Packages Delivered" data={courierDetails.details.packagesDelivered} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesInTransit" title="Packages In Transit" data={courierDetails.details.packagesInTransit} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesLost" title="Packages Lost" data={courierDetails.details.packagesLost} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="facilityTransfers" title="Facility Transfers" data={courierDetails.details.facilityTransfers} extraColumn={{ field: 'destination_facility', label: 'Destination' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="finalDeliveries" title="Final Deliveries" data={courierDetails.details.finalDeliveries} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="allTrackingEvents" title="All Tracking Events" data={courierDetails.details.allTrackingEvents} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+            </div>
+          ) : (
+            <div>No details available</div>
+          )}
+        </Modal>
+      )}
+
+      {/* Toast Notification */}
+      <Toast
+        show={showToast}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 };

@@ -3,7 +3,7 @@ import { badServerRequest } from '../utils/badRequest.js';
 import url from 'url';
 
 // Get packages available for couriers to request
-// Packages must be in 'processing' status and not already assigned to a courier
+// Packages must be in 'processing' or 'pre-shipment' status and not already assigned to a courier
 export const getAvailablePackagesController = async (req, res) => {
   let connection;
 
@@ -62,7 +62,7 @@ export const getAvailablePackagesController = async (req, res) => {
       -- Exclude packages already assigned to couriers
       LEFT JOIN package_assignment pa ON p.package_id = pa.package_id
 
-      WHERE p.package_status = 'processing'
+      WHERE p.package_status IN ('processing', 'pre-shipment')
       AND pa.assignment_id IS NULL
     `;
 

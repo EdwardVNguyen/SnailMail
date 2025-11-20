@@ -33,7 +33,7 @@ export const getAvailablePackagesForCourierController = async (req, res) => {
     const courierFacilityId = courierRows[0].facility_id;
     const courierId = courierRows[0].employee_id;
 
-    // Get packages that are 'processing' at courier's facility and not assigned to any courier
+    // Get packages that are 'processing' or 'pre-shipment' at courier's facility and not assigned to any courier
     // Exclude packages that this courier has already requested
     const query = `
       SELECT
@@ -54,7 +54,7 @@ export const getAvailablePackagesForCourierController = async (req, res) => {
       LEFT JOIN address recipient_addr ON recipient.address_id = recipient_addr.address_id
       LEFT JOIN facility f ON p.facility_id = f.facility_id
       WHERE p.facility_id = ?
-      AND p.package_status = 'processing'
+      AND p.package_status IN ('processing', 'pre-shipment')
       AND p.courier_id IS NULL
       AND NOT EXISTS (
         SELECT 1 FROM courier_package_request cpr

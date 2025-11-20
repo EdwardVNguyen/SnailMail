@@ -5,8 +5,9 @@ import './NavBar.css';
 import homeLogo from '../assets/homeLogo.svg';
 import profileIcon from '../assets/profileIcon.svg';
 
-const AuthNavBar = ( {globalAccountType} ) => {
+const AuthNavBar = ( {globalAccountType, onLogout} ) => {
   const [isTiny, setIsTiny] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,6 +20,29 @@ const AuthNavBar = ( {globalAccountType} ) => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.profile-dropdown-container')) {
+        setShowDropdown(false);
+      }
+    };
+    if (showDropdown) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showDropdown]);
+
+  const handleLogout = () => {
+    setShowDropdown(false);
+    if (onLogout) {
+      onLogout();
+    }
+  };
+
 
   return (
     <header className={`header-container header  ${isTiny ? "tiny" : ""}`}>
@@ -89,16 +113,33 @@ const AuthNavBar = ( {globalAccountType} ) => {
       </nav>
       <nav>
         <ul>
-          <li>
-             {/* Routes to different page depending on account type */}
-            { globalAccountType === 'courier'
-            ? <NavLink to="/EmployeeProfilePage" className="signInOrLogIn"><img className="profileIcon" src={profileIcon} alt="Courier page"/></NavLink>
-            : globalAccountType === 'clerk'
-            ? <NavLink to="/EmployeeProfilePage" className="signInOrLogIn"><img className="profileIcon" src={profileIcon} alt="Clerk page"/></NavLink>
-            : globalAccountType === 'manager'
-              ? <NavLink to="/EmployeeProfilePage" className="signInOrLogIn"><img className="profileIcon" src={profileIcon} alt="Manager page"/></NavLink>
-              : <NavLink to="/customerProfilePage" className="signInOrLogIn"><img className="profileIcon" src={profileIcon} alt="Customer page"/></NavLink>
-            }
+          <li className="profile-dropdown-container">
+            <button
+              className="profile-button"
+              onClick={() => setShowDropdown(!showDropdown)}
+            >
+              <span>Profile</span>
+              <img className="profileIcon" src={profileIcon} alt="Profile icon"/>
+              <span className="dropdown-arrow">{showDropdown ? '▲' : '▼'}</span>
+            </button>
+
+            {showDropdown && (
+              <div className="profile-dropdown">
+                <NavLink
+                  to={globalAccountType === 'customer' ? '/CustomerProfilePage' : '/EmployeeProfilePage'}
+                  className="dropdown-item"
+                  onClick={() => setShowDropdown(false)}
+                >
+                  <span>👤 Account</span>
+                </NavLink>
+                <button
+                  className="dropdown-item logout-button"
+                  onClick={handleLogout}
+                >
+                  <span>🚪 Log Out</span>
+                </button>
+              </div>
+            )}
           </li>
          </ul>
       </nav>

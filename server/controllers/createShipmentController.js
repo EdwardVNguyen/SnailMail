@@ -118,6 +118,7 @@ export const createShipmentController = async (req, res) => {
       `INSERT INTO package (
         sender_id,
         recipient_id,
+        recipient_email,
         package_type,
         weight,
         length,
@@ -128,22 +129,24 @@ export const createShipmentController = async (req, res) => {
         created_by,
         updated_by,
         facility_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'processing', ?, ?, ?, ?)`,
       [
         sender_id,
         recipient_id,
+        recipientEmail,
         packageType,
         weight,
-        length,
-        width,
-        height,
-        'processing',
+        length || 0,
+        width || 0,
+        height || 0,
         tracking_number,
         authId,
         authId,
         facility_id
       ]
     );
+
+
 
     await connection.commit();
 
