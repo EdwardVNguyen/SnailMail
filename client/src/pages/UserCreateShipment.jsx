@@ -39,6 +39,54 @@ const CreateShipment = ({ globalAuthId }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
 
+  // Price calculation state
+  const [calculatedPrice, setCalculatedPrice] = useState(0);
+
+  // Calculate shipping price
+  const calculatePrice = () => {
+    const weight = parseFloat(formData.weight) || 0;
+    const length = parseFloat(formData.length) || 0;
+    const width = parseFloat(formData.width) || 0;
+    const height = parseFloat(formData.height) || 0;
+
+    if (weight === 0) {
+      setCalculatedPrice(0);
+      return;
+    }
+
+    // Base rate
+    let price = 5.00;
+
+    // Calculate dimensional weight (L x W x H / 139)
+    const dimensionalWeight = (length * width * height) / 139;
+
+    // Use greater of actual weight or dimensional weight
+    const billableWeight = Math.max(weight, dimensionalWeight);
+
+    // Add weight charge ($0.50 per lb)
+    price += billableWeight * 0.50;
+
+    // Package type modifiers
+    const typeModifiers = {
+      'envelope': -2.00,
+      'parcel': 0.00,
+      'package': 1.00,
+      'mail': -3.00
+    };
+
+    price += typeModifiers[formData.packageType] || 0;
+
+    // Ensure minimum price of $2.00
+    price = Math.max(price, 2.00);
+
+    setCalculatedPrice(price);
+  };
+
+  // Recalculate price when relevant fields change
+  useEffect(() => {
+    calculatePrice();
+  }, [formData.weight, formData.length, formData.width, formData.height, formData.packageType]);
+
   useEffect(() => {
   fetch(`${import.meta.env.VITE_API_URL}/getFacilityForCustomer`)
     .then((res) => res.json())
@@ -116,10 +164,12 @@ const CreateShipment = ({ globalAuthId }) => {
           facility_id: ''
         });
       } else {
-        // Show toast for dimension/weight errors
+        // Show toast for dimension/weight/payment errors
         if (data.errorType === 'dimension_length' ||
             data.errorType === 'dimension_width_height' ||
-            data.errorType === 'weight') {
+            data.errorType === 'weight' ||
+            data.errorType === 'missing_payment_info' ||
+            data.errorType === 'invalid_payment_info') {
           setToast({ show: true, message: data.message, type: 'error' });
         } else {
           setError(data.message || 'Failed to create shipment');
@@ -373,6 +423,21 @@ const CreateShipment = ({ globalAuthId }) => {
 
 
         </div>
+
+        {/* Estimated Price Section */}
+        {calculatedPrice > 0 && (
+          <div className="form-section price-display-section">
+            <h2>Estimated Shipping Cost</h2>
+            <div className="price-display">
+              <div className="price-value">
+                ${calculatedPrice.toFixed(2)}
+              </div>
+              <p className="price-note">
+                Based on {formData.packageType} package with weight and dimensions provided
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="form-section">
           <h2>Drop Off Location</h2>

@@ -10,6 +10,8 @@ import { updateFacilityFullController } from '../controllers/updateFacilityFullC
 import { deleteFacilityController } from '../controllers/deleteFacilityController.js'
 import { createShipmentController } from '../controllers/createShipmentController.js'
 import { createPackageController } from '../controllers/createPackageController.js'
+import { updateCustomerInfoController } from '../controllers/updateCustomerInfoController.js'
+import { updateEmployeeInfoController } from '../controllers/updateEmployeeInfoController.js'
 import { getMyCourierPackagesController } from '../controllers/getMyCourierPackagesController.js'
 import { getAvailablePackagesForCourierController } from '../controllers/getAvailablePackagesForCourierController.js'
 import { pickupPackageController } from '../controllers/pickupPackageController.js'
@@ -73,7 +75,14 @@ export const handlePostRequest= (req, res) => {
   else if (req.url.startsWith('/createPackage')) {
     return createPackageController(req, res)
   }
+  // update customer information
+  else if (req.url.startsWith('/updateCustomerInfo')) {
+    return updateCustomerInfoController(req, res)
+  }
+  else if (req.url.startsWith('/updateEmployeeInfo')) {
+    return updateEmployeeInfoController(req, res)
   // get available packages for courier
+  }
   else if (req.url.startsWith('/getAvailablePackagesForCourier')) {
     return getAvailablePackagesForCourierController(req, res)
   }

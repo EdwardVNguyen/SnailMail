@@ -114,7 +114,7 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
       <nav>
         <ul>
           <li className="profile-dropdown-container">
-            <button 
+            <button
               className="profile-button"
               onClick={() => setShowDropdown(!showDropdown)}
             >
@@ -125,14 +125,14 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
 
             {showDropdown && (
               <div className="profile-dropdown">
-                <NavLink 
-                  to="/userProfile" 
+                <NavLink
+                  to={['manager', 'clerk', 'courier'].includes(globalAccountType) ? '/EmployeeProfilePage' : '/CustomerProfilePage'}
                   className="dropdown-item"
                   onClick={() => setShowDropdown(false)}
                 >
                   <span>👤 Account</span>
                 </NavLink>
-                <button 
+                <button
                   className="dropdown-item logout-button"
                   onClick={handleLogout}
                 >

@@ -80,7 +80,7 @@ const CustomerPage = ({ globalAuthId }) => {
             </div>
             <button 
               className="actionButton"
-              onClick={() => navigate('/userProfile')}
+              onClick={() => navigate('/CustomerProfilePage')}
             >
               View Profile
             </button>

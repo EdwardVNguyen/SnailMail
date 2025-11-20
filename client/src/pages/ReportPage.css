@@ -181,6 +181,82 @@
   box-shadow: 0 1px 4px rgba(60, 70, 123, 0.2);
 }
 
+/* Filter Section */
+.filterSection {
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.filterSection h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.filterControls {
+  display: flex;
+  gap: 15px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 180px;
+}
+
+.filterGroup label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.filterSelect {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  font-size: 14px;
+  font-family: inherit;
+  background-color: var(--text-inverse);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(60, 70, 123, 0.1);
+}
+
+.clearFiltersButton {
+  padding: 8px 16px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-end;
+}
+
+.clearFiltersButton:hover {
+  background-color: #5a6268;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+}
+
+.clearFiltersButton:active {
+  transform: translateY(0);
+}
+
 /* Statistics cards */
 .reportStats {
   display: flex;
@@ -257,6 +333,13 @@
 .reportTable tbody td {
   padding: 12px 15px;
   color: var(--text-primary);
+}
+
+.reportTable tbody td.amount {
+  font-weight: 600;
+  color: #28a745;
+  text-align: right;
+  font-family: 'Courier New', monospace;
 }
 
 /* Status badges */

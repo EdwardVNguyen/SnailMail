@@ -9,6 +9,8 @@ import EmployeePage from './pages/EmployeePage';
 import CourierPage from './pages/CourierPage';
 import ManagerPage from './pages/ManagerPage';
 
+import CustomerProfilePage from './pages/CustomerProfilePage';
+import EmployeeProfilePage from './pages/EmployeeProfilePage';
 import UserProfile from './pages/UserProfile';
 import UserShipping from './pages/UserShipping';
 import UserTrackPackage from './pages/UserTrackPackage';
@@ -50,26 +52,23 @@ const App = () => {
     setIsLoading(false);
   }, []);
 
-  // anytime user goes to a non-protected route, then set authetnication false (as if they logged out)
-  useEffect( () => {
-    const storedAuthId = localStorage.getItem('authId');
-    if (!storedAuthId && (location.pathname === "/" ||
-        location.pathname === "/loginorsignup" ||
-        location.pathname === "/tracking"      
-        )) {
-      setAuth(false);
-    }
-  }, [location]);
-
-  // Check if user is logged in
+  // Verify auth state on route changes
   useEffect(() => {
-    const authId = localStorage.getItem('authId');
-    const accountType = localStorage.getItem('accountType');
-    if (authId) {
-      setGlobalAuthId(authId);
-      setGlobalAccountType(accountType);
+    const storedAuthId = localStorage.getItem('authId');
+    const storedAccountType = localStorage.getItem('accountType');
+
+    // If no valid auth data in localStorage, clear auth state
+    if (!storedAuthId || !storedAccountType) {
+      setAuth(false);
+      setGlobalAuthId(null);
+      setGlobalAccountType(null);
+    } else {
+      // If we have valid auth data, ensure state is synced
+      setAuth(true);
+      setGlobalAuthId(storedAuthId);
+      setGlobalAccountType(storedAccountType);
     }
-  }, []);
+  }, [location.pathname]);
 
   // Handle logout
   const handleLogout = () => {
@@ -116,7 +115,9 @@ const App = () => {
             <Route path='/courierPackage' element={<CourierPackagePage globalAuthId={globalAuthId}/>} />
             <Route path='/clerkCourierApproval' element={<ClerkCourierApprovalPage globalAuthId={globalAuthId}/>} />
             <Route path='/managerPage' element={<ManagerPage globalAuthId={globalAuthId}/>} />
-            <Route path='/userProfile' element={<UserProfile globalAuthId={globalAuthId}/>} />
+            <Route path='/CustomerProfilePage' element={<CustomerProfilePage globalAuthId={globalAuthId}/>} />
+            <Route path='/EmployeeProfilePage' element={<EmployeeProfilePage globalAuthId={globalAuthId}/>} />
+            {/* <Route path='/userProfile' element={<UserProfile globalAuthId={globalAuthId}/>} /> */}
             <Route path='/userShipping' element={<UserShipping globalAuthId={globalAuthId}/>} />
             <Route path='/userTrackPackage' element={<UserTrackPackage globalAuthId={globalAuthId} />} />
             <Route path='/userTrackPackage/:trackingNumber' element={<UserTrackPackage globalAuthId={globalAuthId} />} />
