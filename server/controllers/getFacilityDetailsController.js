@@ -114,7 +114,7 @@ export const getFacilityDetailsController = async (req, res) => {
       [startDate, endDate, facilityId]
     );
 
-    // Packages Lost: packages currently lost at this facility
+    // Problem Packages: all lost, undeliverable, failed-delivery, damaged packages at this facility
     const [packagesLost] = await connection.execute(
       `SELECT
         p.package_id,
@@ -124,13 +124,53 @@ export const getFacilityDetailsController = async (req, res) => {
         p.package_type,
         p.package_status,
         p.last_updated as lost_date,
-        CONCAT(courier.first_name, ' ', courier.last_name) as last_courier
+        CONCAT(marked_by.first_name, ' ', marked_by.last_name) as marked_by,
+        CONCAT(last_courier.first_name, ' ', last_courier.last_name) as last_courier
       FROM package p
       INNER JOIN customer sender ON p.sender_id = sender.customer_id
       INNER JOIN customer recipient ON p.recipient_id = recipient.customer_id
-      LEFT JOIN employee courier ON p.courier_id = courier.employee_id
-      WHERE p.package_status = 'lost'
-        AND p.facility_id = ?
+      INNER JOIN facility f ON f.facility_id = ?
+      -- Employee who marked it as lost/damaged (created the problem event)
+      LEFT JOIN (
+        SELECT te.package_id, e.first_name, e.last_name
+        FROM tracking_event te
+        INNER JOIN authentication auth ON te.created_by = auth.auth_id
+        INNER JOIN employee e ON auth.auth_id = e.auth_id
+        WHERE te.event_type IN ('lost', 'undeliverable', 'failed-delivery', 'damaged')
+          AND te.event_time = (
+            SELECT MAX(te2.event_time)
+            FROM tracking_event te2
+            WHERE te2.package_id = te.package_id
+              AND te2.event_type IN ('lost', 'undeliverable', 'failed-delivery', 'damaged')
+          )
+      ) marked_by ON p.package_id = marked_by.package_id
+      -- Last courier to handle this package
+      LEFT JOIN (
+        SELECT te.package_id, e.first_name, e.last_name
+        FROM tracking_event te
+        INNER JOIN authentication auth ON te.created_by = auth.auth_id
+        INNER JOIN employee e ON auth.auth_id = e.auth_id
+        WHERE e.account_type = 'courier'
+          AND te.event_time = (
+            SELECT MAX(te2.event_time)
+            FROM tracking_event te2
+            INNER JOIN authentication auth2 ON te2.created_by = auth2.auth_id
+            INNER JOIN employee e2 ON auth2.auth_id = e2.auth_id
+            WHERE te2.package_id = te.package_id
+              AND e2.account_type = 'courier'
+          )
+      ) last_courier ON p.package_id = last_courier.package_id
+      WHERE p.package_status IN ('lost', 'undeliverable', 'failed-delivery', 'damaged')
+        AND EXISTS (
+          SELECT 1 FROM tracking_event te
+          WHERE te.package_id = p.package_id
+            AND te.location_id = f.address_id
+            AND te.event_time = (
+              SELECT MAX(te2.event_time)
+              FROM tracking_event te2
+              WHERE te2.package_id = p.package_id
+            )
+        )
       ORDER BY p.last_updated DESC`,
       [facilityId]
     );

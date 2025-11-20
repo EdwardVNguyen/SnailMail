@@ -136,9 +136,9 @@ export const getCourierDetailsController = async (req, res) => {
       [employeeId]
     );
 
-    // Packages Lost
+    // Problem Packages - find problem packages where this courier was the last courier to handle them
     const [packagesLost] = await connection.execute(
-      `SELECT DISTINCT
+      `SELECT
         p.tracking_number,
         p.package_id,
         CONCAT(sender.first_name, ' ', sender.last_name) as sender_name,
@@ -146,16 +146,29 @@ export const getCourierDetailsController = async (req, res) => {
         p.package_type,
         p.weight,
         p.package_status,
-        te.event_time as lost_date
-      FROM tracking_event te
-      INNER JOIN package p ON te.package_id = p.package_id
+        p.last_updated as lost_date
+      FROM package p
       INNER JOIN customer sender ON p.sender_id = sender.customer_id
       INNER JOIN customer recipient ON p.recipient_id = recipient.customer_id
-      WHERE te.created_by = ?
-        AND te.event_type = 'lost'
-        AND te.event_time BETWEEN ? AND ?
-      ORDER BY te.event_time DESC`,
-      [authId, startDate, endDate]
+      LEFT JOIN (
+        SELECT te.package_id, e.employee_id
+        FROM tracking_event te
+        INNER JOIN authentication auth ON te.created_by = auth.auth_id
+        INNER JOIN employee e ON auth.auth_id = e.auth_id
+        WHERE e.account_type = 'courier'
+          AND te.event_time = (
+            SELECT MAX(te2.event_time)
+            FROM tracking_event te2
+            INNER JOIN authentication auth2 ON te2.created_by = auth2.auth_id
+            INNER JOIN employee e2 ON auth2.auth_id = e2.auth_id
+            WHERE te2.package_id = te.package_id
+              AND e2.account_type = 'courier'
+          )
+      ) last_courier ON p.package_id = last_courier.package_id
+      WHERE p.package_status IN ('lost', 'undeliverable', 'failed-delivery', 'damaged')
+        AND last_courier.employee_id = ?
+      ORDER BY p.last_updated DESC`,
+      [employeeId]
     );
 
     // Final Deliveries (deliveries to customers, not facilities)

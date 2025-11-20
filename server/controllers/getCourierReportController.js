@@ -162,15 +162,30 @@ export const getCourierReportController = async (req, res) => {
         GROUP BY te.created_by
       ) final_deliveries ON auth.auth_id = final_deliveries.created_by
 
-      -- Lost packages (packages assigned to courier that are now lost)
+      -- Problem packages (packages where courier was last courier to handle before problem status)
       LEFT JOIN (
         SELECT
-          courier_id,
-          COUNT(*) as count
-        FROM package
-        WHERE package_status = 'lost'
-          AND courier_id IS NOT NULL
-        GROUP BY courier_id
+          last_courier.employee_id as courier_id,
+          COUNT(DISTINCT p.package_id) as count
+        FROM package p
+        LEFT JOIN (
+          SELECT te.package_id, e.employee_id
+          FROM tracking_event te
+          INNER JOIN authentication auth ON te.created_by = auth.auth_id
+          INNER JOIN employee e ON auth.auth_id = e.auth_id
+          WHERE e.account_type = 'courier'
+            AND te.event_time = (
+              SELECT MAX(te2.event_time)
+              FROM tracking_event te2
+              INNER JOIN authentication auth2 ON te2.created_by = auth2.auth_id
+              INNER JOIN employee e2 ON auth2.auth_id = e2.auth_id
+              WHERE te2.package_id = te.package_id
+                AND e2.account_type = 'courier'
+            )
+        ) last_courier ON p.package_id = last_courier.package_id
+        WHERE p.package_status IN ('lost', 'undeliverable', 'failed-delivery', 'damaged')
+          AND last_courier.employee_id IS NOT NULL
+        GROUP BY last_courier.employee_id
       ) packages_lost ON e.employee_id = packages_lost.courier_id
 
       -- Average delivery time

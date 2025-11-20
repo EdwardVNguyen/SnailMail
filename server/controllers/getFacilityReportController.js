@@ -94,15 +94,21 @@ export const getFacilityReportController = async (req, res) => {
         GROUP BY te_latest.location_id
       ) packages_delivered ON f.address_id = packages_delivered.location_id
 
-      -- Lost packages: packages currently lost at this facility
+      -- Problem packages: lost, undeliverable, failed-delivery, damaged where facility was last location
       LEFT JOIN (
         SELECT
-          p.facility_id,
-          COUNT(*) as count
+          te_last.location_id,
+          COUNT(DISTINCT p.package_id) as count
         FROM package p
-        WHERE p.package_status = 'lost'
-        GROUP BY p.facility_id
-      ) packages_lost ON f.facility_id = packages_lost.facility_id
+        INNER JOIN tracking_event te_last ON te_last.package_id = p.package_id
+        WHERE p.package_status IN ('lost', 'undeliverable', 'failed-delivery', 'damaged')
+          AND te_last.event_time = (
+            SELECT MAX(te2.event_time)
+            FROM tracking_event te2
+            WHERE te2.package_id = p.package_id
+          )
+        GROUP BY te_last.location_id
+      ) packages_lost ON f.address_id = packages_lost.location_id
 
       -- Average delivery time for packages delivered from this facility
       LEFT JOIN (

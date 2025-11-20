@@ -117,9 +117,16 @@ const FacilityReport = ({
                 <td>{facility.packages_lost}</td>
                 <td>{facility.backlog}</td>
                 <td>
-                  <span className={facility.backlog > 0 ? 'rate needs-improvement' : 'rate good'}>
-                    {facility.backlog}
-                  </span>
+                  {(() => {
+                    const packagesIn = facility.packages_received;
+                    const packagesOut = facility.packages_sent + facility.packages_delivered;
+                    const net = packagesIn - packagesOut;
+                    return (
+                      <span className={packagesOut >= packagesIn ? 'rate excellent' : 'rate needs-improvement'}>
+                        {packagesIn} / {packagesOut}
+                      </span>
+                    );
+                  })()}
                 </td>
               </tr>
             ))}

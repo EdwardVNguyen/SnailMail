@@ -61,10 +61,6 @@ const CourierReport = ({
             <div className="statValue">{reportData.summary.total_final_deliveries}</div>
             <div className="statLabel">Final Deliveries</div>
           </div>
-          <div className="statCard">
-            <div className="statValue">{reportData.summary.overall_approval_rate}%</div>
-            <div className="statLabel">Approval Rate</div>
-          </div>
         </div>
       </div>
 
