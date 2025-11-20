@@ -1,3 +1,5 @@
+import { sortData, getSortIndicator } from './reportUtils';
+
 const ClerkReport = ({
   reportData,
   clerkStartDate,
@@ -5,9 +7,15 @@ const ClerkReport = ({
   setClerkStartDate,
   setClerkEndDate,
   setClerkDateRange,
+  clerkSortField,
+  clerkSortDirection,
+  handleClerkSort,
   handleClerkRowClick
 }) => {
   if (!reportData || !reportData.clerks) return <div>No data available</div>;
+
+  // Sort the clerks data
+  const sortedClerks = sortData(reportData.clerks, clerkSortField, clerkSortDirection);
 
   return (
     <div className="reportContent">
@@ -76,20 +84,40 @@ const ClerkReport = ({
         <table className="reportTable">
           <thead>
             <tr>
-              <th>Employee ID</th>
-              <th>Clerk Name</th>
-              <th>Facility</th>
-              <th>Reviews</th>
-              <th>Approved</th>
-              <th>Rejected</th>
-              <th>Approval Rate</th>
-              <th>Events Created</th>
-              <th>Problem Pkgs</th>
-              <th>Packages Processed</th>
+              <th className="sortable" onClick={() => handleClerkSort('employee_id')}>
+                Employee ID{getSortIndicator('employee_id', clerkSortField, clerkSortDirection)}
+              </th>
+              <th className="sortable" onClick={() => handleClerkSort('clerk_name')}>
+                Clerk Name{getSortIndicator('clerk_name', clerkSortField, clerkSortDirection)}
+              </th>
+              <th className="sortable" onClick={() => handleClerkSort('facility_name')}>
+                Facility{getSortIndicator('facility_name', clerkSortField, clerkSortDirection)}
+              </th>
+              <th className="sortable" onClick={() => handleClerkSort('total_reviews')}>
+                Reviews{getSortIndicator('total_reviews', clerkSortField, clerkSortDirection)}
+              </th>
+              <th className="sortable" onClick={() => handleClerkSort('reviews_approved')}>
+                Approved{getSortIndicator('reviews_approved', clerkSortField, clerkSortDirection)}
+              </th>
+              <th className="sortable" onClick={() => handleClerkSort('reviews_rejected')}>
+                Rejected{getSortIndicator('reviews_rejected', clerkSortField, clerkSortDirection)}
+              </th>
+              <th className="sortable" onClick={() => handleClerkSort('approval_rate')}>
+                Approval Rate{getSortIndicator('approval_rate', clerkSortField, clerkSortDirection)}
+              </th>
+              <th className="sortable" onClick={() => handleClerkSort('events_total')}>
+                Events Created{getSortIndicator('events_total', clerkSortField, clerkSortDirection)}
+              </th>
+              <th className="sortable" onClick={() => handleClerkSort('problem_packages')}>
+                Problem Pkgs{getSortIndicator('problem_packages', clerkSortField, clerkSortDirection)}
+              </th>
+              <th className="sortable" onClick={() => handleClerkSort('unique_packages_processed')}>
+                Packages Processed{getSortIndicator('unique_packages_processed', clerkSortField, clerkSortDirection)}
+              </th>
             </tr>
           </thead>
           <tbody>
-            {reportData.clerks.map((clerk) => (
+            {sortedClerks.map((clerk) => (
               <tr
                 key={clerk.employee_id}
                 onClick={() => handleClerkRowClick(clerk)}

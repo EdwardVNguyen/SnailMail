@@ -116,7 +116,7 @@ export const getCourierDetailsController = async (req, res) => {
       [authId, startDate, endDate]
     );
 
-    // Packages In Transit (currently assigned)
+    // Packages In Transit (packages with in-transit status where this courier created the latest event)
     const [packagesInTransit] = await connection.execute(
       `SELECT
         p.tracking_number,
@@ -130,10 +130,19 @@ export const getCourierDetailsController = async (req, res) => {
       FROM package p
       INNER JOIN customer sender ON p.sender_id = sender.customer_id
       INNER JOIN customer recipient ON p.recipient_id = recipient.customer_id
-      WHERE p.courier_id = ?
-        AND p.package_status = 'in-transit'
+      WHERE p.package_status = 'in-transit'
+        AND EXISTS (
+          SELECT 1 FROM tracking_event te
+          WHERE te.package_id = p.package_id
+            AND te.created_by = ?
+            AND te.event_time = (
+              SELECT MAX(te2.event_time)
+              FROM tracking_event te2
+              WHERE te2.package_id = p.package_id
+            )
+        )
       ORDER BY p.last_updated DESC`,
-      [employeeId]
+      [authId]
     );
 
     // Problem Packages - find problem packages where this courier was the last courier to handle them

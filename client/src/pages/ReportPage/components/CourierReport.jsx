@@ -1,3 +1,5 @@
+import { sortData, getSortIndicator } from './reportUtils';
+
 const CourierReport = ({
   reportData,
   courierStartDate,
@@ -5,9 +7,15 @@ const CourierReport = ({
   setCourierStartDate,
   setCourierEndDate,
   setCourierDateRange,
+  courierSortField,
+  courierSortDirection,
+  handleCourierSort,
   handleCourierRowClick
 }) => {
   if (!reportData || !reportData.couriers) return <div>No data available</div>;
+
+  // Sort the couriers data
+  const sortedCouriers = sortData(reportData.couriers, courierSortField, courierSortDirection);
 
   return (
     <div className="reportContent">
@@ -68,18 +76,34 @@ const CourierReport = ({
         <table className="reportTable">
           <thead>
             <tr>
-              <th>Employee ID</th>
-              <th>Courier Name</th>
-              <th>Claimed</th>
-              <th>Delivered</th>
-              <th>Lost</th>
-              <th>Facility Transfers</th>
-              <th>Final Deliveries</th>
-              <th>Request Approval Rate</th>
+              <th className="sortable" onClick={() => handleCourierSort('employee_id')}>
+                Employee ID{getSortIndicator('employee_id', courierSortField, courierSortDirection)}
+              </th>
+              <th className="sortable" onClick={() => handleCourierSort('courier_name')}>
+                Courier Name{getSortIndicator('courier_name', courierSortField, courierSortDirection)}
+              </th>
+              <th className="sortable" onClick={() => handleCourierSort('packages_claimed')}>
+                Claimed{getSortIndicator('packages_claimed', courierSortField, courierSortDirection)}
+              </th>
+              <th className="sortable" onClick={() => handleCourierSort('final_deliveries')}>
+                Final Deliveries{getSortIndicator('final_deliveries', courierSortField, courierSortDirection)}
+              </th>
+              <th className="sortable" onClick={() => handleCourierSort('packages_lost')}>
+                Lost{getSortIndicator('packages_lost', courierSortField, courierSortDirection)}
+              </th>
+              <th className="sortable" onClick={() => handleCourierSort('facility_transfers')}>
+                Facility Transfers{getSortIndicator('facility_transfers', courierSortField, courierSortDirection)}
+              </th>
+              <th className="sortable" onClick={() => handleCourierSort('currently_holding')}>
+                Currently Holding{getSortIndicator('currently_holding', courierSortField, courierSortDirection)}
+              </th>
+              <th className="sortable" onClick={() => handleCourierSort('request_approval_rate')}>
+                Request Approval Rate{getSortIndicator('request_approval_rate', courierSortField, courierSortDirection)}
+              </th>
             </tr>
           </thead>
           <tbody>
-            {reportData.couriers.map((courier) => (
+            {sortedCouriers.map((courier) => (
               <tr
                 key={courier.employee_id}
                 onClick={() => handleCourierRowClick(courier)}
@@ -88,10 +112,10 @@ const CourierReport = ({
                 <td>{courier.employee_id}</td>
                 <td>{courier.courier_name}</td>
                 <td>{courier.packages_claimed}</td>
-                <td>{courier.packages_delivered}</td>
+                <td>{courier.final_deliveries}</td>
                 <td>{courier.packages_lost}</td>
                 <td>{courier.facility_transfers}</td>
-                <td>{courier.final_deliveries}</td>
+                <td>{courier.currently_holding}</td>
                 <td><span className={courier.request_approval_rate >= 75 ? 'rate good' : 'rate needs-improvement'}>{courier.request_approval_rate}%</span></td>
               </tr>
             ))}

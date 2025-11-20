@@ -35,6 +35,9 @@ export const getCourierReportController = async (req, res) => {
         -- Packages in transit (currently assigned to courier)
         IFNULL(packages_in_transit.count, 0) as packages_in_transit,
 
+        -- Currently holding (all non-completed packages assigned to courier)
+        IFNULL(currently_holding.count, 0) as currently_holding,
+
         -- Total moves (all deliveries by courier)
         IFNULL(total_moves.count, 0) as total_moves,
 
@@ -126,6 +129,17 @@ export const getCourierReportController = async (req, res) => {
           AND courier_id IS NOT NULL
         GROUP BY courier_id
       ) packages_in_transit ON e.employee_id = packages_in_transit.courier_id
+
+      -- Currently holding (all non-completed packages)
+      LEFT JOIN (
+        SELECT
+          courier_id,
+          COUNT(*) as count
+        FROM package
+        WHERE courier_id IS NOT NULL
+          AND package_status NOT IN ('delivered', 'returned', 'lost', 'undeliverable')
+        GROUP BY courier_id
+      ) currently_holding ON e.employee_id = currently_holding.courier_id
 
       -- Total moves (all tracking events by courier in date range)
       LEFT JOIN (
