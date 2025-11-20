@@ -84,8 +84,12 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
     const data = await response.json();
 
     if (data.success) {
-      setAuth(true);
+      // Set all auth state before navigation (same as login)
+      localStorage.setItem('authId', data.auth_id);
+      localStorage.setItem('accountType', data.account_type);
+      setGlobalAccountType(data.account_type);
       setGlobalAuthId(data.auth_id);
+      setAuth(true);
       navigate('/customerPage');
     } else {
       showErrorToast('Something went wrong with user sign up');

@@ -74,6 +74,7 @@ export const userSignUpController = async (req, res) => {
             success: true,
             message: 'Sign up successful',
             auth_id: authentication_id,
+            account_type: 'customer'
     })) 
 
   } catch (error) {
