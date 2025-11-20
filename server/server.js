@@ -41,6 +41,5 @@ const server = http.createServer( (req,res) => {
 server.listen(PORT, () => {
   console.log(`listening to port: ${PORT}`)
 
-  // TODO: Fix email_queue table schema before enabling
-  // startEmailWorker();
+  startEmailWorker();
 })
