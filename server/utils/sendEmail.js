@@ -97,7 +97,7 @@ export const sendPackageCreatedEmail = async (recipientEmail, trackingNumber, re
               <p>You can use this tracking number to monitor your package's journey in real-time.</p>
               
               <center>
-                <a href="http://localhost:3000" class="button">Create an account or login with this email to view</a>
+                <a href="https://snail-mail-five.vercel.app/" class="button">Create an account or login with this email to view</a>
               </center>
               
               <p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
@@ -270,8 +270,8 @@ export const sendPackageIssueEmail = async (recipientEmail, trackingNumber, reci
               </div>
               
               <center>
-                <a href="http://localhost:3000/tracking" class="button">Track Package</a>
-                <a href="http://localhost:3000/support" class="button">Contact Support</a>
+                <a href="https://snail-mail-five.vercel.app/" class="button">Track Package</a>
+                <a href="https://snail-mail-five.vercel.app/support" class="button">Contact Support</a>
               </center>
               
               <p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
