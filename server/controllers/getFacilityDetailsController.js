@@ -175,7 +175,7 @@ export const getFacilityDetailsController = async (req, res) => {
       [facilityId]
     );
 
-    // Backlog: packages with processing status at this facility
+    // Backlog: packages with status 'processing' at this facility
     const [backlog] = await connection.execute(
       `SELECT
         p.package_id,
@@ -189,13 +189,23 @@ export const getFacilityDetailsController = async (req, res) => {
       FROM package p
       INNER JOIN customer sender ON p.sender_id = sender.customer_id
       INNER JOIN customer recipient ON p.recipient_id = recipient.customer_id
-      WHERE p.facility_id = ?
-        AND p.package_status = 'processing'
+      WHERE p.package_status = 'processing'
+        AND EXISTS (
+          SELECT 1 FROM tracking_event te
+          INNER JOIN facility f ON te.location_id = f.address_id
+          WHERE te.package_id = p.package_id
+            AND f.facility_id = ?
+            AND te.event_time = (
+              SELECT MAX(te2.event_time)
+              FROM tracking_event te2
+              WHERE te2.package_id = p.package_id
+            )
+        )
       ORDER BY p.last_updated DESC`,
       [facilityId]
     );
 
-    // Status: In-Transit
+    // Status: In-Transit (packages with status 'in-transit' at this facility)
     const [statusInTransit] = await connection.execute(
       `SELECT
         p.package_id,
@@ -211,8 +221,18 @@ export const getFacilityDetailsController = async (req, res) => {
       INNER JOIN customer sender ON p.sender_id = sender.customer_id
       INNER JOIN customer recipient ON p.recipient_id = recipient.customer_id
       LEFT JOIN employee courier ON p.courier_id = courier.employee_id
-      WHERE p.facility_id = ?
-        AND p.package_status = 'in-transit'
+      WHERE p.package_status = 'in-transit'
+        AND EXISTS (
+          SELECT 1 FROM tracking_event te
+          INNER JOIN facility f ON te.location_id = f.address_id
+          WHERE te.package_id = p.package_id
+            AND f.facility_id = ?
+            AND te.event_time = (
+              SELECT MAX(te2.event_time)
+              FROM tracking_event te2
+              WHERE te2.package_id = p.package_id
+            )
+        )
       ORDER BY p.last_updated DESC`,
       [facilityId]
     );
@@ -233,8 +253,18 @@ export const getFacilityDetailsController = async (req, res) => {
       INNER JOIN customer sender ON p.sender_id = sender.customer_id
       INNER JOIN customer recipient ON p.recipient_id = recipient.customer_id
       LEFT JOIN employee courier ON p.courier_id = courier.employee_id
-      WHERE p.facility_id = ?
-        AND p.package_status = 'out-for-delivery'
+      WHERE p.package_status = 'out-for-delivery'
+        AND EXISTS (
+          SELECT 1 FROM tracking_event te
+          INNER JOIN facility f ON te.location_id = f.address_id
+          WHERE te.package_id = p.package_id
+            AND f.facility_id = ?
+            AND te.event_time = (
+              SELECT MAX(te2.event_time)
+              FROM tracking_event te2
+              WHERE te2.package_id = p.package_id
+            )
+        )
       ORDER BY p.last_updated DESC`,
       [facilityId]
     );
@@ -279,7 +309,6 @@ export const getFacilityDetailsController = async (req, res) => {
         CONCAT(recipient.first_name, ' ', recipient.last_name) as recipient_name,
         p.package_type,
         p.package_status,
-        latest_event.event_type,
         latest_event.event_time,
         CONCAT(clerk.first_name, ' ', clerk.last_name) as clerk_name
       FROM (

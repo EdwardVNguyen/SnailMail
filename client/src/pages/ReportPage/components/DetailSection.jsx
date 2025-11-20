@@ -3,6 +3,7 @@ import { sortData, getSortIndicator } from './reportUtils';
 const DetailSection = ({
   sectionKey,
   title,
+  description = null,
   data,
   extraColumn = null,
   collapsedSections,
@@ -42,6 +43,7 @@ const DetailSection = ({
       </div>
       {!isCollapsed && (
         <div className="detailSectionContent">
+          {description && <p className="detailSectionDescription">{description}</p>}
           <div className="detailTableContainer">
             <table className="detailTable">
               <thead>

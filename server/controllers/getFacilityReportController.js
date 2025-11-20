@@ -151,34 +151,52 @@ export const getFacilityReportController = async (req, res) => {
         GROUP BY f_from.facility_id
       ) packages_sent ON f.facility_id = packages_sent.from_facility_id
 
-      -- Status distribution: processing
+      -- Status distribution: processing (packages whose latest tracking event at this facility is 'processing')
       LEFT JOIN (
         SELECT
-          p.facility_id,
-          COUNT(DISTINCT p.package_id) as count
-        FROM package p
-        WHERE p.package_status = 'processing'
-        GROUP BY p.facility_id
+          f_inner.facility_id,
+          COUNT(DISTINCT te.package_id) as count
+        FROM tracking_event te
+        INNER JOIN facility f_inner ON te.location_id = f_inner.address_id
+        WHERE te.event_type = 'processing'
+          AND te.event_time = (
+            SELECT MAX(te2.event_time)
+            FROM tracking_event te2
+            WHERE te2.package_id = te.package_id
+          )
+        GROUP BY f_inner.facility_id
       ) status_processing ON f.facility_id = status_processing.facility_id
 
-      -- Status distribution: in-transit
+      -- Status distribution: in-transit (packages whose latest tracking event at this facility is 'in-transit')
       LEFT JOIN (
         SELECT
-          p.facility_id,
-          COUNT(DISTINCT p.package_id) as count
-        FROM package p
-        WHERE p.package_status = 'in-transit'
-        GROUP BY p.facility_id
+          f_inner.facility_id,
+          COUNT(DISTINCT te.package_id) as count
+        FROM tracking_event te
+        INNER JOIN facility f_inner ON te.location_id = f_inner.address_id
+        WHERE te.event_type = 'in-transit'
+          AND te.event_time = (
+            SELECT MAX(te2.event_time)
+            FROM tracking_event te2
+            WHERE te2.package_id = te.package_id
+          )
+        GROUP BY f_inner.facility_id
       ) status_in_transit ON f.facility_id = status_in_transit.facility_id
 
       -- Status distribution: out-for-delivery
       LEFT JOIN (
         SELECT
-          p.facility_id,
-          COUNT(DISTINCT p.package_id) as count
-        FROM package p
-        WHERE p.package_status = 'out-for-delivery'
-        GROUP BY p.facility_id
+          f_inner.facility_id,
+          COUNT(DISTINCT te.package_id) as count
+        FROM tracking_event te
+        INNER JOIN facility f_inner ON te.location_id = f_inner.address_id
+        WHERE te.event_type = 'out-for-delivery'
+          AND te.event_time = (
+            SELECT MAX(te2.event_time)
+            FROM tracking_event te2
+            WHERE te2.package_id = te.package_id
+          )
+        GROUP BY f_inner.facility_id
       ) status_out_for_delivery ON f.facility_id = status_out_for_delivery.facility_id
 
       ORDER BY packages_received DESC

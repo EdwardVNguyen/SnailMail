@@ -540,6 +540,12 @@
   background-color: var(--bg-primary);
 }
 
+.detailSectionDescription {
+  margin: 0 0 15px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
 .detailTableContainer {
   overflow-x: auto;
   margin-bottom: 15px;

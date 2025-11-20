@@ -45,6 +45,14 @@ const ReportPage = ({ globalAuthId }) => {
   const [facilitySortField, setFacilitySortField] = useState('facility_name');
   const [facilitySortDirection, setFacilitySortDirection] = useState('asc');
 
+  // Sorting state for main courier table
+  const [courierSortField, setCourierSortField] = useState('courier_name');
+  const [courierSortDirection, setCourierSortDirection] = useState('asc');
+
+  // Sorting state for main clerk table
+  const [clerkSortField, setClerkSortField] = useState('clerk_name');
+  const [clerkSortDirection, setClerkSortDirection] = useState('asc');
+
   // Collapsed sections state (all start collapsed)
   const [collapsedSections, setCollapsedSections] = useState({
     packagesReceived: true,
@@ -136,6 +144,26 @@ const ReportPage = ({ globalAuthId }) => {
     } else {
       setFacilitySortField(field);
       setFacilitySortDirection('asc');
+    }
+  };
+
+  // Sorting function for main courier table
+  const handleCourierSort = (field) => {
+    if (courierSortField === field) {
+      setCourierSortDirection(courierSortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setCourierSortField(field);
+      setCourierSortDirection('asc');
+    }
+  };
+
+  // Sorting function for main clerk table
+  const handleClerkSort = (field) => {
+    if (clerkSortField === field) {
+      setClerkSortDirection(clerkSortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setClerkSortField(field);
+      setClerkSortDirection('asc');
     }
   };
 
@@ -247,7 +275,6 @@ const ReportPage = ({ globalAuthId }) => {
 
     setCollapsedSections({
       packagesClaimed: true,
-      packagesDelivered: true,
       packagesInTransit: true,
       packagesLost: true,
       facilityTransfers: true,
@@ -422,8 +449,8 @@ const ReportPage = ({ globalAuthId }) => {
           ) : reportData ? (
             <>
               {activeReport === 'facility' && <FacilityReport reportData={reportData} facilityStartDate={facilityStartDate} facilityEndDate={facilityEndDate} setFacilityStartDate={setFacilityStartDate} setFacilityEndDate={setFacilityEndDate} setFacilityDateRange={setFacilityDateRange} facilitySortField={facilitySortField} facilitySortDirection={facilitySortDirection} handleFacilitySort={handleFacilitySort} handleFacilityRowClick={handleFacilityRowClick} />}
-              {activeReport === 'clerk' && <ClerkReport reportData={reportData} clerkStartDate={clerkStartDate} clerkEndDate={clerkEndDate} setClerkStartDate={setClerkStartDate} setClerkEndDate={setClerkEndDate} setClerkDateRange={setClerkDateRange} handleClerkRowClick={handleClerkRowClick} />}
-              {activeReport === 'courier' && <CourierReport reportData={reportData} courierStartDate={courierStartDate} courierEndDate={courierEndDate} setCourierStartDate={setCourierStartDate} setCourierEndDate={setCourierEndDate} setCourierDateRange={setCourierDateRange} handleCourierRowClick={handleCourierRowClick} />}
+              {activeReport === 'clerk' && <ClerkReport reportData={reportData} clerkStartDate={clerkStartDate} clerkEndDate={clerkEndDate} setClerkStartDate={setClerkStartDate} setClerkEndDate={setClerkEndDate} setClerkDateRange={setClerkDateRange} clerkSortField={clerkSortField} clerkSortDirection={clerkSortDirection} handleClerkSort={handleClerkSort} handleClerkRowClick={handleClerkRowClick} />}
+              {activeReport === 'courier' && <CourierReport reportData={reportData} courierStartDate={courierStartDate} courierEndDate={courierEndDate} setCourierStartDate={setCourierStartDate} setCourierEndDate={setCourierEndDate} setCourierDateRange={setCourierDateRange} courierSortField={courierSortField} courierSortDirection={courierSortDirection} handleCourierSort={handleCourierSort} handleCourierRowClick={handleCourierRowClick} />}
             </>
           ) : (
             <div className="loadingMessage">No data available</div>
@@ -450,19 +477,20 @@ const ReportPage = ({ globalAuthId }) => {
                   <span><strong>Clerk Events:</strong> {facilityDetails.details.clerkCreatedEvents.length}</span>
                   <span><strong>Delivered:</strong> {facilityDetails.details.packagesDelivered.length}</span>
                   <span><strong>Lost:</strong> {facilityDetails.details.packagesLost.length}</span>
-                  <span><strong>Backlog:</strong> {facilityDetails.details.backlog.length}</span>
+                  <span><strong>Processing:</strong> {facilityDetails.details.backlog.length}</span>
+                  <span><strong>In Transit:</strong> {facilityDetails.details.statusInTransit.length}</span>
                 </div>
               </div>
 
               {/* Collapsible sections */}
-              <DetailSection sectionKey="packagesReceived" title="Packages Received" data={facilityDetails.details.packagesReceived} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="clerkCreatedEvents" title="Clerk Created Events" data={facilityDetails.details.clerkCreatedEvents} extraColumn={[{ field: 'event_type', label: 'Event Type' }, { field: 'clerk_name', label: 'Clerk' }]} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="packagesDelivered" title="Packages Delivered" data={facilityDetails.details.packagesDelivered} extraColumn={{ field: 'delivered_by', label: 'Delivered By' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="packagesLost" title="Problem Packages" data={facilityDetails.details.packagesLost} extraColumn={[{ field: 'marked_by', label: 'Marked By' }, { field: 'last_courier', label: 'Last Courier' }]} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="packagesSent" title="Packages Sent" data={facilityDetails.details.packagesSent} extraColumn={{ field: 'destination_facility', label: 'Destination Facility' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="backlog" title="Backlog" data={facilityDetails.details.backlog} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="statusInTransit" title="Status: In Transit" data={facilityDetails.details.statusInTransit} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="statusOutForDelivery" title="Status: Out for Delivery" data={facilityDetails.details.statusOutForDelivery} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesReceived" title="Packages Received" description="All packages that arrived at this facility during the selected date range" data={facilityDetails.details.packagesReceived} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="clerkCreatedEvents" title="Clerk Created Events" description="Tracking events created by clerks at this facility" data={facilityDetails.details.clerkCreatedEvents} extraColumn={[{ field: 'event_type', label: 'Event Type' }, { field: 'clerk_name', label: 'Clerk' }]} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesDelivered" title="Packages Delivered" description="Packages delivered to their final destination from this facility" data={facilityDetails.details.packagesDelivered} extraColumn={{ field: 'delivered_by', label: 'Delivered By' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesLost" title="Problem Packages" description="Packages with issues such as lost, damaged, undeliverable, or failed delivery" data={facilityDetails.details.packagesLost} extraColumn={[{ field: 'marked_by', label: 'Marked By' }, { field: 'last_courier', label: 'Last Courier' }]} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesSent" title="Packages Sent" description="Packages transferred to other facilities" data={facilityDetails.details.packagesSent} extraColumn={{ field: 'destination_facility', label: 'Destination Facility' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="backlog" title="Processing" description="Packages awaiting clerk review" data={facilityDetails.details.backlog} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="statusInTransit" title="In Transit" description="Packages currently being held by couriers" data={facilityDetails.details.statusInTransit} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="statusOutForDelivery" title="Out for Delivery" description="Packages currently out for delivery to recipients" data={facilityDetails.details.statusOutForDelivery} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
             </div>
           ) : (
             <div>No details available</div>
@@ -492,11 +520,11 @@ const ReportPage = ({ globalAuthId }) => {
                 </div>
               </div>
 
-              <DetailSection sectionKey="reviewsApproved" title="Reviews Approved" data={clerkDetails.details.reviewsApproved} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="reviewsRejected" title="Reviews Rejected" data={clerkDetails.details.reviewsRejected} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="trackingEvents" title="Tracking Events Created" data={clerkDetails.details.trackingEvents} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="problemPackages" title="Problem Packages" data={clerkDetails.details.problemPackages} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="packagesProcessed" title="Packages Processed" data={clerkDetails.details.packagesProcessed} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="reviewsApproved" title="Reviews Approved" description="Courier package requests approved by this clerk" data={clerkDetails.details.reviewsApproved} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="reviewsRejected" title="Reviews Rejected" description="Courier package requests rejected by this clerk" data={clerkDetails.details.reviewsRejected} extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="trackingEvents" title="Tracking Events Created" description="All tracking events created by this clerk" data={clerkDetails.details.trackingEvents} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="problemPackages" title="Problem Packages" description="Packages marked as lost, undeliverable, failed-delivery, or damaged by this clerk" data={clerkDetails.details.problemPackages} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesProcessed" title="Packages Processed" description="Unique packages this clerk created tracking events for" data={clerkDetails.details.packagesProcessed} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
             </div>
           ) : (
             <div>No details available</div>
@@ -518,19 +546,19 @@ const ReportPage = ({ globalAuthId }) => {
               <div className="facilityDetailsSummary">
                 <div className="summaryStats">
                   <span><strong>Claimed:</strong> {courierDetails.details.packagesClaimed.length}</span>
-                  <span><strong>Delivered:</strong> {courierDetails.details.packagesDelivered.length}</span>
-                  <span><strong>In Transit:</strong> {courierDetails.details.packagesInTransit.length}</span>
+                  <span><strong>Final Deliveries:</strong> {courierDetails.details.finalDeliveries.length}</span>
                   <span><strong>Lost:</strong> {courierDetails.details.packagesLost.length}</span>
+                  <span><strong>Facility Transfers:</strong> {courierDetails.details.facilityTransfers.length}</span>
+                  <span><strong>Currently Holding:</strong> {courierDetails.details.packagesInTransit.length}</span>
                 </div>
               </div>
 
-              <DetailSection sectionKey="packagesClaimed" title="Packages Claimed" data={courierDetails.details.packagesClaimed} extraColumn={{ field: 'reviewed_by_name', label: 'Approved By' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="packagesDelivered" title="Packages Delivered" data={courierDetails.details.packagesDelivered} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="packagesInTransit" title="Packages In Transit" data={courierDetails.details.packagesInTransit} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="packagesLost" title="Packages Lost" data={courierDetails.details.packagesLost} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="facilityTransfers" title="Facility Transfers" data={courierDetails.details.facilityTransfers} extraColumn={{ field: 'destination_facility', label: 'Destination' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="finalDeliveries" title="Final Deliveries" data={courierDetails.details.finalDeliveries} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="allTrackingEvents" title="All Tracking Events" data={courierDetails.details.allTrackingEvents} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesClaimed" title="Packages Claimed" description="Approved package requests claimed by this courier" data={courierDetails.details.packagesClaimed} extraColumn={{ field: 'reviewed_by_name', label: 'Approved By' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="finalDeliveries" title="Final Deliveries" description="Packages delivered to recipients" data={courierDetails.details.finalDeliveries} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesLost" title="Packages Lost" description="Problem packages where this courier was last to handle" data={courierDetails.details.packagesLost} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="facilityTransfers" title="Facility Transfers" description="Packages delivered to facilities" data={courierDetails.details.facilityTransfers} extraColumn={{ field: 'destination_facility', label: 'Destination' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="packagesInTransit" title="Currently Holding" description="Packages currently in transit with this courier" data={courierDetails.details.packagesInTransit} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
+              <DetailSection sectionKey="allTrackingEvents" title="All Tracking Events" description="All tracking events created by this courier" data={courierDetails.details.allTrackingEvents} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
             </div>
           ) : (
             <div>No details available</div>

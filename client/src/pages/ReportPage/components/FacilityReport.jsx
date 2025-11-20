@@ -96,7 +96,10 @@ const FacilityReport = ({
                 Lost{getSortIndicator('packages_lost', facilitySortField, facilitySortDirection)}
               </th>
               <th className="sortable" onClick={() => handleFacilitySort('backlog')}>
-                Backlog{getSortIndicator('backlog', facilitySortField, facilitySortDirection)}
+                Processing{getSortIndicator('backlog', facilitySortField, facilitySortDirection)}
+              </th>
+              <th className="sortable" onClick={() => handleFacilitySort('status_in_transit')}>
+                In Transit{getSortIndicator('status_in_transit', facilitySortField, facilitySortDirection)}
               </th>
               <th>Throughput</th>
             </tr>
@@ -116,6 +119,7 @@ const FacilityReport = ({
                 <td>{facility.packages_delivered}</td>
                 <td>{facility.packages_lost}</td>
                 <td>{facility.backlog}</td>
+                <td>{facility.status_in_transit}</td>
                 <td>
                   {(() => {
                     const packagesIn = facility.packages_received;

@@ -138,7 +138,14 @@ export const getClerkDetailsController = async (req, res) => {
       WHERE te.created_by = ?
         AND te.event_type IN ('lost', 'undeliverable', 'failed-delivery', 'damaged')
         AND te.event_time BETWEEN ? AND ?
-        AND p.package_status NOT IN ('delivered')
+        AND NOT EXISTS (
+          SELECT 1 FROM tracking_event te_latest
+          WHERE te_latest.package_id = p.package_id
+            AND te_latest.event_type = 'delivered'
+            AND te_latest.event_time = (
+              SELECT MAX(te3.event_time) FROM tracking_event te3 WHERE te3.package_id = p.package_id
+            )
+        )
       GROUP BY p.package_id, p.tracking_number, sender_name, recipient_name, p.package_type, p.weight, p.package_status
       ORDER BY event_time DESC`,
       [authId, startDate, endDate]
