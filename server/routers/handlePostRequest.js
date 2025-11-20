@@ -22,7 +22,6 @@ import { markPackagesDeliveredController } from '../controllers/markPackagesDeli
 import { updatePackageDimensionsController } from '../controllers/updatePackageDimensionsController.js'
 import { updateCustomerController } from '../controllers/updateCustomerController.js'
 import { updateSecurityController } from '../controllers/updateSecurityController.js'
-import { updateAccountTypeController } from '../controllers/updateAccountTypeController.js'
 
 export const handlePostRequest= (req, res) => {
 
@@ -121,10 +120,6 @@ export const handlePostRequest= (req, res) => {
   // update security (email/password)
   else if (req.url.startsWith('/updateSecurity')) {
     return updateSecurityController(req, res)
-  }
-  // update account type
-  else if (req.url.startsWith('/updateAccountType')) {
-    return updateAccountTypeController(req, res)
   }
   // if an api call is made to a url that isn't any of the above, return 404
   else {

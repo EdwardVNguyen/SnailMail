@@ -30,10 +30,6 @@ const UserProfile = ({ globalAuthId }) => {
     confirmPassword: ''
   });
 
-  const [accountForm, setAccountForm] = useState({
-    accountType: ''
-  });
-
   useEffect(() => {
     const fetchCustomerData = async () => {
       try {
@@ -51,9 +47,6 @@ const UserProfile = ({ globalAuthId }) => {
             cityName: data.customer.city_name || '',
             stateName: data.customer.state_name || '',
             zipCode: data.customer.zip_code || ''
-          });
-          setAccountForm({
-            accountType: data.customer.account_type || ''
           });
         }
       } catch (error) {
@@ -74,9 +67,6 @@ const UserProfile = ({ globalAuthId }) => {
   };
   const handleSecurityChange = (e) => {
     setSecurityForm({ ...securityForm, [e.target.name]: e.target.value });
-  };
-  const handleAccountChange = (e) => {
-    setAccountForm({ ...accountForm, [e.target.name]: e.target.value });
   };
   const handleSaveContact = async (e) => {
     e.preventDefault();
@@ -164,41 +154,6 @@ const UserProfile = ({ globalAuthId }) => {
     }
   };
 
-  const handleSaveAccount = async (e) => {
-    e.preventDefault();
-    setIsSaving(true);
-    setSuccessMessage('');
-    setErrorMessage('');
-
-    try {
-      const response = await fetch('http://localhost:8000/updateAccountType', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          authId: globalAuthId,
-          accountType: accountForm.accountType
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setSuccessMessage('Account settings updated successfully!');
-        setTimeout(() => {
-          refetchCustomerData
-        }, 1500);
-      } else {
-        setErrorMessage(data.message || 'Failed to update account settings');
-      }
-    } catch (error) {
-      setErrorMessage('Failed to update account settings', error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   if (!globalAuthId) {
     return (
       <div className="profile-container">
@@ -228,9 +183,6 @@ const UserProfile = ({ globalAuthId }) => {
           cityName: data.customer.city_name || '',
           stateName: data.customer.state_name || '',
           zipCode: data.customer.zip_code || ''
-        });
-        setAccountForm({
-          accountType: data.customer.account_type || ''
         });
       }
     } catch (error) {
@@ -293,14 +245,6 @@ const UserProfile = ({ globalAuthId }) => {
               <span className="nav-icon">🔐</span>
               <span className="nav-text">LOGIN & SECURITY</span>
             </button>
-
-            <button
-              className={`nav-item ${activeSection === 'account' ? 'active' : ''}`}
-              onClick={() => setActiveSection('account')}
-            >
-              <span className="nav-icon">💳</span>
-              <span className="nav-text">ACCOUNT & PAYMENTS</span>
-            </button>
           </nav>
         </div>
 
@@ -351,20 +295,6 @@ const UserProfile = ({ globalAuthId }) => {
                     onClick={() => setActiveSection('security')}
                   >
                     UPDATE
-                  </button>
-                </div>
-
-                <div className="overview-card">
-                  <div className="card-icon">💳</div>
-                  <div className="card-content">
-                    <h3>Account Settings</h3>
-                    <p>Manage your account type and preferences.</p>
-                  </div>
-                  <button 
-                    className="card-action-button"
-                    onClick={() => setActiveSection('account')}
-                  >
-                    MANAGE
                   </button>
                 </div>
               </div>
@@ -543,48 +473,6 @@ const UserProfile = ({ globalAuthId }) => {
                       onChange={handleSecurityChange}
                       placeholder="Confirm new password"
                     />
-                  </div>
-                </div>
-
-                <button type="submit" className="save-button" disabled={isSaving}>
-                  {isSaving ? 'Saving...' : 'Save Changes'}
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* Account & Payments Section */}
-          {activeSection === 'account' && (
-            <div className="section-content">
-              <h2>Account & Payments</h2>
-              <p className="section-description">Manage your account type</p>
-
-              <form onSubmit={handleSaveAccount} className="profile-form">
-                <div className="form-section">
-                  <h3>Account Type</h3>
-                  <p className="field-description">Current account type: <strong>{customerData?.account_type}</strong></p>
-                  
-                  <div className="form-group">
-                    <label>Select Account Type *</label>
-                    <select
-                      name="accountType"
-                      value={accountForm.accountType}
-                      onChange={handleAccountChange}
-                      required
-                    >
-                      <option value="individual">Individual</option>
-                      <option value="business">Business</option>
-                      <option value="prime">Prime</option>
-                    </select>
-                  </div>
-
-                  <div className="account-type-info">
-                    <h4>Account Type Benefits:</h4>
-                    <ul>
-                      <li><strong>Individual:</strong> Standard shipping rates and features</li>
-                      <li><strong>Business:</strong> Volume discounts and business tools</li>
-                      <li><strong>Prime:</strong> Premium features and fastest shipping</li>
-                    </ul>
                   </div>
                 </div>
 
