@@ -52,26 +52,23 @@ const App = () => {
     setIsLoading(false);
   }, []);
 
-  // anytime user goes to a non-protected route, then set authetnication false (as if they logged out)
-  useEffect( () => {
-    const storedAuthId = localStorage.getItem('authId');
-    if (!storedAuthId && (location.pathname === "/" ||
-        location.pathname === "/loginorsignup" ||
-        location.pathname === "/tracking"      
-        )) {
-      setAuth(false);
-    }
-  }, [location]);
-
-  // Check if user is logged in
+  // Verify auth state on route changes
   useEffect(() => {
-    const authId = localStorage.getItem('authId');
-    const accountType = localStorage.getItem('accountType');
-    if (authId) {
-      setGlobalAuthId(authId);
-      setGlobalAccountType(accountType);
+    const storedAuthId = localStorage.getItem('authId');
+    const storedAccountType = localStorage.getItem('accountType');
+
+    // If no valid auth data in localStorage, clear auth state
+    if (!storedAuthId || !storedAccountType) {
+      setAuth(false);
+      setGlobalAuthId(null);
+      setGlobalAccountType(null);
+    } else {
+      // If we have valid auth data, ensure state is synced
+      setAuth(true);
+      setGlobalAuthId(storedAuthId);
+      setGlobalAccountType(storedAccountType);
     }
-  }, []);
+  }, [location.pathname]);
 
   // Handle logout
   const handleLogout = () => {

@@ -67,12 +67,56 @@ export const createShipmentController = async (req, res) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // get sender_id
-    const [[{ customer_id: sender_id } = {}]] = await connection.execute(
-      `SELECT customer_id FROM customer WHERE auth_id = ?`,
+    // get sender_id and validate payment information
+    const [[customerData] = []] = await connection.execute(
+      `SELECT customer_id, card_number, security_code, expiration_date FROM customer WHERE auth_id = ?`,
       [authId]
     );
-    if (!sender_id) throw new Error('Sender not found');
+
+    if (!customerData) throw new Error('Sender not found');
+    const sender_id = customerData.customer_id;
+
+    // Validate payment information - customer must have card on file
+    const isEmpty = (value) => {
+      if (value === null || value === undefined) return true;
+      const stringValue = String(value).trim();
+      return stringValue === '' || stringValue.length === 0;
+    };
+
+    const hasCardNumber = !isEmpty(customerData.card_number);
+    const hasSecurityCode = !isEmpty(customerData.security_code);
+    const hasExpirationDate = !isEmpty(customerData.expiration_date);
+
+    // Build specific error message
+    const missingFields = [];
+    if (!hasCardNumber) missingFields.push('card number');
+    if (!hasSecurityCode) missingFields.push('security code');
+    if (!hasExpirationDate) missingFields.push('expiration date');
+
+    if (missingFields.length > 0) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({
+        success: false,
+        message: `Payment information required. Please add your ${missingFields.join(', ')} to your profile before creating a shipment.`,
+        errorType: 'missing_payment_info',
+        missingFields: missingFields
+      }));
+      return;
+    }
+
+    // Additional validation: check card number has at least 13 digits
+    const cardDigits = String(customerData.card_number).replace(/\D/g, '');
+    if (cardDigits.length < 13) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({
+        success: false,
+        message: 'Invalid card number. Please update your payment information in your profile.',
+        errorType: 'invalid_payment_info'
+      }));
+      return;
+    }
 
     // Insert recipient address into address table
     const [recipientAddressResult] = await connection.execute(

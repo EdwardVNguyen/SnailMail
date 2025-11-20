@@ -16,9 +16,9 @@ export const getEmployeeDataController = async (req, res) => {
 
     // SQL to get employee info, address, and authentication info
     const sql = `
-      SELECT 
-        e.first_name, e.last_name, e.address_id, e.phone_number,
-        e.auth_id, e.account_type, e.employee_id, e.employee_ssn, e.salary,
+      SELECT
+        e.first_name, e.last_name, e.address_id,
+        e.auth_id, e.account_type, e.employee_id, e.employee_ssn, e.salary, e.profile_picture_url,
         a.street_name, a.city_name, a.state_name, a.zip_code,
         au.email, au.password
       FROM employee e

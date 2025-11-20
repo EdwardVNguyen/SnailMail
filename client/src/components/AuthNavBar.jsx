@@ -126,7 +126,7 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
             {showDropdown && (
               <div className="profile-dropdown">
                 <NavLink
-                  to={globalAccountType === 'customer' ? '/CustomerProfilePage' : '/EmployeeProfilePage'}
+                  to={['manager', 'clerk', 'courier'].includes(globalAccountType) ? '/EmployeeProfilePage' : '/CustomerProfilePage'}
                   className="dropdown-item"
                   onClick={() => setShowDropdown(false)}
                 >

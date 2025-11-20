@@ -21,7 +21,7 @@ export const updateCustomerInfoController = async (req, res) => {
     let connection;
     try {
         const body = await parseRequestBody(req);
-        const { authId, firstName, lastName, birthDate, streetName, cityName, stateName, zipCode, addressId } = body;
+        const { authId, firstName, lastName, birthDate, streetName, cityName, stateName, zipCode, addressId, cardNumber, securityCode, expirationDate, profilePictureUrl } = body;
 
         connection = await pool.getConnection();
 
@@ -41,7 +41,10 @@ export const updateCustomerInfoController = async (req, res) => {
 
         const updateCustomer = async (field, value) => {
             const updateCustomerQuery = `UPDATE customer SET ${connection.escapeId(field)} = ? WHERE auth_id = ?`;
-            if (value === '' || value === undefined) return await connection.query(updateCustomerQuery, [null, authId]);
+            // Set to NULL if value is empty, undefined, null, or only whitespace
+            if (value === '' || value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
+                return await connection.query(updateCustomerQuery, [null, authId]);
+            }
             return await connection.query(updateCustomerQuery, [value, authId]);
         }
 
@@ -50,6 +53,14 @@ export const updateCustomerInfoController = async (req, res) => {
         await updateCustomer("last_name", lastName);
 
         await updateCustomer("birth_date", birthDate);
+
+        await updateCustomer("card_number", cardNumber);
+
+        await updateCustomer("security_code", securityCode);
+
+        await updateCustomer("expiration_date", expirationDate);
+
+        await updateCustomer("profile_picture_url", profilePictureUrl);
 
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');

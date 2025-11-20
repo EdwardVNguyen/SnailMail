@@ -6,6 +6,7 @@ import DetailSection from './ReportPage/components/DetailSection';
 import FacilityReport from './ReportPage/components/FacilityReport';
 import ClerkReport from './ReportPage/components/ClerkReport';
 import CourierReport from './ReportPage/components/CourierReport';
+import TransactionReport from './ReportPage/components/TransactionReport';
 
 const ReportPage = ({ globalAuthId }) => {
   const [activeReport, setActiveReport] = useState('facility');
@@ -19,6 +20,8 @@ const ReportPage = ({ globalAuthId }) => {
   const [clerkEndDate, setClerkEndDate] = useState('');
   const [courierStartDate, setCourierStartDate] = useState('');
   const [courierEndDate, setCourierEndDate] = useState('');
+  const [transactionStartDate, setTransactionStartDate] = useState('');
+  const [transactionEndDate, setTransactionEndDate] = useState('');
 
   // Modal state
   const [showFacilityModal, setShowFacilityModal] = useState(false);
@@ -66,12 +69,10 @@ const ReportPage = ({ globalAuthId }) => {
   // Initialize dates on component mount
   useEffect(() => {
     const today = new Date();
-    const startDate = today.toISOString().split('T')[0];
+    const endDate = today.toISOString().split('T')[0];
 
-    // All reports: 30 days back for end date
-    const thirtyDaysBack = new Date(today);
-    thirtyDaysBack.setDate(thirtyDaysBack.getDate() - 30);
-    const endDate = thirtyDaysBack.toISOString().split('T')[0];
+    // All reports: Start from beginning of year or a far past date for "all time"
+    const startDate = '2000-01-01'; // Far past date to capture all historical data
 
     setFacilityStartDate(startDate);
     setFacilityEndDate(endDate);
@@ -79,6 +80,8 @@ const ReportPage = ({ globalAuthId }) => {
     setClerkEndDate(endDate);
     setCourierStartDate(startDate);
     setCourierEndDate(endDate);
+    setTransactionStartDate(startDate);
+    setTransactionEndDate(endDate);
   }, []);
 
   // Helper function to get date range presets
@@ -127,6 +130,11 @@ const ReportPage = ({ globalAuthId }) => {
   const setCourierDateRange = (preset) => {
     const { fromDate } = getDateRange(preset);
     setCourierEndDate(fromDate); // "To" field - the past date
+  };
+
+  const setTransactionDateRange = (preset) => {
+    const { fromDate } = getDateRange(preset);
+    setTransactionEndDate(fromDate); // "To" field - the past date
   };
 
   // Sorting function for main facility table
@@ -326,6 +334,7 @@ const ReportPage = ({ globalAuthId }) => {
       if (reportType === 'facility' && (!facilityStartDate || !facilityEndDate)) return;
       if (reportType === 'clerk' && (!clerkStartDate || !clerkEndDate)) return;
       if (reportType === 'courier' && (!courierStartDate || !courierEndDate)) return;
+      if (reportType === 'transaction' && (!transactionStartDate || !transactionEndDate)) return;
 
       setLoading(true);
       setReportData(null); // Clear previous data
@@ -346,6 +355,10 @@ const ReportPage = ({ globalAuthId }) => {
           case 'courier':
             endpoint = 'getCourierReport';
             url = `${import.meta.env.VITE_API_URL}/${endpoint}?startDate=${courierStartDate}&endDate=${courierEndDate}`;
+            break;
+          case 'transaction':
+            endpoint = 'getTransactionReport';
+            url = `${import.meta.env.VITE_API_URL}/${endpoint}?startDate=${transactionStartDate}&endDate=${transactionEndDate}`;
             break;
           default:
             endpoint = 'getFacilityReport';
@@ -381,7 +394,7 @@ const ReportPage = ({ globalAuthId }) => {
     return () => {
       cancelled = true;
     };
-  }, [activeReport, facilityStartDate, facilityEndDate, clerkStartDate, clerkEndDate, courierStartDate, courierEndDate]);
+  }, [activeReport, facilityStartDate, facilityEndDate, clerkStartDate, clerkEndDate, courierStartDate, courierEndDate, transactionStartDate, transactionEndDate]);
 
 
   return (
@@ -413,6 +426,14 @@ const ReportPage = ({ globalAuthId }) => {
             <div className="menuItemTitle">Courier Report</div>
             <div className="menuItemDesc">Deliveries and performance metrics</div>
           </div>
+
+          <div
+            className={`reportMenuItem ${activeReport === 'transaction' ? 'active' : ''}`}
+            onClick={() => setActiveReport('transaction')}
+          >
+            <div className="menuItemTitle">Transaction Report</div>
+            <div className="menuItemDesc">Financial transactions by facility</div>
+          </div>
         </div>
 
         {/* Right side report display */}
@@ -424,6 +445,7 @@ const ReportPage = ({ globalAuthId }) => {
               {activeReport === 'facility' && <FacilityReport reportData={reportData} facilityStartDate={facilityStartDate} facilityEndDate={facilityEndDate} setFacilityStartDate={setFacilityStartDate} setFacilityEndDate={setFacilityEndDate} setFacilityDateRange={setFacilityDateRange} facilitySortField={facilitySortField} facilitySortDirection={facilitySortDirection} handleFacilitySort={handleFacilitySort} handleFacilityRowClick={handleFacilityRowClick} />}
               {activeReport === 'clerk' && <ClerkReport reportData={reportData} clerkStartDate={clerkStartDate} clerkEndDate={clerkEndDate} setClerkStartDate={setClerkStartDate} setClerkEndDate={setClerkEndDate} setClerkDateRange={setClerkDateRange} handleClerkRowClick={handleClerkRowClick} />}
               {activeReport === 'courier' && <CourierReport reportData={reportData} courierStartDate={courierStartDate} courierEndDate={courierEndDate} setCourierStartDate={setCourierStartDate} setCourierEndDate={setCourierEndDate} setCourierDateRange={setCourierDateRange} handleCourierRowClick={handleCourierRowClick} />}
+              {activeReport === 'transaction' && <TransactionReport reportData={reportData} transactionStartDate={transactionStartDate} transactionEndDate={transactionEndDate} setTransactionStartDate={setTransactionStartDate} setTransactionEndDate={setTransactionEndDate} setTransactionDateRange={setTransactionDateRange} />}
             </>
           ) : (
             <div className="loadingMessage">No data available</div>

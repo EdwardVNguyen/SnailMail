@@ -1,246 +1,361 @@
-import './CustomerProfilePage.css';
-import { useState, useEffect } from 'react';
-import { getEmployeeData } from '../utils/getEmployeeData.js';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import './EmployeeProfilePage.css';
+import profileIcon from '../assets/profileIcon.svg';
 
 const EmployeeProfilePage = ({ globalAuthId }) => {
-  const [employeeInfo, setEmployeeInfo] = useState(null);
-  const [notifications, setNotifications] = useState([]);
-  const [editing, setEditing] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
-  
-  // Fetch employee data
+
+  const [employeeData, setEmployeeData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    streetName: '',
+    cityName: '',
+    stateName: '',
+    zipCode: '',
+    profilePictureUrl: ''
+  });
+
+  // Helper: Get profile picture URL or default icon
+  const getProfilePicture = (url) => {
+    if (!url || url.trim() === '') {
+      return profileIcon;
+    }
+    return url;
+  };
+
+  // Helper: Mask SSN (show only last 4 digits)
+  const maskSSN = (ssn) => {
+    if (!ssn) return '—';
+    const ssnStr = String(ssn).trim();
+    if (!ssnStr) return '—';
+    if (ssnStr.length <= 4) return ssnStr;
+    return `***-**-${ssnStr.slice(-4)}`;
+  };
+
+  // Helper: Format salary as currency
+  const formatSalary = (salary) => {
+    if (!salary) return '—';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(salary);
+  };
+
   useEffect(() => {
-      const fetchData = async () => {
-          const data = await getEmployeeData(globalAuthId);
-          setEmployeeInfo(data);
-      };
-      fetchData();
+    const fetchEmployeeData = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/getEmployeeData?authId=${globalAuthId}`);
+        const data = await response.json();
+        if (data.success) {
+          setEmployeeData(data.employee);
+          setFormData({
+            firstName: data.employee.first_name || '',
+            lastName: data.employee.last_name || '',
+            streetName: data.employee.street_name || '',
+            cityName: data.employee.city_name || '',
+            stateName: data.employee.state_name || '',
+            zipCode: data.employee.zip_code || '',
+            profilePictureUrl: data.employee.profile_picture_url || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching employee data:', error);
+        setErrorMessage('Failed to load profile data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (globalAuthId) {
+      fetchEmployeeData();
+    }
   }, [globalAuthId]);
 
-  // Fetch notification data (tracking event updates)
-  useEffect(() => {
-      const fetchData = async () => {
-          const data = await getNotificationData(globalAuthId);
-          setNotifications(data);
-      };
-      fetchData();
-  }, [globalAuthId]);
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess(false);
+    setIsSaving(true);
+    setSuccessMessage('');
+    setErrorMessage('');
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/updateEmployee`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/updateEmployeeInfo`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          authId: employeeInfo.employee.employee_id,
-          firstName: employeeInfo.employee.first_name,
-          lastName: employeeInfo.employee.last_name,
-          streetName: employeeInfo.employee.street_name,
-          cityName: employeeInfo.employee.city_name,
-          stateName: employeeInfo.employee.state_name,
-          zipCode: employeeInfo.employee.zip_code,
-          addressId: employeeInfo.employee.address_id,
+          authId: employeeData.auth_id,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          streetName: formData.streetName,
+          cityName: formData.cityName,
+          stateName: formData.stateName,
+          zipCode: formData.zipCode.trim(),
+          addressId: employeeData.address_id,
+          profilePictureUrl: formData.profilePictureUrl || null
         })
       });
 
       const data = await response.json();
-
       if (data.success) {
-        setSuccess(true);
+        setSuccessMessage('Profile updated successfully!');
+        setEditing(false);
+        // Refetch to get updated data
+        const refetchResponse = await fetch(`${import.meta.env.VITE_API_URL}/getEmployeeData?authId=${globalAuthId}`);
+        const refetchData = await refetchResponse.json();
+        if (refetchData.success) {
+          setEmployeeData(refetchData.employee);
+        }
       } else {
-        setError(data.message || 'Failed to save changes');
+        setErrorMessage(data.message || 'Failed to update profile');
       }
-    } catch (err) {
-      setError('Failed to save changes. Please check your input and try again.');
-      console.error('Save Changes Error:', err);
+    } catch (error) {
+      setErrorMessage('Failed to update profile');
+      console.error('Update error:', error);
     } finally {
-      setEditing(false);;
+      setIsSaving(false);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate('/');
+  const getBackNavigation = () => {
+    if (employeeData?.account_type === 'courier') {
+      return '/courierPage';
+    } else if (employeeData?.account_type === 'clerk') {
+      return '/employeePage';
+    } else if (employeeData?.account_type === 'manager') {
+      return '/managerPage';
+    } else {
+      return '/employeePage';
+    }
   };
 
-  if (!employeeInfo) {
+  if (!globalAuthId) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p>Loading your profile...</p>
+      <div className="employeeProfilePageContainer">
+        <div className="error-state">
+          <h2>Authentication Required</h2>
+          <p>Please log in to view your profile.</p>
+          <button onClick={() => navigate('/loginorsignup')} className="primaryButton">
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="employeeProfilePageContainer">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading your profile...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="EmployeeProfilePageContainer">
-      
-      {/*Updated Profile Success*/}
-      {success && <div className="success-message">
-          <h2> Profile Updated! </h2>
-      </div>
-      }
-
-      {/* Error Message */}
-      {error && <div className="error-message">{error}</div>}
-
-      {/* Profile Header */}
+    <div className="employeeProfilePageContainer">
+      {/* Header */}
       <div className="profileHeader">
-        <h1>Your Profile</h1>
-        <p>Manage your account, subscription, and notifications</p>
-      </div>
-
-      {/* Profile Info */}
-      <div className="profileCard">
-        <h2>Profile Information</h2>
-
-        {editing ? (
-          <div className="profileForm">
-            <div className="formRow">
-              <input
-                className="profileInput"
-                placeholder="First Name"
-                value={employeeInfo.employee.first_name || ''}
-                onChange={(e) => setEmployeeInfo({
-                  ...employeeInfo,
-                  employee: {
-                    ...employeeInfo.employee,
-                    first_name: e.target.value
-                  }
-                })}
-              />
-              <input
-                className="profileInput"
-                placeholder="Last Name"
-                value={employeeInfo.employee.last_name || ''}
-                onChange={(e) => setEmployeeInfo({
-                  ...employeeInfo,
-                  employee: {
-                    ...employeeInfo.employee,
-                    last_name: e.target.value
-                  }
-                })}
-                />
-            </div>
-
-              <div className="formRow">
-                <input
-                  className="profileInput"
-                  placeholder="Street"
-                  value={employeeInfo.employee.street_name || ''}
-                  onChange={(e) => setEmployeeInfo({
-                  ...employeeInfo,
-                  employee: {
-                    ...employeeInfo.employee,
-                    street_name: e.target.value
-                  }
-                })}
-                />
-                <input
-                  className="profileInput"
-                  placeholder="City"
-                  value={employeeInfo.employee.city_name || ''}
-                  onChange={(e) => setEmployeeInfo({
-                  ...employeeInfo,
-                  employee: {
-                    ...employeeInfo.employee,
-                    city_name: e.target.value
-                  }
-                })}
-                />
-              </div>
-
-              <div className="formRow">
-                <input
-                  className="profileInput"
-                  placeholder="State"
-                  value={employeeInfo.employee.state_name || ''}
-                  onChange={(e) => setEmployeeInfo({
-                  ...employeeInfo,
-                  employee: {
-                    ...employeeInfo.employee,
-                    state_name: e.target.value
-                  }
-                })}
-                />
-                <input
-                  className="profileInput"
-                  placeholder="ZIP Code"
-                  value={employeeInfo.employee.zip_code || ''}
-                  onChange={(e) => setEmployeeInfo({
-                  ...employeeInfo,
-                  employee: {
-                    ...employeeInfo.employee,
-                    zip_code: e.target.value
-                  }
-                })}
-                />
-              </div>
-
-              <button className="saveButton" onClick={handleSave}>
-                Save Changes
-              </button>
-            
-            </div>
-          ) : (
-            <div className="profileSummary">
-              <p>
-                <strong>Name:</strong> {employeeInfo.employee.first_name} {employeeInfo.employee.last_name}
-              </p>
-              <p>
-                <strong>Address:</strong> {employeeInfo.employee.street_name}, {employeeInfo.employee.city_name}, {employeeInfo.employee.state_name}{' '}
-                {employeeInfo.employee.zip_code}
-              </p>
-              <p>
-                <strong>Home Post Office:</strong> {employeeInfo.employee.home_post_office || '—'}
-              </p>
-              <p>
-                <strong>Role:</strong> {employeeInfo.employee.account_type || '—'}
-              </p>
-              <p>
-                <strong>SSN:</strong> {employeeInfo.employee.employee_ssn || '—'}
-              </p>
-              <p>
-                <strong>Salary:</strong> {employeeInfo.employee.salary || '—'}
-              </p>
-
-              <button className="actionButton" onClick={() => setEditing(true)}>
-                Edit Profile
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Notifications */}
-        <div className="profileCard3">
-          <h2>Notifications</h2>
-          {notifications.length === 0 ? (
-            <p>No recent notifications.</p>
-          ) : (
-            <ul>
-              {notifications.map((n) => (
-                <li key={n.id}>
-                  {n.event_type}: {n.description}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* Log Out */}
-        <button className="logoutButton" onClick={handleLogout}>
-          Log Out
+        <button onClick={() => navigate(getBackNavigation())} className="backButton">
+          ← Back to Dashboard
         </button>
+        <div className="profileAvatar">
+          <img
+            src={getProfilePicture(employeeData?.profile_picture_url)}
+            alt="Profile"
+            className="avatarImage"
+            onError={(e) => { e.target.src = profileIcon; }}
+          />
+        </div>
+        <h1>Your Profile</h1>
+        <p>Manage your personal information</p>
       </div>
+
+      {/* Messages */}
+      {successMessage && (
+        <div className="success-message">
+          {successMessage}
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="error-message">
+          {errorMessage}
+        </div>
+      )}
+
+      {/* Profile Grid */}
+      <div className="profileGrid">
+        {/* Personal Information Card */}
+        <div className="profileCard">
+          <div className="cardHeader">
+            <h2>Personal Information</h2>
+          </div>
+          <div className="cardContent">
+            {editing ? (
+              <form onSubmit={handleSave} className="profileForm">
+                <div className="formRow">
+                  <div className="formGroup">
+                    <label>First Name *</label>
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="formGroup">
+                    <label>Last Name *</label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="formGroup">
+                  <label>Profile Picture URL</label>
+                  <input
+                    type="text"
+                    name="profilePictureUrl"
+                    value={formData.profilePictureUrl}
+                    onChange={handleChange}
+                    placeholder="https://example.com/profile.jpg"
+                  />
+                </div>
+
+                <div className="formGroup">
+                  <label>Street Address *</label>
+                  <input
+                    type="text"
+                    name="streetName"
+                    value={formData.streetName}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="formRow">
+                  <div className="formGroup">
+                    <label>City *</label>
+                    <input
+                      type="text"
+                      name="cityName"
+                      value={formData.cityName}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="formGroup">
+                    <label>State *</label>
+                    <input
+                      type="text"
+                      name="stateName"
+                      value={formData.stateName}
+                      onChange={handleChange}
+                      maxLength="2"
+                      required
+                    />
+                  </div>
+                  <div className="formGroup">
+                    <label>ZIP Code *</label>
+                    <input
+                      type="text"
+                      name="zipCode"
+                      value={formData.zipCode}
+                      onChange={handleChange}
+                      pattern="[0-9]{5}"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="buttonRow">
+                  <button type="submit" className="saveButton" disabled={isSaving}>
+                    {isSaving ? 'Saving...' : 'Save Changes'}
+                  </button>
+                  <button type="button" className="cancelButton" onClick={() => setEditing(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="infoDisplay">
+                <div className="infoRow">
+                  <span className="infoLabel">Name:</span>
+                  <span className="infoValue">{employeeData?.first_name} {employeeData?.last_name}</span>
+                </div>
+                <div className="infoRow">
+                  <span className="infoLabel">Address:</span>
+                  <span className="infoValue">
+                    {employeeData?.street_name}, {employeeData?.city_name}, {employeeData?.state_name} {employeeData?.zip_code}
+                  </span>
+                </div>
+                <div className="infoRow">
+                  <span className="infoLabel">Email:</span>
+                  <span className="infoValue">{employeeData?.email || '—'}</span>
+                </div>
+                <button className="editButton" onClick={() => setEditing(true)}>
+                  Edit Information
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Employee Information Card (Read-only) */}
+        <div className="profileCard">
+          <div className="cardHeader">
+            <h2>Employment Details</h2>
+          </div>
+          <div className="cardContent">
+            <div className="infoDisplay">
+              <div className="infoRow">
+                <span className="infoLabel">Employee ID:</span>
+                <span className="infoValue">{employeeData?.employee_id || '—'}</span>
+              </div>
+              <div className="infoRow">
+                <span className="infoLabel">Job Type:</span>
+                <span className="infoValue">{employeeData?.account_type || '—'}</span>
+              </div>
+              <div className="infoRow">
+                <span className="infoLabel">SSN:</span>
+                <span className="infoValue">{maskSSN(employeeData?.employee_ssn)}</span>
+              </div>
+              <div className="infoRow">
+                <span className="infoLabel">Salary:</span>
+                <span className="infoValue">{formatSalary(employeeData?.salary)}</span>
+              </div>
+              {employeeData?.account_type !== 'manager' && (
+                <div className="infoNote">
+                  <p><strong>Note:</strong> Employment information cannot be edited. Please contact your manager or HR for changes.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

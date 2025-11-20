@@ -1,4 +1,4 @@
-.customerProfilePageContainer {
+.employeeProfilePageContainer {
   margin-top: 50px;
   padding: 20px;
   max-width: 1400px;
@@ -179,6 +179,21 @@
   text-align: right;
 }
 
+.infoNote {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-left: 4px solid #3C467B;
+  border-radius: 4px;
+}
+
+.infoNote p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+}
+
 .editButton {
   margin-top: 20px;
   padding: 12px 30px;
@@ -326,7 +341,7 @@
 }
 
 @media (max-width: 768px) {
-  .customerProfilePageContainer {
+  .employeeProfilePageContainer {
     padding: 15px;
   }
 

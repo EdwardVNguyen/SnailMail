@@ -16,6 +16,7 @@ import { getClerkReportController } from '../controllers/getClerkReportControlle
 import { getClerkDetailsController } from '../controllers/getClerkDetailsController.js'
 import { getCourierReportController } from '../controllers/getCourierReportController.js'
 import { getCourierDetailsController } from '../controllers/getCourierDetailsController.js'
+import { getTransactionReportController } from '../controllers/getTransactionReportController.js'
 import { trackingController } from '../controllers/trackingController.js';
 import { getOutForDeliveryPackagesController } from '../controllers/getOutForDeliveryPackagesController.js'
 import { getFacilityForCustomerController } from '../controllers/getFacilityForCustomerController.js'
@@ -87,6 +88,10 @@ export const handleGetRequest = (req, res) => {
   // get courier details
   else if ( req.url.startsWith('/getCourierDetails')) {
     return getCourierDetailsController(req, res)
+  }
+  // get transaction report
+  else if ( req.url.startsWith('/getTransactionReport')) {
+    return getTransactionReportController(req, res)
   }
   // get tracking info for a package
   else if (req.url.startsWith('/tracking')) {

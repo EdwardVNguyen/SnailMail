@@ -21,7 +21,7 @@ export const updateEmployeeInfoController = async (req, res) => {
     let connection;
     try {
         const body = await parseRequestBody(req);
-        const { authId, firstName, lastName, streetName, cityName, stateName, zipCode, addressId, } = body;
+        const { authId, firstName, lastName, streetName, cityName, stateName, zipCode, addressId, profilePictureUrl } = body;
 
         connection = await pool.getConnection();
 
@@ -40,14 +40,19 @@ export const updateEmployeeInfoController = async (req, res) => {
         await updateAddress("zip_code", zipCode);
 
         const updateEmployee = async (field, value) => {
-            const updateEmployeeQuery = `UPDATE Employee SET ${connection.escapeId(field)} = ? WHERE auth_id = ?`;
-            if (value === '' || value === undefined) return await connection.query(updateEmployeeQuery, [null, authId]);
+            const updateEmployeeQuery = `UPDATE employee SET ${connection.escapeId(field)} = ? WHERE auth_id = ?`;
+            // Set to NULL if value is empty, undefined, null, or only whitespace
+            if (value === '' || value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
+                return await connection.query(updateEmployeeQuery, [null, authId]);
+            }
             return await connection.query(updateEmployeeQuery, [value, authId]);
         }
 
         await updateEmployee("first_name", firstName);
 
         await updateEmployee("last_name", lastName);
+
+        await updateEmployee("profile_picture_url", profilePictureUrl);
 
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
