@@ -29,7 +29,7 @@ export const processEmailQueue = async () => {
       try {
         // Send email based on type
         let emailResult;
-        
+
         if (email.email_type === 'package_created') {
           emailResult = await sendPackageCreatedEmail(
             email.recipient_email,
@@ -56,17 +56,20 @@ export const processEmailQueue = async () => {
             email.recipient_name,
             packageStatus
           );
-        }      
+        } else {
+          // Generic email with subject and body
+          throw new Error('Unsupported email type. Please add email_type field to email_queue entries.');
+        }
 
         if (emailResult && emailResult.success) {
           // Mark as sent
           await connection.execute(
-            `UPDATE email_queue 
-             SET status = 'sent', 
+            `UPDATE email_queue
+             SET status = 'sent',
                  sent_at = CURRENT_TIMESTAMP,
                  attempts = attempts + 1
-             WHERE queue_id = ?`,
-            [email.queue_id]
+             WHERE email_id = ?`,
+            [email.email_id]
           );
           successCount++;
           console.log(`Email sent: ${email.recipient_email} - ${email.tracking_number}`);
@@ -75,16 +78,20 @@ export const processEmailQueue = async () => {
         }
       } catch (error) {
         // Mark as failed or increment attempts
-        const newAttempts = email.attempts + 1;
+        const newAttempts = (email.attempts || 0) + 1;
         const newStatus = newAttempts >= 3 ? 'failed' : 'pending';
-        
+
+        // Debug: Log the email object to see what fields it has
+        console.log('Email object:', JSON.stringify(email, null, 2));
+        console.log('Update parameters:', { newStatus, newAttempts, errorMessage: error.message || null, emailId: email.email_id });
+
         await connection.execute(
-          `UPDATE email_queue 
-           SET status = ?, 
+          `UPDATE email_queue
+           SET status = ?,
                attempts = ?,
                error_message = ?
-           WHERE queue_id = ?`,
-          [newStatus, newAttempts, error.message, email.queue_id]
+           WHERE email_id = ?`,
+          [newStatus, newAttempts, error.message || null, email.email_id]
         );
         failCount++;
         console.error(`Email failed: ${email.recipient_email} - ${error.message}`);
