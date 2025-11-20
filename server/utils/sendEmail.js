@@ -3,10 +3,10 @@ import nodemailer from 'nodemailer';
 // Create reusable transporter
 const createTransporter = () => {
   return nodemailer.createTransport({
-    service: process.env.EMAIL_SERVICE || 'gmail',
+    service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD
+      user: 'snailmail.nejjg@gmail.com',
+      pass: 'mrnpzmjzhwcgamvk'
     }
   });
 };
