@@ -34,7 +34,6 @@ const UserProfile = ({ globalAuthId }) => {
       try {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/getCustomerData?authId=${globalAuthId}`);
         const data = await response.json();
-        console.log('Fetched customer data:', data);
         if (data.success) {
           setCustomerData(data.customer);
           let formattedBirthDate = '';
@@ -42,7 +41,6 @@ const UserProfile = ({ globalAuthId }) => {
             const date = new Date(data.customer.birth_date);
             formattedBirthDate = date.toISOString().split('T')[0];
           }
-          console.log('Formatted birth date:', formattedBirthDate);
           setContactForm({
             firstName: data.customer.first_name || '',
             lastName: data.customer.last_name || '',

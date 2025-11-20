@@ -108,6 +108,8 @@ const LogInOrSignUp = ( {setAuth, setGlobalAccountType, setGlobalAuthId} ) => {
     // navigate to home page if success, alert about wrong credentials otherwise
     if (data.success) {
       // Set all auth state before navigation
+      localStorage.setItem('authId', data.auth_id);
+      localStorage.setItem('accountType', data.account_type);
       setGlobalAccountType(data.account_type);
       setGlobalAuthId(data.auth_id);
       setAuth(true);

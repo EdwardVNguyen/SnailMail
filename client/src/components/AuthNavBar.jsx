@@ -5,8 +5,9 @@ import './NavBar.css';
 import homeLogo from '../assets/homeLogo.svg';
 import profileIcon from '../assets/profileIcon.svg';
 
-const AuthNavBar = ( {globalAccountType} ) => {
+const AuthNavBar = ( {globalAccountType, onLogout} ) => {
   const [isTiny, setIsTiny] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,6 +20,29 @@ const AuthNavBar = ( {globalAccountType} ) => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.profile-dropdown-container')) {
+        setShowDropdown(false);
+      }
+    };
+    if (showDropdown) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showDropdown]);
+
+  const handleLogout = () => {
+    setShowDropdown(false);
+    if (onLogout) {
+      onLogout();
+    }
+  };
+
 
   return (
     <header className={`header-container header  ${isTiny ? "tiny" : ""}`}>
@@ -89,11 +113,33 @@ const AuthNavBar = ( {globalAccountType} ) => {
       </nav>
       <nav>
         <ul>
-          <li>
-            <NavLink to="/userProfile" className="signInOrLogIn">
+          <li className="profile-dropdown-container">
+            <button 
+              className="profile-button"
+              onClick={() => setShowDropdown(!showDropdown)}
+            >
               <span>Profile</span>
               <img className="profileIcon" src={profileIcon} alt="Profile icon"/>
-            </NavLink>
+              <span className="dropdown-arrow">{showDropdown ? '▲' : '▼'}</span>
+            </button>
+
+            {showDropdown && (
+              <div className="profile-dropdown">
+                <NavLink 
+                  to="/userProfile" 
+                  className="dropdown-item"
+                  onClick={() => setShowDropdown(false)}
+                >
+                  <span>👤 Account</span>
+                </NavLink>
+                <button 
+                  className="dropdown-item logout-button"
+                  onClick={handleLogout}
+                >
+                  <span>🚪 Log Out</span>
+                </button>
+              </div>
+            )}
           </li>
          </ul>
       </nav>
