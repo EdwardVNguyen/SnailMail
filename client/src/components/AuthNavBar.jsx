@@ -46,7 +46,7 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
   // Fetch notifications for managers
   useEffect(() => {
     if (globalAccountType === 'manager') {
-      const authId = localStorage.getItem('authId');
+      const authId = sessionStorage.getItem('authId');
       if (authId) {
         fetchNotifications(authId);
       }
@@ -56,7 +56,7 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
   // Refresh notifications on page navigation
   useEffect(() => {
     if (globalAccountType === 'manager') {
-      const authId = localStorage.getItem('authId');
+      const authId = sessionStorage.getItem('authId');
       if (authId) {
         fetchNotifications(authId);
       }
@@ -188,7 +188,7 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
                     <button
                       className="notification-refresh"
                       onClick={() => {
-                        const authId = localStorage.getItem('authId');
+                        const authId = sessionStorage.getItem('authId');
                         if (authId) fetchNotifications(authId);
                       }}
                     >

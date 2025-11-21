@@ -39,10 +39,10 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true)
   const location = useLocation();
 
-  // Restore auth state from localStorage on mount
+  // Restore auth state from sessionStorage on mount
   useEffect(() => {
-    const storedAuthId = localStorage.getItem('authId');
-    const storedAccountType = localStorage.getItem('accountType');
+    const storedAuthId = sessionStorage.getItem('authId');
+    const storedAccountType = sessionStorage.getItem('accountType');
 
     if (storedAuthId && storedAccountType) {
       setAuth(true);
@@ -54,10 +54,10 @@ const App = () => {
 
   // Verify auth state on route changes
   useEffect(() => {
-    const storedAuthId = localStorage.getItem('authId');
-    const storedAccountType = localStorage.getItem('accountType');
+    const storedAuthId = sessionStorage.getItem('authId');
+    const storedAccountType = sessionStorage.getItem('accountType');
 
-    // If no valid auth data in localStorage, clear auth state
+    // If no valid auth data in sessionStorage, clear auth state
     if (!storedAuthId || !storedAccountType) {
       setAuth(false);
       setGlobalAuthId(null);
@@ -72,8 +72,8 @@ const App = () => {
 
   // Handle logout
   const handleLogout = () => {
-    localStorage.removeItem('authId');
-    localStorage.removeItem('accountType');
+    sessionStorage.removeItem('authId');
+    sessionStorage.removeItem('accountType');
     setAuth(false);
     setGlobalAuthId(null);
     setGlobalAccountType(null);
