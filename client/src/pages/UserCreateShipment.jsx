@@ -131,7 +131,8 @@ const CreateShipment = ({ globalAuthId }) => {
         },
         body: JSON.stringify({
           authId: globalAuthId,
-          ...formData
+          ...formData,
+          price: calculatedPrice
         })
       });
 

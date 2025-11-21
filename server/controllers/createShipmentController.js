@@ -29,7 +29,8 @@ export const createShipmentController = async (req, res) => {
       width,
       height,
 
-      facility_id;
+      facility_id,
+      price;
 
   // Parse request body
   try {
@@ -51,11 +52,12 @@ export const createShipmentController = async (req, res) => {
     height = body.height;
 
     facility_id = body.facility_id;
+    price = body.price;
 
     // Validate required fields
-    if (!authId || !recipientFirstName || !recipientLastName || !recipientEmail || !recipientStreet || 
-        !recipientCity || !recipientState || !recipientZipCode || 
-        !packageType || !weight || !facility_id) {
+    if (!authId || !recipientFirstName || !recipientLastName || !recipientEmail || !recipientStreet ||
+        !recipientCity || !recipientState || !recipientZipCode ||
+        !packageType || !weight || !facility_id || !price) {
       return badClientRequest(res, { message: 'Missing required fields' });
     }
   } catch (err) {
@@ -158,7 +160,7 @@ export const createShipmentController = async (req, res) => {
     }
 
     // Insert package into package table
-    await connection.execute(
+    const [packageResult] = await connection.execute(
       `INSERT INTO package (
         sender_id,
         recipient_id,
@@ -190,7 +192,14 @@ export const createShipmentController = async (req, res) => {
       ]
     );
 
+    const package_id = packageResult.insertId;
 
+    // Create transaction record
+    await connection.execute(
+      `INSERT INTO transaction (package_id, date_time, cost_fee)
+       VALUES (?, NOW(), ?)`,
+      [package_id, price]
+    );
 
     await connection.commit();
 
