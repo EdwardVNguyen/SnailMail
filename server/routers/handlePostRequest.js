@@ -24,6 +24,7 @@ import { markPackagesDeliveredController } from '../controllers/markPackagesDeli
 import { updatePackageDimensionsController } from '../controllers/updatePackageDimensionsController.js'
 import { updateCustomerController } from '../controllers/updateCustomerController.js'
 import { updateSecurityController } from '../controllers/updateSecurityController.js'
+import { markNotificationReadController } from '../controllers/markNotificationReadController.js'
 
 export const handlePostRequest= (req, res) => {
 
@@ -129,6 +130,10 @@ export const handlePostRequest= (req, res) => {
   // update security (email/password)
   else if (req.url.startsWith('/updateSecurity')) {
     return updateSecurityController(req, res)
+  }
+  // mark notification as read
+  else if (req.url.startsWith('/markNotificationRead')) {
+    return markNotificationReadController(req, res)
   }
   // if an api call is made to a url that isn't any of the above, return 404
   else {

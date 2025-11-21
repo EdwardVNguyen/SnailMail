@@ -24,6 +24,7 @@ import { getPackagesAtFacilitiesController } from '../controllers/getPackagesAtF
 import { getPackageTrackingHistoryController } from '../controllers/clerk/getPackageTrackingHistoryController.js'
 import { getPendingCourierRequestsController } from '../controllers/getPendingCourierRequestsController.js'
 import { getProblemPackagesReportController } from '../controllers/getProblemPackagesReportController.js'
+import { getManagerNotificationsController } from '../controllers/getManagerNotificationsController.js'
 
 export const handleGetRequest = (req, res) => {
 
@@ -119,6 +120,10 @@ export const handleGetRequest = (req, res) => {
   // get problem packages count (for manager dashboard)
   else if (req.url.startsWith('/getProblemPackagesReport')) {
     return getProblemPackagesReportController(req, res);
+  }
+  // get manager notifications
+  else if (req.url.startsWith('/getManagerNotifications')) {
+    return getManagerNotificationsController(req, res);
   }
   // if an api call is made to a url that isn't any of the above, return 404
   else {
