@@ -212,7 +212,7 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
                     <div className="notification-empty">No new notifications</div>
                   ) : (
                     notifications.map(notification => (
-                      <div key={notification.notification_id} className="notification-item">
+                      <div key={notification.notification_id || notification.log_id} className="notification-item">
                         <button
                           className="notification-dismiss"
                           onClick={() => markAsRead(notification.notification_id)}
@@ -237,8 +237,18 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
                           {/* Employee notifications */}
                           {isEmployee && (
                             <>
-                              <div className="notification-subject">{notification.subject}</div>
-                              <div className="notification-body">{notification.body}</div>
+                              <div className="notification-subject">{notification.tracking_number}</div>
+                              <div className="notification-body">
+                                {notification.employee_name && (
+                                  <span>Employee: {notification.employee_name}</span>
+                                )}
+                                {notification.package_number && (
+                                  <span>Package Number: {notification.package_number}</span>
+                                )}
+                                { notification.type && (
+                                  <span>Status: {notification.type}</span>
+                                )}
+                              </div>
                             </>
                           )}
                           <div className="notification-time">
