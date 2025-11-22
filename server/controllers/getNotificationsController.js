@@ -51,21 +51,19 @@ export const getNotificationsController = async (req, res) => {
 
     // If not a customer, check if employee JUAN HERE ----------------
     const [[employee]] = await connection.execute(
-      `SELECT email FROM employee e
-       JOIN authentication a ON e.auth_id = a.auth_id
-       WHERE e.auth_id = ?`,
+      `SELECT manager_id
+      FROM packages_log
+      WHERE manager_id = ?`,
       [authId]
     );
 
     if (employee) {
       // This is an employee - get from email_queue table
-      const [notifications] = await connection.execute(
-        `SELECT email_id as notification_id, subject, body, created_at
-         FROM email_queue
-         WHERE recipient_email = ? AND status = 'sent'
-         ORDER BY created_at DESC
-         LIMIT 20`,
-        [employee.email]
+      const [notifications] = await connection.execute(`
+        SELECT log_id as notification_id, manager_id, employee_name, package_number, type, is_read
+        FROM packages_log
+        WHERE is_read = FALSE
+        LIMIT 20`
       );
 
       res.statusCode = 200;
