@@ -67,7 +67,8 @@ export const getFacilityDetailsController = async (req, res) => {
       INNER JOIN package p ON first_event.package_id = p.package_id
       INNER JOIN customer sender ON p.sender_id = sender.customer_id
       INNER JOIN customer recipient ON p.recipient_id = recipient.customer_id
-      LEFT JOIN employee package_courier ON p.courier_id = package_courier.employee_id
+      LEFT JOIN authentication ON first_event.created_by = authentication.auth_id
+      LEFT JOIN employee package_courier ON authentication.auth_id = package_courier.auth_id
       ORDER BY first_event.event_time DESC`,
       [facilityId, startDate, endDate]
     );
@@ -165,36 +166,6 @@ export const getFacilityDetailsController = async (req, res) => {
           SELECT 1 FROM tracking_event te
           WHERE te.package_id = p.package_id
             AND te.location_id = f.address_id
-            AND te.event_time = (
-              SELECT MAX(te2.event_time)
-              FROM tracking_event te2
-              WHERE te2.package_id = p.package_id
-            )
-        )
-      ORDER BY p.last_updated DESC`,
-      [facilityId]
-    );
-
-    // Backlog: packages with status 'processing' at this facility
-    const [backlog] = await connection.execute(
-      `SELECT
-        p.package_id,
-        p.tracking_number,
-        CONCAT(sender.first_name, ' ', sender.last_name) as sender_name,
-        CONCAT(recipient.first_name, ' ', recipient.last_name) as recipient_name,
-        p.package_type,
-        p.weight,
-        p.package_status,
-        p.last_updated as status_date
-      FROM package p
-      INNER JOIN customer sender ON p.sender_id = sender.customer_id
-      INNER JOIN customer recipient ON p.recipient_id = recipient.customer_id
-      WHERE p.package_status = 'processing'
-        AND EXISTS (
-          SELECT 1 FROM tracking_event te
-          INNER JOIN facility f ON te.location_id = f.address_id
-          WHERE te.package_id = p.package_id
-            AND f.facility_id = ?
             AND te.event_time = (
               SELECT MAX(te2.event_time)
               FROM tracking_event te2
@@ -357,7 +328,6 @@ export const getFacilityDetailsController = async (req, res) => {
         packagesDelivered,
         packagesLost,
         packagesSent,
-        backlog,
         statusInTransit,
         statusOutForDelivery,
         clerkCreatedEvents

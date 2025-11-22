@@ -18,7 +18,6 @@ const CourierReport = ({
   const [facilitySearch, setFacilitySearch] = useState('');
   const [minClaimed, setMinClaimed] = useState('');
   const [minLost, setMinLost] = useState('');
-  const [minApprovalRate, setMinApprovalRate] = useState('');
 
   // Filter couriers based on selected filters
   const filteredCouriers = useMemo(() => {
@@ -45,12 +44,8 @@ const CourierReport = ({
       filtered = filtered.filter(c => c.packages_lost >= parseInt(minLost));
     }
 
-    if (minApprovalRate !== '') {
-      filtered = filtered.filter(c => c.request_approval_rate >= parseFloat(minApprovalRate));
-    }
-
     return filtered;
-  }, [reportData?.couriers, courierSearch, facilitySearch, minClaimed, minLost, minApprovalRate]);
+  }, [reportData?.couriers, courierSearch, facilitySearch, minClaimed, minLost]);
 
   if (!reportData || !reportData.couriers) return <div>No data available</div>;
 
@@ -62,7 +57,6 @@ const CourierReport = ({
     setFacilitySearch('');
     setMinClaimed('');
     setMinLost('');
-    setMinApprovalRate('');
   };
 
   return (
@@ -146,19 +140,6 @@ const CourierReport = ({
               />
             </div>
 
-            <div className="filterGroup">
-              <label>Min Approval %:</label>
-              <input
-                type="number"
-                value={minApprovalRate}
-                onChange={(e) => setMinApprovalRate(e.target.value)}
-                placeholder="0"
-                min="0"
-                max="100"
-                className="filterInput"
-              />
-            </div>
-
             <button onClick={clearFilters} className="clearFiltersButton">
               Clear Filters
             </button>
@@ -214,12 +195,6 @@ const CourierReport = ({
               <th className="sortable" onClick={() => handleCourierSort('facility_transfers')}>
                 Facility Transfers{getSortIndicator('facility_transfers', courierSortField, courierSortDirection)}
               </th>
-              <th className="sortable" onClick={() => handleCourierSort('currently_holding')}>
-                Currently Holding{getSortIndicator('currently_holding', courierSortField, courierSortDirection)}
-              </th>
-              <th className="sortable" onClick={() => handleCourierSort('request_approval_rate')}>
-                Request Approval Rate{getSortIndicator('request_approval_rate', courierSortField, courierSortDirection)}
-              </th>
             </tr>
           </thead>
           <tbody>
@@ -236,8 +211,6 @@ const CourierReport = ({
                 <td>{courier.final_deliveries}</td>
                 <td>{courier.packages_lost}</td>
                 <td>{courier.facility_transfers}</td>
-                <td>{courier.currently_holding}</td>
-                <td><span className={courier.request_approval_rate >= 75 ? 'rate good' : 'rate needs-improvement'}>{courier.request_approval_rate}%</span></td>
               </tr>
             ))}
           </tbody>

@@ -211,7 +211,7 @@ const ClerkReport = ({
                 Problem Pkgs{getSortIndicator('problem_packages', clerkSortField, clerkSortDirection)}
               </th>
               <th className="sortable" onClick={() => handleClerkSort('unique_packages_processed')}>
-                Packages Processed{getSortIndicator('unique_packages_processed', clerkSortField, clerkSortDirection)}
+                Unique Packages Processed{getSortIndicator('unique_packages_processed', clerkSortField, clerkSortDirection)}
               </th>
             </tr>
           </thead>

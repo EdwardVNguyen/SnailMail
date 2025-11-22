@@ -233,8 +233,8 @@ const TransactionReport = ({
         <table className="reportTable">
           <thead>
             <tr>
-              <th className="sortable" onClick={() => handleSort('transaction_id')}>
-                Transaction ID{getSortIndicator('transaction_id', sortField, sortDirection)}
+              <th className="sortable" onClick={() => handleSort('package_id')}>
+                Package ID{getSortIndicator('package_id', sortField, sortDirection)}
               </th>
               <th className="sortable" onClick={() => handleSort('transaction_date')}>
                 Date{getSortIndicator('transaction_date', sortField, sortDirection)}
@@ -246,7 +246,6 @@ const TransactionReport = ({
                 Package Type{getSortIndicator('package_type', sortField, sortDirection)}
               </th>
               <th>Customer</th>
-              <th>Tracking Number</th>
               <th className="sortable" onClick={() => handleSort('transaction_amount')}>
                 Amount{getSortIndicator('transaction_amount', sortField, sortDirection)}
               </th>
@@ -256,12 +255,11 @@ const TransactionReport = ({
             {sortedTransactions.length > 0 ? (
               sortedTransactions.map((transaction) => (
                 <tr key={transaction.transaction_id}>
-                  <td>{transaction.transaction_id}</td>
+                  <td>{transaction.package_id}</td>
                   <td>{formatDate(transaction.transaction_date)}</td>
                   <td>{transaction.facility_name}</td>
                   <td>{transaction.package_type.charAt(0).toUpperCase() + transaction.package_type.slice(1)}</td>
                   <td>{transaction.customer_first_name} {transaction.customer_last_name}</td>
-                  <td>{transaction.tracking_number}</td>
                   <td className="amount" style={ERROR_STATUSES.includes(transaction.package_status) ? { color: '#dc2626' } : {}}>
                     {ERROR_STATUSES.includes(transaction.package_status)
                       ? `-${formatCurrency(transaction.transaction_amount)}`
@@ -272,7 +270,7 @@ const TransactionReport = ({
               ))
             ) : (
               <tr>
-                <td colSpan="7" style={{ textAlign: 'center', padding: '30px' }}>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '30px' }}>
                   No transactions match the selected filters
                 </td>
               </tr>
