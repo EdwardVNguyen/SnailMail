@@ -16,34 +16,87 @@ export const getNotificationsController = async (req, res) => {
   try {
     connection = await pool.getConnection();
 
-    // Get email directly from authentication table (works for all users)
-    const [[user]] = await connection.execute(
-      `SELECT email FROM authentication WHERE auth_id = ?`,
+    // check if user is a customer
+    const [[customer]] = await connection.execute(
+      `SELECT customer_id FROM customer WHERE auth_id = ?`,
       [authId]
     );
+    if (customer) {
+      const [notifications] = await connection.execute(
+        `SELECT 
+          notification_id,
+          notification_type,
+          tracking_number,
+          message,
+          package_status,
+          is_read,
+          created_at,
+          read_at
+         FROM customer_notifications
+         WHERE customer_id = ? AND is_read = FALSE
+         ORDER BY created_at DESC
+         LIMIT 20`,
+        [customer.customer_id]
+      );
 
-    if (!user) {
-      res.statusCode = 404;
+      res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ success: false, message: 'User not found' }));
+      res.end(JSON.stringify({
+        success: true,
+        notifications: notifications,
+        userType: 'customer'
+      }));
       return;
     }
 
-    // Get notifications from email_queue where status is 'sent'
-    const [notifications] = await connection.execute(
-      `SELECT email_id, subject, body, created_at
-       FROM email_queue
-       WHERE recipient_email = ? AND status = 'sent'
-       ORDER BY created_at DESC`,
-      [user.email]
+    // If not a customer, check if employee
+    const [[employee]] = await connection.execute(
+      `SELECT employee_id, account_type FROM employee WHERE auth_id = ?`,
+      [authId]
     );
 
-    res.statusCode = 200;
+    if (employee) {
+      if (employee.account_type === 'manager') {
+        const [notifications] = await connection.execute(
+          `SELECT 
+            log_id as notification_id, 
+            manager_id, 
+            employee_name, 
+            package_number, 
+            type, 
+            is_read
+          FROM packages_log
+          WHERE manager_id = ? AND is_read = FALSE
+          LIMIT 20`,
+          [employee.employee_id]
+        );
+
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          success: true,
+          notifications: notifications,
+          userType: 'employee'
+        }));
+        return;
+
+      } else {
+        // Clerk or Courier
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          success: true,
+          notifications: [],
+          userType: 'employee'
+        }));
+        return;
+      }
+    }
+
+    // If neither customer nor employee
+    res.statusCode = 400;
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({
-      success: true,
-      notifications: notifications
-    }));
+    res.end(JSON.stringify({ success: false, message: 'User not found' }));
 
   } catch (error) {
     console.error('Get notifications error:', error);

@@ -71,16 +71,18 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
     }
   };
 
-  const markAsRead = async (emailId) => {
+  const markAsRead = async (notificationId) => {
     try {
+      const userType = globalAccountType === 'customer' ? 'customer' : 'employee';
       const response = await fetch(`${import.meta.env.VITE_API_URL}/markNotificationRead`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ emailId })
+        body: JSON.stringify({ notificationId, userType })
       });
       const data = await response.json();
       if (data.success) {
-        setNotifications(notifications.filter(n => n.email_id !== emailId));
+        // Remove notification from local state
+        setNotifications(notifications.filter(n => n.notification_id !== notificationId));
       }
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -94,6 +96,22 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
     }
   };
 
+    // Format time ago helper
+  const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+    return date.toLocaleDateString();
+  };
+
+   // Determine if this user type should see notifications
+  const isCustomer = globalAccountType === 'customer';
+  const isEmployee = ['manager', 'clerk', 'courier'].includes(globalAccountType);
 
   return (
     <header className={`header-container header  ${isTiny ? "tiny" : ""}`}>
@@ -194,19 +212,45 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
                     <div className="notification-empty">No new notifications</div>
                   ) : (
                     notifications.map(notification => (
-                      <div key={notification.email_id} className="notification-item">
+                      <div key={notification.notification_id || notification.log_id} className="notification-item">
                         <button
                           className="notification-dismiss"
-                          onClick={() => markAsRead(notification.email_id)}
+                          onClick={() => markAsRead(notification.notification_id)}
                         >
                           ✕
                         </button>
                         <div className="notification-content">
-                          <div className="notification-subject">{notification.subject}</div>
-                          <div className="notification-body">{notification.body}</div>
-                          <div className="notification-time">
-                            {new Date(notification.created_at).toLocaleString()}
-                          </div>
+                          {/* Customer notifications */}
+                          {isCustomer && (
+                            <>
+                              <div className="notification-subject">{notification.message}</div>
+                              <div className="notification-body">
+                                {notification.tracking_number && (
+                                  <span>Tracking: {notification.tracking_number}</span>
+                                )}
+                                {notification.package_status && (
+                                  <span>Status: {notification.package_status}</span>
+                                )}
+                              </div>
+                            </>
+                          )}
+                          {/* Employee notifications */}
+                          {isEmployee && (
+                            <>
+                              <div className="notification-subject">{notification.tracking_number}</div>
+                              <div className="notification-body">
+                                {notification.employee_name && (
+                                  <span>Employee: {notification.employee_name}</span>
+                                )}
+                                {notification.package_number && (
+                                  <span>Package Number: {notification.package_number}</span>
+                                )}
+                                { notification.type && (
+                                  <span>Status: {notification.type}</span>
+                                )}
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     ))

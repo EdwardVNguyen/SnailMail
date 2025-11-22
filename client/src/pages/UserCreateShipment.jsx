@@ -226,7 +226,10 @@ const CreateShipment = ({ globalAuthId }) => {
                 Track Package
               </button>
               <button
-                onClick={() => setSuccess(false)}
+                onClick={() => {
+                  setSuccess(false);
+                  window.location.reload();
+                }}
                 className="submit-button"
                 style={{ margin: 0, padding: '8px 16px', fontSize: '14px', backgroundColor: '#6c757d' }}
               >
