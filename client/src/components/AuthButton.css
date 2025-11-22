@@ -6,16 +6,16 @@
   transition: all 0.2s;
   padding: 10px 25px;
   border-radius: 100px;
-  background: #3C467B;
+  background: var(--color-primary);
   border: 1px solid transparent;
   display: flex;
   align-items: center;
   font-size: 15px;
-  color: white;
+  color: var(--text-inverse);
 }
 
 .AuthButton:hover {
-  background: #50589C;
+  background: var(--color-primary-light);
 }
 
 .AuthButton > svg {

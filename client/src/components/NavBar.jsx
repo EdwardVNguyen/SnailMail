@@ -30,40 +30,27 @@ const NavBar = () => {
         </ul>
       </nav>
       <div className="navigation">
-        <nav>
-          <ul>
-            <li>
-              <NavLink to="/about">About</NavLink> 
-            </li>
-            <li>
-              <NavLink to="/support">Support</NavLink> 
-            </li>
-            <li>
-              <NavLink to="/shipping">Shipping</NavLink> 
-            </li>
-            <li>
-              <NavLink to="/tracking">Tracking</NavLink>
-            </li>
-            <li>
-              <NavLink to="/testquery">Test Query</NavLink>
-            </li>
-            <li>
-              <NavLink to="/createpackage">Create Package</NavLink>
-            </li>
-          </ul>
-        </nav>
-
-        <nav>
-          <ul>
-            <li>
-              <NavLink to="/loginorsignup" className="signInOrLogIn"> 
-                <span>Log In or Sign Up </span>
-                <img className="profileIcon" src={profileIcon} alt="Profile icon"/>
-              </NavLink> 
-            </li>
-          </ul>
-        </nav>
-      </div>
+      <nav>
+        <ul>
+          <li>
+            <NavLink to="/about">About</NavLink>
+          </li>
+          <li>
+            <NavLink to="/support">Support</NavLink>
+          </li>
+        </ul>
+      </nav>
+      <nav>
+        <ul>
+          <li>
+            <NavLink to="/loginorsignup" className="signInOrLogIn"> 
+              <span>Log In or Sign Up </span>
+              <img className="profileIcon" src={profileIcon} alt="Profile icon"/>
+            </NavLink> 
+          </li>
+         </ul>
+      </nav>
+    </div>
     </header>
   );
 };

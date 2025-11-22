@@ -16,9 +16,10 @@ export const getCustomerDataController = async (req, res) => {
 
     // SQL to get customer info, address, and authentication info
     const sql = `
-      SELECT 
-        c.first_name, c.middle_name, c.last_name, c.address_id, c.phone_number,
-        c.auth_id, c.account_type, c.birth_date, c.customer_id,
+      SELECT
+        c.first_name, c.last_name, c.address_id,
+        c.auth_id, c.birth_date, c.customer_id,
+        c.card_number, c.security_code, c.expiration_date, c.profile_picture_url,
         a.street_name, a.city_name, a.state_name, a.zip_code,
         au.email, au.password
       FROM customer c

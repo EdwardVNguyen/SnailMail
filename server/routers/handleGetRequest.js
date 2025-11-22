@@ -1,4 +1,5 @@
 import { getCustomerDataController } from '../controllers/getCustomerDataController.js'
+import { getEmployeeDataController } from '../controllers/getEmployeeDataController.js'
 import { getCustomerPackageDataController } from '../controllers/getCustomerPackageDataController.js'
 import { getAddressDataController } from '../controllers/getAddressDataController.js'
 import { getFacilitiesController } from '../controllers/getFacilitiesController.js'
@@ -9,17 +10,31 @@ import { getEmployeesController } from '../controllers/getEmployeesController.js
 import { checkEmployeeUniquenessController } from '../controllers/checkEmployeeUniquenessController.js'
 import { getNextFacilityIdController } from '../controllers/getNextFacilityIdController.js'
 import { checkFacilityUniquenessController } from '../controllers/checkFacilityUniquenessController.js'
-import { getProblemsReportController } from '../controllers/getProblemsReportController.js'
-import { getFacilityBacklogReportController } from '../controllers/getFacilityBacklogReportController.js'
-import { getDeliveryTimeReportController } from '../controllers/getDeliveryTimeReportController.js'
-import { getCourierPerformanceReportController } from '../controllers/getCourierPerformanceReportController.js'
+import { getFacilityReportController } from '../controllers/getFacilityReportController.js'
+import { getFacilityDetailsController } from '../controllers/getFacilityDetailsController.js'
+import { getClerkReportController } from '../controllers/getClerkReportController.js'
+import { getClerkDetailsController } from '../controllers/getClerkDetailsController.js'
+import { getCourierReportController } from '../controllers/getCourierReportController.js'
+import { getCourierDetailsController } from '../controllers/getCourierDetailsController.js'
+import { getTransactionReportController } from '../controllers/getTransactionReportController.js'
+import { trackingController } from '../controllers/trackingController.js';
+import { getOutForDeliveryPackagesController } from '../controllers/getOutForDeliveryPackagesController.js'
+import { getFacilityForCustomerController } from '../controllers/getFacilityForCustomerController.js'
+import { getPackagesAtFacilitiesController } from '../controllers/getPackagesAtFacilitiesController.js'
+import { getPackageTrackingHistoryController } from '../controllers/clerk/getPackageTrackingHistoryController.js'
+import { getPendingCourierRequestsController } from '../controllers/getPendingCourierRequestsController.js'
+import { getProblemPackagesReportController } from '../controllers/getProblemPackagesReportController.js'
+import { getManagerNotificationsController } from '../controllers/getManagerNotificationsController.js'
 
 export const handleGetRequest = (req, res) => {
 
   // get all info from customer relation
   if ( req.url.startsWith('/getCustomerData') ) {
     return getCustomerDataController(req, res)
-  // get all info from package relation
+    // get all info from employee relation
+  } else if ( req.url.startsWith('/getEmployeeData') ) {
+    return getEmployeeDataController(req, res)
+    // get all info from package relation
   } else if ( req.url.startsWith('/getCustomerPackageData')){
     return getCustomerPackageDataController(req, res)
   // get all info from address relation
@@ -50,22 +65,65 @@ export const handleGetRequest = (req, res) => {
   }
   else if ( req.url.startsWith('/checkFacilityUniqueness')) {
     return checkFacilityUniquenessController(req, res)
+  } 
+  // get facility report
+  else if ( req.url.startsWith('/getFacilityReport')) {
+    return getFacilityReportController(req, res)
   }
-  // get problem packages report
-  else if ( req.url.startsWith('/getProblemsReport')) {
-    return getProblemsReportController(req, res)
+  // get facility details
+  else if ( req.url.startsWith('/getFacilityDetails')) {
+    return getFacilityDetailsController(req, res)
   }
-  // get facility backlog report
-  else if ( req.url.startsWith('/getFacilityBacklogReport')) {
-    return getFacilityBacklogReportController(req, res)
+  // get clerk report
+  else if ( req.url.startsWith('/getClerkReport')) {
+    return getClerkReportController(req, res)
   }
-  // get delivery time report
-  else if ( req.url.startsWith('/getDeliveryTimeReport')) {
-    return getDeliveryTimeReportController(req, res)
+  // get clerk details
+  else if ( req.url.startsWith('/getClerkDetails')) {
+    return getClerkDetailsController(req, res)
   }
-  // get courier performance report
-  else if ( req.url.startsWith('/getCourierPerformanceReport')) {
-    return getCourierPerformanceReportController(req, res)
+  // get courier report
+  else if ( req.url.startsWith('/getCourierReport')) {
+    return getCourierReportController(req, res)
+  }
+  // get courier details
+  else if ( req.url.startsWith('/getCourierDetails')) {
+    return getCourierDetailsController(req, res)
+  }
+  // get transaction report
+  else if ( req.url.startsWith('/getTransactionReport')) {
+    return getTransactionReportController(req, res)
+  }
+  // get tracking info for a package
+  else if (req.url.startsWith('/tracking')) {
+        return trackingController(req, res);
+  }
+  // get packages out for delivery from a facility
+  else if (req.url.startsWith('/getOutForDeliveryPackages')) {
+    return getOutForDeliveryPackagesController(req, res)
+  }
+  else if (req.url.startsWith('/getFacilityForCustomer')) {
+    return getFacilityForCustomerController(req, res);
+  }
+  // get packages at facilities (for clerks)
+  else if (req.url.startsWith('/getPackagesAtFacilities')) {
+    return getPackagesAtFacilitiesController(req, res);
+  }
+  // get tracking history for a package
+  else if (req.url.startsWith('/getPackageTrackingHistory')) {
+    return getPackageTrackingHistoryController(req, res);
+  }
+  // get pending courier requests (for clerks)
+  else if (req.url.startsWith('/getPendingCourierRequests')) {
+    return getPendingCourierRequestsController(req, res);
+  }
+  // get problem packages count (for manager dashboard)
+  else if (req.url.startsWith('/getProblemPackagesReport')) {
+    return getProblemPackagesReportController(req, res);
+  }
+  // get manager notifications
+  else if (req.url.startsWith('/getManagerNotifications')) {
+    return getManagerNotificationsController(req, res);
   }
   // if an api call is made to a url that isn't any of the above, return 404
   else {

@@ -16,7 +16,15 @@ export const getEmployeeIdController = async (req, res) => {
     connection = await pool.getConnection();
 
     const [employeeRows] = await connection.execute(
-      `SELECT employee_id FROM employee WHERE auth_id = ?`,
+      `SELECT
+        e.employee_id,
+        e.facility_id,
+        e.account_type,
+        f.address_id AS facility_address_id,
+        f.facility_name
+       FROM employee e
+       LEFT JOIN facility f ON e.facility_id = f.facility_id
+       WHERE e.auth_id = ?`,
       [authId]
     );
 
@@ -28,7 +36,7 @@ export const getEmployeeIdController = async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({
       success: true,
-      employee_id: employeeRows[0].employee_id
+      employee: employeeRows[0]
     }));
 
   } catch (error) {

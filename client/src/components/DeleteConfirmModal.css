@@ -1,0 +1,55 @@
+/* Delete Modal Specific Styles */
+.delete-modal-header {
+  color: #dc3545 !important;
+}
+
+.delete-modal-body {
+  margin-bottom: 20px;
+}
+
+.delete-modal-body p {
+  margin-bottom: 10px;
+}
+
+.delete-warning {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.delete-confirm-field {
+  display: flex;
+  flex-direction: column;
+  margin-top: 15px;
+}
+
+.delete-confirm-field label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #495057;
+  font-size: 14px;
+}
+
+.delete-confirm-field input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  box-sizing: border-box;
+  font-family: inherit;
+  border: 2px solid #ced4da;
+  border-radius: 4px;
+  transition: border-color 0.15s ease;
+}
+
+.delete-confirm-field input:focus {
+  outline: none;
+  border-color: #dc3545;
+}
+
+.delete-confirm-button {
+  background-color: #dc3545 !important;
+}
+
+.delete-confirm-button:hover:not(:disabled) {
+  background-color: #c82333 !important;
+}
