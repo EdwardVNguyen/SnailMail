@@ -3,14 +3,15 @@ import { getJSONRequestBody } from '../utils/getJSONRequestBody.js';
 import { badClientRequest, badServerRequest } from '../utils/badRequest.js';
 
 export const markNotificationReadController = async (req, res) => {
-  let emailId;
+  let notificationId, userType;
 
   try {
     const body = await getJSONRequestBody(req);
-    emailId = body.emailId;
+    notificationId = body.notificationId;
+    userType = body.userType; // 'customer' or 'employee'
 
-    if (!emailId) {
-      return badClientRequest(res, { message: 'Missing emailId' });
+    if (!notificationId) {
+      return badClientRequest(res, { message: 'Missing notificationId' });
     }
   } catch (err) {
     return badClientRequest(res, err);
@@ -20,11 +21,25 @@ export const markNotificationReadController = async (req, res) => {
   try {
     connection = await pool.getConnection();
 
-    // Update status to 'failed' to mark as read/dismissed
-    await connection.execute(
-      `UPDATE email_queue SET status = 'failed' WHERE email_id = ?`,
-      [emailId]
-    );
+    if (userType === 'customer') {
+      // Mark customer notification as read
+      await connection.execute(
+        `UPDATE customer_notifications 
+         SET is_read = TRUE, read_at = CURRENT_TIMESTAMP 
+         WHERE notification_id = ?`,
+        [notificationId]
+      );
+    } 
+    // JUAN HERE ----------------
+    else if (userType === 'employee') {
+      // Mark employee notification as dismissed (set status to 'failed')
+      await connection.execute(
+        `UPDATE email_queue SET status = 'failed' WHERE email_id = ?`,
+        [notificationId]
+      );
+    } else {
+      return badClientRequest(res, { message: 'Invalid userType' });
+    }
 
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
