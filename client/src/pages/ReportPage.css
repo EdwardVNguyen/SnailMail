@@ -234,6 +234,22 @@
   box-shadow: 0 0 0 2px rgba(60, 70, 123, 0.1);
 }
 
+.filterInput {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  font-size: 14px;
+  font-family: inherit;
+  background-color: var(--text-inverse);
+  transition: border-color 0.2s;
+}
+
+.filterInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(60, 70, 123, 0.1);
+}
+
 .clearFiltersButton {
   padding: 8px 16px;
   background-color: #6c757d;

@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { sortData, getSortIndicator } from './reportUtils';
 
 const FacilityReport = ({
@@ -12,10 +13,37 @@ const FacilityReport = ({
   handleFacilitySort,
   handleFacilityRowClick
 }) => {
+  // Filter states
+  const [facilitySearch, setFacilitySearch] = useState('');
+  const [minReceivedPackages, setMinReceivedPackages] = useState('');
+
+  // Filter facilities based on selected filters
+  const filteredFacilities = useMemo(() => {
+    if (!reportData?.facilities) return [];
+    let filtered = reportData.facilities;
+
+    if (facilitySearch) {
+      filtered = filtered.filter(f =>
+        f.facility_name.toLowerCase().includes(facilitySearch.toLowerCase())
+      );
+    }
+
+    if (minReceivedPackages !== '') {
+      filtered = filtered.filter(f => f.packages_received >= parseInt(minReceivedPackages));
+    }
+
+    return filtered;
+  }, [reportData?.facilities, facilitySearch, minReceivedPackages]);
+
   if (!reportData || !reportData.facilities) return <div>No data available</div>;
 
-  // Sort the facilities data
-  const sortedFacilities = sortData(reportData.facilities, facilitySortField, facilitySortDirection);
+  // Sort the filtered facilities data
+  const sortedFacilities = sortData(filteredFacilities, facilitySortField, facilitySortDirection);
+
+  const clearFilters = () => {
+    setFacilitySearch('');
+    setMinReceivedPackages('');
+  };
 
   return (
     <div className="reportContent">
@@ -45,6 +73,39 @@ const FacilityReport = ({
             <button onClick={() => setFacilityDateRange('month')} className="presetButton">1 Month</button>
             <button onClick={() => setFacilityDateRange('year')} className="presetButton">1 Year</button>
             <button onClick={() => setFacilityDateRange('all')} className="presetButton">All Time</button>
+          </div>
+        </div>
+
+        {/* Filter Section */}
+        <div className="filterSection">
+          <h3>Filters</h3>
+          <div className="filterControls">
+            <div className="filterGroup">
+              <label>Facility Name:</label>
+              <input
+                type="text"
+                value={facilitySearch}
+                onChange={(e) => setFacilitySearch(e.target.value)}
+                placeholder="Search facilities..."
+                className="filterInput"
+              />
+            </div>
+
+            <div className="filterGroup">
+              <label>Min Received:</label>
+              <input
+                type="number"
+                value={minReceivedPackages}
+                onChange={(e) => setMinReceivedPackages(e.target.value)}
+                placeholder="0"
+                min="0"
+                className="filterInput"
+              />
+            </div>
+
+            <button onClick={clearFilters} className="clearFiltersButton">
+              Clear Filters
+            </button>
           </div>
         </div>
 

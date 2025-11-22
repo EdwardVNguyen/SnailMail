@@ -10,55 +10,46 @@ const TransactionReport = ({
   setTransactionDateRange
 }) => {
   // Filter states
-  const [selectedFacility, setSelectedFacility] = useState('all');
+  const [facilitySearch, setFacilitySearch] = useState('');
   const [selectedPackageType, setSelectedPackageType] = useState('all');
-  const [selectedCustomer, setSelectedCustomer] = useState('all');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
 
   // Sorting states
   const [sortField, setSortField] = useState('transaction_date');
   const [sortDirection, setSortDirection] = useState('desc');
 
-  if (!reportData || !reportData.transactions) return <div>No data available</div>;
-
-  // Extract unique facilities, package types, and customers for filters
-  const facilities = useMemo(() => {
-    const uniqueFacilities = [...new Set(reportData.transactions.map(t => ({
-      id: t.facility_id,
-      name: t.facility_name
-    })).map(f => JSON.stringify(f)))].map(f => JSON.parse(f));
-    return uniqueFacilities.sort((a, b) => a.name.localeCompare(b.name));
-  }, [reportData.transactions]);
-
+  // Extract unique package types for filters
   const packageTypes = useMemo(() => {
+    if (!reportData?.transactions) return [];
     return [...new Set(reportData.transactions.map(t => t.package_type))].sort();
-  }, [reportData.transactions]);
-
-  const customers = useMemo(() => {
-    const uniqueCustomers = [...new Set(reportData.transactions.map(t => ({
-      id: t.customer_id,
-      name: `${t.customer_first_name} ${t.customer_last_name}`
-    })).map(c => JSON.stringify(c)))].map(c => JSON.parse(c));
-    return uniqueCustomers.sort((a, b) => a.name.localeCompare(b.name));
-  }, [reportData.transactions]);
+  }, [reportData?.transactions]);
 
   // Filter transactions based on selected filters
   const filteredTransactions = useMemo(() => {
+    if (!reportData?.transactions) return [];
     let filtered = reportData.transactions;
 
-    if (selectedFacility !== 'all') {
-      filtered = filtered.filter(t => t.facility_id === parseInt(selectedFacility));
+    if (facilitySearch) {
+      filtered = filtered.filter(t =>
+        t.facility_name.toLowerCase().includes(facilitySearch.toLowerCase())
+      );
     }
 
     if (selectedPackageType !== 'all') {
       filtered = filtered.filter(t => t.package_type === selectedPackageType);
     }
 
-    if (selectedCustomer !== 'all') {
-      filtered = filtered.filter(t => t.customer_id === parseInt(selectedCustomer));
+    if (minPrice !== '') {
+      filtered = filtered.filter(t => parseFloat(t.transaction_amount) >= parseFloat(minPrice));
+    }
+
+    if (maxPrice !== '') {
+      filtered = filtered.filter(t => parseFloat(t.transaction_amount) <= parseFloat(maxPrice));
     }
 
     return filtered;
-  }, [reportData.transactions, selectedFacility, selectedPackageType, selectedCustomer]);
+  }, [reportData?.transactions, facilitySearch, selectedPackageType, minPrice, maxPrice]);
 
   // Calculate filtered summary stats
   const filteredSummary = useMemo(() => {
@@ -70,6 +61,8 @@ const TransactionReport = ({
       avgAmount: avgAmount
     };
   }, [filteredTransactions]);
+
+  if (!reportData || !reportData.transactions) return <div>No data available</div>;
 
   // Sort the filtered transactions
   const sortedTransactions = sortData(filteredTransactions, sortField, sortDirection);
@@ -104,9 +97,10 @@ const TransactionReport = ({
   };
 
   const clearFilters = () => {
-    setSelectedFacility('all');
+    setFacilitySearch('');
     setSelectedPackageType('all');
-    setSelectedCustomer('all');
+    setMinPrice('');
+    setMaxPrice('');
   };
 
   return (
@@ -149,18 +143,13 @@ const TransactionReport = ({
           <div className="filterControls">
             <div className="filterGroup">
               <label>Facility:</label>
-              <select
-                value={selectedFacility}
-                onChange={(e) => setSelectedFacility(e.target.value)}
-                className="filterSelect"
-              >
-                <option value="all">All Facilities</option>
-                {facilities.map(facility => (
-                  <option key={facility.id} value={facility.id}>
-                    {facility.name}
-                  </option>
-                ))}
-              </select>
+              <input
+                type="text"
+                value={facilitySearch}
+                onChange={(e) => setFacilitySearch(e.target.value)}
+                placeholder="Search facilities..."
+                className="filterInput"
+              />
             </div>
 
             <div className="filterGroup">
@@ -180,19 +169,29 @@ const TransactionReport = ({
             </div>
 
             <div className="filterGroup">
-              <label>Customer:</label>
-              <select
-                value={selectedCustomer}
-                onChange={(e) => setSelectedCustomer(e.target.value)}
-                className="filterSelect"
-              >
-                <option value="all">All Customers</option>
-                {customers.map(customer => (
-                  <option key={customer.id} value={customer.id}>
-                    {customer.name}
-                  </option>
-                ))}
-              </select>
+              <label>Min Price:</label>
+              <input
+                type="number"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                className="filterInput"
+              />
+            </div>
+
+            <div className="filterGroup">
+              <label>Max Price:</label>
+              <input
+                type="number"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                placeholder="No limit"
+                min="0"
+                step="0.01"
+                className="filterInput"
+              />
             </div>
 
             <button onClick={clearFilters} className="clearFiltersButton">

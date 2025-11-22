@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { sortData, getSortIndicator } from './reportUtils';
 
 const ClerkReport = ({
@@ -12,10 +13,51 @@ const ClerkReport = ({
   handleClerkSort,
   handleClerkRowClick
 }) => {
+  // Filter states
+  const [clerkSearch, setClerkSearch] = useState('');
+  const [facilitySearch, setFacilitySearch] = useState('');
+  const [minReviews, setMinReviews] = useState('');
+  const [minApprovalRate, setMinApprovalRate] = useState('');
+
+  // Filter clerks based on selected filters
+  const filteredClerks = useMemo(() => {
+    if (!reportData?.clerks) return [];
+    let filtered = reportData.clerks;
+
+    if (clerkSearch) {
+      filtered = filtered.filter(c =>
+        c.clerk_name.toLowerCase().includes(clerkSearch.toLowerCase())
+      );
+    }
+
+    if (facilitySearch) {
+      filtered = filtered.filter(c =>
+        c.facility_name.toLowerCase().includes(facilitySearch.toLowerCase())
+      );
+    }
+
+    if (minReviews !== '') {
+      filtered = filtered.filter(c => c.total_reviews >= parseInt(minReviews));
+    }
+
+    if (minApprovalRate !== '') {
+      filtered = filtered.filter(c => c.approval_rate >= parseFloat(minApprovalRate));
+    }
+
+    return filtered;
+  }, [reportData?.clerks, clerkSearch, facilitySearch, minReviews, minApprovalRate]);
+
   if (!reportData || !reportData.clerks) return <div>No data available</div>;
 
-  // Sort the clerks data
-  const sortedClerks = sortData(reportData.clerks, clerkSortField, clerkSortDirection);
+  // Sort the filtered clerks data
+  const sortedClerks = sortData(filteredClerks, clerkSortField, clerkSortDirection);
+
+  const clearFilters = () => {
+    setClerkSearch('');
+    setFacilitySearch('');
+    setMinReviews('');
+    setMinApprovalRate('');
+  };
 
   return (
     <div className="reportContent">
@@ -45,6 +87,63 @@ const ClerkReport = ({
             <button onClick={() => setClerkDateRange('month')} className="presetButton">1 Month</button>
             <button onClick={() => setClerkDateRange('year')} className="presetButton">1 Year</button>
             <button onClick={() => setClerkDateRange('all')} className="presetButton">All Time</button>
+          </div>
+        </div>
+
+        {/* Filter Section */}
+        <div className="filterSection">
+          <h3>Filters</h3>
+          <div className="filterControls">
+            <div className="filterGroup">
+              <label>Clerk Name:</label>
+              <input
+                type="text"
+                value={clerkSearch}
+                onChange={(e) => setClerkSearch(e.target.value)}
+                placeholder="Search clerks..."
+                className="filterInput"
+              />
+            </div>
+
+            <div className="filterGroup">
+              <label>Facility:</label>
+              <input
+                type="text"
+                value={facilitySearch}
+                onChange={(e) => setFacilitySearch(e.target.value)}
+                placeholder="Search facilities..."
+                className="filterInput"
+              />
+            </div>
+
+            <div className="filterGroup">
+              <label>Min Reviews:</label>
+              <input
+                type="number"
+                value={minReviews}
+                onChange={(e) => setMinReviews(e.target.value)}
+                placeholder="0"
+                min="0"
+                className="filterInput"
+              />
+            </div>
+
+            <div className="filterGroup">
+              <label>Min Approval %:</label>
+              <input
+                type="number"
+                value={minApprovalRate}
+                onChange={(e) => setMinApprovalRate(e.target.value)}
+                placeholder="0"
+                min="0"
+                max="100"
+                className="filterInput"
+              />
+            </div>
+
+            <button onClick={clearFilters} className="clearFiltersButton">
+              Clear Filters
+            </button>
           </div>
         </div>
 

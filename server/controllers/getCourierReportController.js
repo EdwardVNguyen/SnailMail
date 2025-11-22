@@ -25,6 +25,7 @@ export const getCourierReportController = async (req, res) => {
       SELECT
         e.employee_id,
         CONCAT(e.first_name, ' ', e.last_name) as courier_name,
+        f.facility_name,
 
         -- Packages claimed (approved courier requests)
         IFNULL(packages_claimed.count, 0) as packages_claimed,
@@ -96,6 +97,7 @@ export const getCourierReportController = async (req, res) => {
 
       FROM employee e
       LEFT JOIN authentication auth ON e.auth_id = auth.auth_id
+      LEFT JOIN facility f ON e.facility_id = f.facility_id
 
       -- Packages claimed (approved courier requests)
       LEFT JOIN (
