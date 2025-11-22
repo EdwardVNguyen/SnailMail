@@ -33,9 +33,10 @@ export const markNotificationReadController = async (req, res) => {
     // JUAN HERE ----------------
     else if (userType === 'employee') {
       // Mark employee notification as dismissed (set status to 'failed')
-      await connection.execute(
-        `UPDATE email_queue SET status = 'failed' WHERE email_id = ?`,
-        [notificationId]
+      await connection.execute(`
+        UPDATE packages_log
+        SET is_read = TRUE
+        WHERE log_id = ?`, [notificationId]
       );
     } else {
       return badClientRequest(res, { message: 'Invalid userType' });
