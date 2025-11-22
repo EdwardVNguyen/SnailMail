@@ -1,7 +1,7 @@
 import pool from '../config/database.js';
 import { badServerRequest } from '../utils/badRequest.js';
 
-export const getManagerNotificationsController = async (req, res) => {
+export const getNotificationsController = async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const authId = url.searchParams.get('authId');
 
@@ -16,19 +16,16 @@ export const getManagerNotificationsController = async (req, res) => {
   try {
     connection = await pool.getConnection();
 
-    // Get manager's email from auth_id via authentication table
-    const [[employee]] = await connection.execute(
-      `SELECT a.email
-       FROM employee e
-       INNER JOIN authentication a ON e.auth_id = a.auth_id
-       WHERE e.auth_id = ?`,
+    // Get email directly from authentication table (works for all users)
+    const [[user]] = await connection.execute(
+      `SELECT email FROM authentication WHERE auth_id = ?`,
       [authId]
     );
 
-    if (!employee) {
+    if (!user) {
       res.statusCode = 404;
       res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ success: false, message: 'Employee not found' }));
+      res.end(JSON.stringify({ success: false, message: 'User not found' }));
       return;
     }
 
@@ -38,7 +35,7 @@ export const getManagerNotificationsController = async (req, res) => {
        FROM email_queue
        WHERE recipient_email = ? AND status = 'sent'
        ORDER BY created_at DESC`,
-      [employee.email]
+      [user.email]
     );
 
     res.statusCode = 200;
@@ -49,7 +46,7 @@ export const getManagerNotificationsController = async (req, res) => {
     }));
 
   } catch (error) {
-    console.error('Get manager notifications error:', error);
+    console.error('Get notifications error:', error);
     badServerRequest(res);
   } finally {
     if (connection) connection.release();

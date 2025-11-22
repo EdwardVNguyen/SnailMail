@@ -43,29 +43,25 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
     };
   }, [showDropdown, showNotifications]);
 
-  // Fetch notifications for managers
+  // Fetch notifications for all users
   useEffect(() => {
-    if (globalAccountType === 'manager') {
-      const authId = sessionStorage.getItem('authId');
-      if (authId) {
-        fetchNotifications(authId);
-      }
+    const authId = sessionStorage.getItem('authId');
+    if (authId) {
+      fetchNotifications(authId);
     }
   }, [globalAccountType]);
 
   // Refresh notifications on page navigation
   useEffect(() => {
-    if (globalAccountType === 'manager') {
-      const authId = sessionStorage.getItem('authId');
-      if (authId) {
-        fetchNotifications(authId);
-      }
+    const authId = sessionStorage.getItem('authId');
+    if (authId) {
+      fetchNotifications(authId);
     }
   }, [location.pathname]);
 
   const fetchNotifications = async (authId) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/getManagerNotifications?authId=${authId}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/getNotifications?authId=${authId}`);
       const data = await response.json();
       if (data.success) {
         setNotifications(data.notifications);
@@ -168,33 +164,32 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
       </nav>
       <nav>
         <ul>
-          {/* Notification bell for managers */}
-          {globalAccountType === 'manager' && (
-            <li className="notification-container">
-              <button
-                className="notification-button"
-                onClick={() => setShowNotifications(!showNotifications)}
-              >
-                <FaBell className="bell-icon" />
-                {notifications.length > 0 && (
-                  <span className="notification-badge">{notifications.length}</span>
-                )}
-              </button>
+          {/* Notification bell for all users */}
+          <li className="notification-container">
+            <button
+              className="notification-button"
+              onClick={() => setShowNotifications(!showNotifications)}
+            >
+              <FaBell className="bell-icon" />
+              {notifications.length > 0 && (
+                <span className="notification-badge">{notifications.length}</span>
+              )}
+            </button>
 
-              {showNotifications && (
-                <div className="notification-dropdown">
-                  <div className="notification-header">
-                    <span>Notifications</span>
-                    <button
-                      className="notification-refresh"
-                      onClick={() => {
-                        const authId = sessionStorage.getItem('authId');
-                        if (authId) fetchNotifications(authId);
-                      }}
-                    >
-                      ↻
-                    </button>
-                  </div>
+            {showNotifications && (
+              <div className="notification-dropdown">
+                <div className="notification-header">
+                  <span>Notifications</span>
+                  <button
+                    className="notification-refresh"
+                    onClick={() => {
+                      const authId = sessionStorage.getItem('authId');
+                      if (authId) fetchNotifications(authId);
+                    }}
+                  >
+                    ↻
+                  </button>
+                </div>
                   {notifications.length === 0 ? (
                     <div className="notification-empty">No new notifications</div>
                   ) : (
@@ -218,8 +213,7 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
                   )}
                 </div>
               )}
-            </li>
-          )}
+          </li>
 
           <li className="profile-dropdown-container">
             <button
