@@ -251,9 +251,6 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
                               </div>
                             </>
                           )}
-                          <div className="notification-time">
-                            {formatTimeAgo(notification.created_at)}
-                          </div>
                         </div>
                       </div>
                     ))

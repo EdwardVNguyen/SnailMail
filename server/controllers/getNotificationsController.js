@@ -49,35 +49,52 @@ export const getNotificationsController = async (req, res) => {
       return;
     }
 
-    // If not a customer, check if employee JUAN HERE ----------------
+    // If not a customer, check if employee
     const [[employee]] = await connection.execute(
-      `SELECT manager_id
-      FROM packages_log
-      WHERE manager_id = ?`,
+      `SELECT employee_id, account_type FROM employee WHERE auth_id = ?`,
       [authId]
     );
 
     if (employee) {
-      // This is an employee - get from email_queue table
-      const [notifications] = await connection.execute(`
-        SELECT log_id as notification_id, manager_id, employee_name, package_number, type, is_read
-        FROM packages_log
-        WHERE is_read = FALSE
-        LIMIT 20`
-      );
+      if (employee.account_type === 'manager') {
+        const [notifications] = await connection.execute(
+          `SELECT 
+            log_id as notification_id, 
+            manager_id, 
+            employee_name, 
+            package_number, 
+            type, 
+            is_read
+          FROM packages_log
+          WHERE manager_id = ? AND is_read = FALSE
+          LIMIT 20`,
+          [employee.employee_id]
+        );
 
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({
-        success: true,
-        notifications: notifications,
-        userType: 'employee'
-      }));
-      return;
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          success: true,
+          notifications: notifications,
+          userType: 'employee'
+        }));
+        return;
+
+      } else {
+        // Clerk or Courier
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          success: true,
+          notifications: [],
+          userType: 'employee'
+        }));
+        return;
+      }
     }
 
-    // User not found
-    res.statusCode = 404;
+    // If neither customer nor employee
+    res.statusCode = 400;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({ success: false, message: 'User not found' }));
 

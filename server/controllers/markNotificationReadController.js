@@ -29,9 +29,7 @@ export const markNotificationReadController = async (req, res) => {
          WHERE notification_id = ?`,
         [notificationId]
       );
-    } 
-    // JUAN HERE ----------------
-    else if (userType === 'employee') {
+    }  else if (userType === 'employee') {
       // Mark employee notification as dismissed (set status to 'failed')
       await connection.execute(`
         UPDATE packages_log
