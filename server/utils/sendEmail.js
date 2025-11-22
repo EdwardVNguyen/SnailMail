@@ -3,11 +3,18 @@ import nodemailer from 'nodemailer';
 // Create reusable transporter
 const createTransporter = () => {
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
       user: "snailmail.nejjg@gmail.com",
       pass: "mrnpzmjzhwcgamvk"
-    }
+    },
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 60000,
+    logger: true,
+    debug: true
   });
 };
 
