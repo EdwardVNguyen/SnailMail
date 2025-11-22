@@ -12,12 +12,12 @@ const createTransporter = () => {
 };
 
 // Send package created email
-export const sendPackageCreatedEmail = async (recipientEmail, trackingNumber, recipientName) => {
+export const sendPackageCreatedEmail = async (recipientEmail, trackingNumber) => {
   try {
     const transporter = createTransporter();
 
     const mailOptions = {
-      from: `"SnailMail Shipping" <${process.env.EMAIL_USER}>`,
+      from: `"SnailMail Shipping" <snailmail.nejjg@gmail.com>`,
       to: recipientEmail,
       subject: 'Your Package Has Been Created - Tracking Number Inside',
       html: `
@@ -85,7 +85,7 @@ export const sendPackageCreatedEmail = async (recipientEmail, trackingNumber, re
               <h1>📦 Package Created Successfully</h1>
             </div>
             <div class="content">
-              <p>Hello ${recipientName || 'Customer'},</p>
+              <p>Hello ${'Customer'},</p>
               
               <p>Great news! A package has been created and is on its way to you.</p>
               
@@ -131,7 +131,7 @@ export const sendPackageCreatedEmail = async (recipientEmail, trackingNumber, re
 };
 
 // Send package issue notification email
-export const sendPackageIssueEmail = async (recipientEmail, trackingNumber, recipientName, packageStatus) => {
+export const sendPackageIssueEmail = async (recipientEmail, trackingNumber, packageStatus) => {
   try {
     const transporter = await createTransporter();
 
@@ -166,7 +166,7 @@ export const sendPackageIssueEmail = async (recipientEmail, trackingNumber, reci
     }
 
     const mailOptions = {
-      from: `"SnailMail Shipping" <${process.env.EMAIL_USER || 'noreply@snailmail.com'}>`,
+      from: `"SnailMail Shipping" <snailmail.nejjg@gmail.com>`,
       to: recipientEmail,
       subject: `Important: ${statusTitle} - ${trackingNumber}`,
       html: `
@@ -247,7 +247,7 @@ export const sendPackageIssueEmail = async (recipientEmail, trackingNumber, reci
               <h1>${statusTitle}</h1>
             </div>
             <div class="content">
-              <p>Hello ${recipientName || 'Customer'},</p>
+              <p>Hello ${'Customer'},</p>
               
               <div class="alert-box">
                 <strong>Status Update:</strong><br>
@@ -290,12 +290,7 @@ export const sendPackageIssueEmail = async (recipientEmail, trackingNumber, reci
       `
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('Preview URL:', nodemailer.getTestMessageUrl(info));
-    }
-    
+    const info = await transporter.sendMail(mailOptions); 
     console.log('Email sent successfully:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {

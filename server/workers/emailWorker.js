@@ -1,7 +1,7 @@
 import { processEmailQueue } from '../controllers/processEmailQueueController.js';
 
-// Process email queue every 30 seconds
-const EMAIL_PROCESS_INTERVAL = 10000; // 10 seconds
+// Process email queue every 15 seconds
+const EMAIL_PROCESS_INTERVAL = 15000; // 15 seconds
 
 let isProcessing = false;
 

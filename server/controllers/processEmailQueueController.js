@@ -34,7 +34,6 @@ export const processEmailQueue = async () => {
           emailResult = await sendPackageCreatedEmail(
             email.recipient_email,
             email.tracking_number,
-            email.recipient_name
           );
         } else if (email.email_type === 'package_issue') {
           // Query package table to get current status
@@ -53,7 +52,6 @@ export const processEmailQueue = async () => {
           emailResult = await sendPackageIssueEmail(
             email.recipient_email,
             email.tracking_number,
-            email.recipient_name,
             packageStatus
           );
         } else {
