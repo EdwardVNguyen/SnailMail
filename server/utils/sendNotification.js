@@ -3,21 +3,21 @@ import nodemailer from 'nodemailer';
 // create reusable transporter
 const createTransporter = () => {
     return nodemailer.createTransport({
-        service: process.env.EMAIL_SERVICE || 'gmail',
+        service: 'gmail',
         auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASSWORD
+            user: "snailmail.nejjg@gmail.com",
+            pass: "mrnpzmjzhwcgamvk"
         }
     });
 };
 
 // send notifications email
-export const sendFlaggingNotification = async (recepientEmail, recepientName, notificationType) => {
+export const sendFlaggingNotification = async (recepientEmail, notificationType) => {
     try {
         const transporter = createTransporter();
 
         const mailOptions = {
-            from: `"SnailMail Internal" <${process.env.EMAIL_USER}>`,
+            from: `"SnailMail Internal" <snailmail.nejjg@gmail.com>`,
             to: recepientEmail,
             subject: 'Immediate Attention Required: ${notificationType}',
             html: `
@@ -65,7 +65,7 @@ export const sendFlaggingNotification = async (recepientEmail, recepientName, no
                             <h1>This issue requires your immediate attention</h1>
                         </div>
                         <div class="content">
-                            <p>Greetings ${recepientName || 'Manager'},</p>
+                            <p>Greetings ${'Manager'},</p>
 
                             <p>There is an actions that requires your immediate attention.</p>
 
