@@ -399,16 +399,17 @@ const FacilitiesPage = ({ globalAuthId }) => {
       const data = await response.json();
 
       if (data.success) {
-        setShowDeleteModal(false);
-        setDeletingFacility(null);
         fetchFacilities();
         showSuccessToast('Facility deleted successfully!');
       } else {
-        showErrorToast('Error deleting facility: ' + data.message);
+        showErrorToast(data.message || 'Error deleting facility.');
       }
     } catch (err) {
       console.error('Error deleting facility:', err);
       showErrorToast('Error deleting facility.');
+    } finally {
+      setShowDeleteModal(false);
+      setDeletingFacility(null);
     }
   };
 

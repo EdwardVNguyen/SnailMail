@@ -30,6 +30,17 @@ export const deleteEmployeeController = async (req, res) => {
   }
   catch (error) {
     console.error('Error deleting employee:', error);
+
+    // Check for foreign key constraint violation
+    if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.errno === 1451) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: false,
+        message: 'Cannot delete employee: they have packages or requests associated with them. Please reassign or complete them first.'
+      }));
+      return;
+    }
+
     badServerRequest(res, 'Error deleting employee');
   }
   finally {
