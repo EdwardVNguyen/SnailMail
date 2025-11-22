@@ -16,11 +16,18 @@ const FacilityReport = ({
   // Filter states
   const [facilitySearch, setFacilitySearch] = useState('');
   const [minReceivedPackages, setMinReceivedPackages] = useState('');
+  const [statusFilter, setStatusFilter] = useState('active');
 
   // Filter facilities based on selected filters
   const filteredFacilities = useMemo(() => {
     if (!reportData?.facilities) return [];
     let filtered = reportData.facilities;
+
+    if (statusFilter === 'active') {
+      filtered = filtered.filter(f => f.status === 'active');
+    } else if (statusFilter === 'inactive') {
+      filtered = filtered.filter(f => f.status === 'inactive');
+    }
 
     if (facilitySearch) {
       filtered = filtered.filter(f =>
@@ -33,7 +40,7 @@ const FacilityReport = ({
     }
 
     return filtered;
-  }, [reportData?.facilities, facilitySearch, minReceivedPackages]);
+  }, [reportData?.facilities, facilitySearch, minReceivedPackages, statusFilter]);
 
   if (!reportData || !reportData.facilities) return <div>No data available</div>;
 
@@ -43,6 +50,7 @@ const FacilityReport = ({
   const clearFilters = () => {
     setFacilitySearch('');
     setMinReceivedPackages('');
+    setStatusFilter('all');
   };
 
   return (
@@ -78,7 +86,7 @@ const FacilityReport = ({
 
         {/* Filter Section */}
         <div className="filterSection">
-          <h3>Filters</h3>
+          <h3 style={{ margin: '0 0 15px 0' }}>Filters</h3>
           <div className="filterControls">
             <div className="filterGroup">
               <label>Facility Name:</label>
@@ -89,6 +97,19 @@ const FacilityReport = ({
                 placeholder="Search facilities..."
                 className="filterInput"
               />
+            </div>
+
+            <div className="filterGroup">
+              <label>Status:</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="filterInput"
+              >
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
             </div>
 
             <div className="filterGroup">
@@ -171,6 +192,7 @@ const FacilityReport = ({
                 key={facility.facility_id}
                 onClick={() => handleFacilityRowClick(facility)}
                 className="clickable-row"
+                style={facility.status === 'inactive' ? { opacity: 0.5 } : {}}
               >
                 <td>{facility.facility_id}</td>
                 <td>{facility.facility_name}</td>

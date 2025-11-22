@@ -9,12 +9,14 @@ import { Toast } from './Toast';
  * @param {boolean} show - Whether to show the modal
  * @param {string} entityType - Type of entity being deleted (e.g., 'Employee', 'Facility')
  * @param {string} entityName - Name to display and require for confirmation
- * @param {function} onConfirm - Callback when delete is confirmed
+ * @param {function} onConfirm - Callback when hard delete is confirmed
+ * @param {function} onSoftDelete - Optional callback for soft delete (deactivate)
  * @param {function} onCancel - Callback when deletion is cancelled
  */
-export const DeleteConfirmModal = ({ show, entityType, entityName, onConfirm, onCancel }) => {
+export const DeleteConfirmModal = ({ show, entityType, entityName, onConfirm, onSoftDelete, onCancel }) => {
   const [confirmName, setConfirmName] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteType, setDeleteType] = useState(null); // 'soft' or 'hard'
 
   // Toast notification state
   const [showToast, setShowToast] = useState(false);
@@ -32,6 +34,7 @@ export const DeleteConfirmModal = ({ show, entityType, entityName, onConfirm, on
     if (!show) {
       setConfirmName('');
       setIsDeleting(false);
+      setDeleteType(null);
     }
   }, [show]);
 
@@ -49,9 +52,9 @@ export const DeleteConfirmModal = ({ show, entityType, entityName, onConfirm, on
 
   if (!show) return null;
 
-  const handleConfirm = async () => {
+  const handleConfirm = async (type) => {
     if (confirmName !== entityName) {
-      showErrorToast('The name does not match. Please type the exact name to confirm deletion.');
+      showErrorToast('The name does not match. Please type the exact name to confirm.');
       return;
     }
 
@@ -59,7 +62,13 @@ export const DeleteConfirmModal = ({ show, entityType, entityName, onConfirm, on
     if (isDeleting) return;
 
     setIsDeleting(true);
-    await onConfirm();
+    setDeleteType(type);
+
+    if (type === 'soft' && onSoftDelete) {
+      await onSoftDelete();
+    } else {
+      await onConfirm();
+    }
     // Note: isDeleting will be reset when the modal closes (via useEffect)
   };
 
@@ -77,11 +86,14 @@ export const DeleteConfirmModal = ({ show, entityType, entityName, onConfirm, on
         </h2>
         <div className="delete-modal-body">
           <p>
-            Are you sure you want to delete {entityType.toLowerCase()} <strong>{entityName}</strong>?
+            What would you like to do with {entityType.toLowerCase()} <strong>{entityName}</strong>?
           </p>
-          <p className="delete-warning">
-            This action cannot be undone.
-          </p>
+          {onSoftDelete && (
+            <p style={{ fontSize: '13px', color: '#666', margin: '10px 0' }}>
+              <strong>Deactivate:</strong> Mark as inactive (can be reactivated later)<br />
+              <strong>Delete Permanently:</strong> Remove from database (cannot be undone)
+            </p>
+          )}
           <p>To confirm, please type the {entityType.toLowerCase()}'s name below:</p>
           <div className="delete-confirm-field">
             <label>Name:</label>
@@ -96,12 +108,22 @@ export const DeleteConfirmModal = ({ show, entityType, entityName, onConfirm, on
           </div>
         </div>
         <div className="modal-actions">
+          {onSoftDelete && (
+            <button
+              onClick={() => handleConfirm('soft')}
+              className="modal-submit-button"
+              style={{ backgroundColor: '#f59e0b' }}
+              disabled={confirmName !== entityName || isDeleting}
+            >
+              {isDeleting && deleteType === 'soft' ? 'Deactivating...' : 'Deactivate'}
+            </button>
+          )}
           <button
-            onClick={handleConfirm}
+            onClick={() => handleConfirm('hard')}
             className="modal-submit-button delete-confirm-button"
             disabled={confirmName !== entityName || isDeleting}
           >
-            {isDeleting ? 'Deleting...' : `Delete ${entityType}`}
+            {isDeleting && deleteType === 'hard' ? 'Deleting...' : 'Delete Permanently'}
           </button>
           <button onClick={handleCancel} className="modal-cancel-button" disabled={isDeleting}>
             Cancel

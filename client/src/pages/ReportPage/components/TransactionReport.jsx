@@ -1,6 +1,9 @@
 import { useState, useMemo } from 'react';
 import { sortData, getSortIndicator } from './reportUtils';
 
+// Error statuses that should be treated as refunds
+const ERROR_STATUSES = ['lost', 'damaged', 'undeliverable', 'failed-delivery', 'returned'];
+
 const TransactionReport = ({
   reportData,
   transactionStartDate,
@@ -53,12 +56,22 @@ const TransactionReport = ({
 
   // Calculate filtered summary stats
   const filteredSummary = useMemo(() => {
-    const totalAmount = filteredTransactions.reduce((sum, t) => sum + parseFloat(t.transaction_amount), 0);
-    const avgAmount = filteredTransactions.length > 0 ? totalAmount / filteredTransactions.length : 0;
+    let totalRevenue = 0;
+    let totalRefunded = 0;
+
+    filteredTransactions.forEach(t => {
+      const amount = parseFloat(t.transaction_amount);
+      if (ERROR_STATUSES.includes(t.package_status)) {
+        totalRefunded += amount;
+      } else {
+        totalRevenue += amount;
+      }
+    });
+
     return {
       count: filteredTransactions.length,
-      totalAmount: totalAmount,
-      avgAmount: avgAmount
+      totalRevenue: totalRevenue,
+      totalRefunded: totalRefunded
     };
   }, [filteredTransactions]);
 
@@ -206,20 +219,12 @@ const TransactionReport = ({
             <div className="statLabel">Transactions</div>
           </div>
           <div className="statCard">
-            <div className="statValue">{formatCurrency(filteredSummary.totalAmount)}</div>
+            <div className="statValue">{formatCurrency(filteredSummary.totalRevenue)}</div>
             <div className="statLabel">Total Revenue</div>
           </div>
           <div className="statCard">
-            <div className="statValue">{formatCurrency(filteredSummary.avgAmount)}</div>
-            <div className="statLabel">Average Amount</div>
-          </div>
-          <div className="statCard">
-            <div className="statValue">{reportData.summary.total_transactions}</div>
-            <div className="statLabel">All Transactions</div>
-          </div>
-          <div className="statCard">
-            <div className="statValue">{formatCurrency(reportData.summary.total_revenue)}</div>
-            <div className="statLabel">Total Period Revenue</div>
+            <div className="statValue" style={{ color: '#dc2626' }}>{formatCurrency(filteredSummary.totalRefunded)}</div>
+            <div className="statLabel">Total Refunded</div>
           </div>
         </div>
       </div>
@@ -257,7 +262,12 @@ const TransactionReport = ({
                   <td>{transaction.package_type.charAt(0).toUpperCase() + transaction.package_type.slice(1)}</td>
                   <td>{transaction.customer_first_name} {transaction.customer_last_name}</td>
                   <td>{transaction.tracking_number}</td>
-                  <td className="amount">{formatCurrency(transaction.transaction_amount)}</td>
+                  <td className="amount" style={ERROR_STATUSES.includes(transaction.package_status) ? { color: '#dc2626' } : {}}>
+                    {ERROR_STATUSES.includes(transaction.package_status)
+                      ? `-${formatCurrency(transaction.transaction_amount)}`
+                      : formatCurrency(transaction.transaction_amount)
+                    }
+                  </td>
                 </tr>
               ))
             ) : (

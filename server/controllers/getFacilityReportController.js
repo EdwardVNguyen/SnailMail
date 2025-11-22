@@ -25,6 +25,7 @@ export const getFacilityReportController = async (req, res) => {
       SELECT
         f.facility_id,
         f.facility_name,
+        f.status,
         CONCAT(a.street_name, ', ', a.city_name, ', ', a.state_name, ' ', a.zip_code) as facility_address,
 
         -- Packages received (tracking events at this facility in date range)
