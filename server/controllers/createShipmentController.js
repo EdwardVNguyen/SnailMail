@@ -120,29 +120,75 @@ export const createShipmentController = async (req, res) => {
       return;
     }
 
-    // Insert recipient address into address table
-    const [recipientAddressResult] = await connection.execute(
-      `INSERT INTO address (street_name, city_name, state_name, zip_code)
-       VALUES (?, ?, ?, ?)`,
-      [recipientStreet, recipientCity, recipientState, recipientZipCode]
+    // Check if recipient already exists by email in authentication table
+    const [[existingAuth] = []] = await connection.execute(
+      `SELECT auth_id FROM authentication WHERE email = ?`,
+      [recipientEmail]
     );
-    const recipient_address_id = recipientAddressResult.insertId;
+    let recipient_auth_id;
+    let recipient_id;
 
-    // Insert recipient as guest customer
-    const [recipientCustomerResult] = await connection.execute(
-      `INSERT INTO customer (
-        first_name,
-        last_name,
-        address_id,
-        auth_id
-      ) VALUES (?, ?, ?, NULL)`,
-      [
-        recipientFirstName,
-        recipientLastName,
-        recipient_address_id
-      ]
-    );
-    const recipient_id = recipientCustomerResult.insertId;
+    if (existingAuth) {
+      recipient_auth_id = existingAuth.auth_id;
+
+      const [[existingCustomer] = []] = await connection.execute(
+        `SELECT customer_id FROM customer WHERE auth_id = ?`,
+        [recipient_auth_id]
+      );
+      if (existingCustomer) {
+        recipient_id = existingCustomer.customer_id;
+      } else {
+        // Auth exists but no customer record
+        // Create address and customer with existing auth_id
+        const [recipientAddressResult] = await connection.execute(
+          `INSERT INTO address (street_name, city_name, state_name, zip_code)
+           VALUES (?, ?, ?, ?)`,
+          [recipientStreet, recipientCity, recipientState, recipientZipCode]
+        );
+        const recipient_address_id = recipientAddressResult.insertId;
+
+        const [recipientCustomerResult] = await connection.execute(
+          `INSERT INTO customer (
+            first_name,
+            last_name,
+            address_id,
+            auth_id
+          ) VALUES (?, ?, ?, ?)`,
+          [recipientFirstName, recipientLastName, recipient_address_id, recipient_auth_id]
+        );
+        recipient_id = recipientCustomerResult.insertId;
+      }
+    } else {
+      // Create new auth account for recipient
+      const recipientPassword = `${recipientFirstName.toLowerCase()}${recipientLastName.toLowerCase()}`;
+
+      const [authResult] = await connection.execute(
+        `INSERT INTO authentication (email, password)
+         VALUES (?, ?)`,
+        [recipientEmail, recipientPassword]
+      );
+      recipient_auth_id = authResult.insertId;
+
+      // Insert recipient address into address table
+      const [recipientAddressResult] = await connection.execute(
+        `INSERT INTO address (street_name, city_name, state_name, zip_code)
+         VALUES (?, ?, ?, ?)`,
+        [recipientStreet, recipientCity, recipientState, recipientZipCode]
+      );
+      const recipient_address_id = recipientAddressResult.insertId;
+
+      // Insert recipient as customer with auth_id
+      const [recipientCustomerResult] = await connection.execute(
+        `INSERT INTO customer (
+          first_name,
+          last_name,
+          address_id,
+          auth_id
+        ) VALUES (?, ?, ?, ?)`,
+        [recipientFirstName, recipientLastName, recipient_address_id, recipient_auth_id]
+      );
+      recipient_id = recipientCustomerResult.insertId;
+    }
 
     // Generate unique tracking number
     let tracking_number;
