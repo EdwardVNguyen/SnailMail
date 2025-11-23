@@ -8,6 +8,8 @@ import { encodeCustomerId } from '../utils/idEncoder';
 const CustomerPage = ({ globalAuthId }) => {
   const [customerInfo, setCustomerInfo] = useState(null);
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const navigate = useNavigate();
 
   // Toast notification state
@@ -24,8 +26,18 @@ const CustomerPage = ({ globalAuthId }) => {
   // Fetch customer data
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      setError(false);
       const data = await getCustomerData(globalAuthId);
-      setCustomerInfo(data);
+
+      if (data && data.success && data.customer) {
+        setCustomerInfo(data);
+        setError(false);
+      } else {
+        setError(true);
+        showErrorToast('Failed to load customer data. Please try refreshing the page.');
+      }
+      setLoading(false);
     };
     fetchData();
   }, [globalAuthId]);
@@ -41,11 +53,34 @@ const CustomerPage = ({ globalAuthId }) => {
     navigate(`/userTrackPackage/${trackingNumber}`);
   };
 
-  if (!customerInfo) {
+  if (loading) {
     return (
       <div className="loading-container">
         <div className="loading-spinner"></div>
         <p>Loading your dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error || !customerInfo || !customerInfo.customer) {
+    return (
+      <div className="loading-container">
+        <div className="error-message">
+          <h2>Unable to Load Dashboard</h2>
+          <p>We couldn't load your customer data. Please try refreshing the page.</p>
+          <button
+            className="actionButton"
+            onClick={() => window.location.reload()}
+          >
+            Refresh Page
+          </button>
+        </div>
+        <Toast
+          show={showToast}
+          message={toastMessage}
+          type={toastType}
+          onClose={() => setShowToast(false)}
+        />
       </div>
     );
   }

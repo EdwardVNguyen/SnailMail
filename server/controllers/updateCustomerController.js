@@ -7,7 +7,6 @@ export const updateCustomerController = async (req, res) => {
   let authId,
       firstName,
       lastName,
-      birthDate,
       streetName,
       cityName,
       stateName,
@@ -18,7 +17,6 @@ export const updateCustomerController = async (req, res) => {
     authId = body.authId;
     firstName = body.firstName;
     lastName = body.lastName;
-    birthDate = body.birthDate;
     streetName = body.streetName;
     cityName = body.cityName;
     stateName = body.stateName;
@@ -47,14 +45,13 @@ export const updateCustomerController = async (req, res) => {
     const customer_id = customerRows[0].customer_id;
 
     await connection.execute(
-      `UPDATE customer 
-       SET first_name = ?, 
-           last_name = ?, 
-           birth_date = ?,
+      `UPDATE customer
+       SET first_name = ?,
+           last_name = ?,
            updated_by = ?,
            last_updated = CURRENT_TIMESTAMP
        WHERE auth_id = ?`,
-      [firstName, lastName, birthDate, authId, authId]
+      [firstName, lastName, authId, authId]
     );
 
     await connection.execute(

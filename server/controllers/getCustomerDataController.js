@@ -3,9 +3,11 @@ import { badClientRequest, badServerRequest } from '../utils/badRequest.js';
 import { parse } from 'node:url'
 
 export const getCustomerDataController = async (req, res) => {
-  const connection = await pool.getConnection(); 
+  let connection;
 
   try {
+    connection = await pool.getConnection();
+
     // Get authId from query or body
     const url = parse(req.url, true);
     const authId = url.query.authId;
@@ -18,7 +20,7 @@ export const getCustomerDataController = async (req, res) => {
     const sql = `
       SELECT
         c.first_name, c.last_name, c.address_id,
-        c.auth_id, c.birth_date, c.customer_id,
+        c.auth_id, c.customer_id,
         c.card_number, c.security_code, c.expiration_date, c.profile_picture_url,
         a.street_name, a.city_name, a.state_name, a.zip_code,
         au.email, au.password
@@ -46,6 +48,8 @@ export const getCustomerDataController = async (req, res) => {
     console.error('Database query failed', error);
     badServerRequest(res);
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 };
