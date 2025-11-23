@@ -42,7 +42,7 @@ export const loginController = async (req, res) => {
 
     const [customerRows] = await connection.execute(
       `SELECT customer_id FROM customer
-       WHERE auth_id = ? AND (is_deleted = FALSE OR is_deleted IS NULL)`,
+       WHERE auth_id = ?`,
       [authId]
     );
 
@@ -53,7 +53,8 @@ export const loginController = async (req, res) => {
     // check if auth_id exists in employee relation
     else {
       const [employeeRows] = await connection.execute(
-        `SELECT account_type FROM employee WHERE auth_id = ?`,
+        `SELECT account_type FROM employee
+         WHERE auth_id = ?`,
         [authId]
       );
 

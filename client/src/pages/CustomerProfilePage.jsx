@@ -18,7 +18,6 @@ const CustomerProfilePage = ({ globalAuthId }) => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    birthDate: '',
     streetName: '',
     cityName: '',
     stateName: '',
@@ -84,7 +83,6 @@ const CustomerProfilePage = ({ globalAuthId }) => {
           setFormData({
             firstName: data.customer.first_name || '',
             lastName: data.customer.last_name || '',
-            birthDate: formatDateForInput(data.customer.birth_date) || '',
             streetName: data.customer.street_name || '',
             cityName: data.customer.city_name || '',
             stateName: data.customer.state_name || '',
@@ -126,12 +124,6 @@ const CustomerProfilePage = ({ globalAuthId }) => {
     setErrorMessage('');
 
     try {
-      // Convert birth_date to YYYY-MM-DD format for database
-      let birthDateForDB = formData.birthDate;
-      if (birthDateForDB && birthDateForDB.includes('T')) {
-        birthDateForDB = birthDateForDB.split('T')[0];
-      }
-
       // Convert expiration date from YYYY-MM to MM/YYYY for database
       let expirationDateForDB = formData.expirationDate;
       if (expirationDateForDB && /^\d{4}-\d{2}$/.test(expirationDateForDB)) {
@@ -148,7 +140,6 @@ const CustomerProfilePage = ({ globalAuthId }) => {
           authId: customerData.auth_id,
           firstName: formData.firstName,
           lastName: formData.lastName,
-          birthDate: birthDateForDB,
           streetName: formData.streetName,
           cityName: formData.cityName,
           stateName: formData.stateName,
@@ -311,16 +302,6 @@ const CustomerProfilePage = ({ globalAuthId }) => {
                 </div>
 
                 <div className="formGroup">
-                  <label>Birth Date</label>
-                  <input
-                    type="date"
-                    name="birthDate"
-                    value={formData.birthDate}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="formGroup">
                   <label>Profile Picture URL</label>
                   <input
                     type="text"
@@ -391,10 +372,6 @@ const CustomerProfilePage = ({ globalAuthId }) => {
                 <div className="infoRow">
                   <span className="infoLabel">Name:</span>
                   <span className="infoValue">{customerData?.first_name} {customerData?.last_name}</span>
-                </div>
-                <div className="infoRow">
-                  <span className="infoLabel">Birth Date:</span>
-                  <span className="infoValue">{customerData?.birth_date ? new Date(customerData.birth_date).toLocaleDateString() : '—'}</span>
                 </div>
                 <div className="infoRow">
                   <span className="infoLabel">Address:</span>

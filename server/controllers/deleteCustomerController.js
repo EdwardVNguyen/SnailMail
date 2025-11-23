@@ -30,9 +30,9 @@ export const deleteCustomerController = async (req, res) => {
       return;
     }
 
-    // Get the customer record and check if it exists and is not already deleted
+    // Get the customer record and check if it exists
     const [customerRows] = await connection.query(
-      `SELECT customer_id, is_deleted
+      `SELECT customer_id
        FROM customer
        WHERE auth_id = ?`,
       [authId]
@@ -49,23 +49,10 @@ export const deleteCustomerController = async (req, res) => {
 
     const customer = customerRows[0];
 
-    if (customer.is_deleted) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        success: false,
-        message: 'Account is already deleted'
-      }));
-      return;
-    }
-
-    // Perform soft delete by setting is_deleted flag and deleted_at timestamp
+    // Perform soft delete (BEFORE DELETE trigger will archive the record)
     const [result] = await connection.query(
-      `UPDATE customer
-       SET is_deleted = TRUE,
-           deleted_at = CURRENT_TIMESTAMP,
-           updated_by = ?
-       WHERE customer_id = ?`,
-      [authId, customer.customer_id]
+      `DELETE FROM customer WHERE customer_id = ?`,
+      [customer.customer_id]
     );
 
     if (result.affectedRows === 0) {

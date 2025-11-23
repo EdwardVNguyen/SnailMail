@@ -18,7 +18,7 @@ export const getCustomerDataController = async (req, res) => {
     const sql = `
       SELECT
         c.first_name, c.last_name, c.address_id,
-        c.auth_id, c.birth_date, c.customer_id,
+        c.auth_id, c.customer_id,
         c.card_number, c.security_code, c.expiration_date, c.profile_picture_url,
         a.street_name, a.city_name, a.state_name, a.zip_code,
         au.email, au.password
@@ -26,7 +26,6 @@ export const getCustomerDataController = async (req, res) => {
       LEFT JOIN address a ON c.address_id = a.address_id
       LEFT JOIN authentication au ON c.auth_id = au.auth_id
       WHERE c.auth_id = ?
-        AND (c.is_deleted = FALSE OR c.is_deleted IS NULL)
     `;
 
     const [rows] = await connection.execute(sql, [authId]);
