@@ -34,7 +34,8 @@ export const updateCustomerController = async (req, res) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
     const [customerRows] = await connection.execute(
-      `SELECT address_id, customer_id FROM customer WHERE auth_id = ?`,
+      `SELECT address_id, customer_id FROM customer
+       WHERE auth_id = ?`,
       [authId]
     );
     if (customerRows.length === 0) {

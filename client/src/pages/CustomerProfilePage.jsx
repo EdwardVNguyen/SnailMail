@@ -12,11 +12,12 @@ const CustomerProfilePage = ({ globalAuthId }) => {
   const [editing, setEditing] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    birthDate: '',
     streetName: '',
     cityName: '',
     stateName: '',
@@ -82,7 +83,6 @@ const CustomerProfilePage = ({ globalAuthId }) => {
           setFormData({
             firstName: data.customer.first_name || '',
             lastName: data.customer.last_name || '',
-            birthDate: formatDateForInput(data.customer.birth_date) || '',
             streetName: data.customer.street_name || '',
             cityName: data.customer.city_name || '',
             stateName: data.customer.state_name || '',
@@ -124,12 +124,6 @@ const CustomerProfilePage = ({ globalAuthId }) => {
     setErrorMessage('');
 
     try {
-      // Convert birth_date to YYYY-MM-DD format for database
-      let birthDateForDB = formData.birthDate;
-      if (birthDateForDB && birthDateForDB.includes('T')) {
-        birthDateForDB = birthDateForDB.split('T')[0];
-      }
-
       // Convert expiration date from YYYY-MM to MM/YYYY for database
       let expirationDateForDB = formData.expirationDate;
       if (expirationDateForDB && /^\d{4}-\d{2}$/.test(expirationDateForDB)) {
@@ -146,7 +140,6 @@ const CustomerProfilePage = ({ globalAuthId }) => {
           authId: customerData.auth_id,
           firstName: formData.firstName,
           lastName: formData.lastName,
-          birthDate: birthDateForDB,
           streetName: formData.streetName,
           cityName: formData.cityName,
           stateName: formData.stateName,
@@ -177,6 +170,44 @@ const CustomerProfilePage = ({ globalAuthId }) => {
       console.error('Update error:', error);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    setErrorMessage('');
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/deleteCustomer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          authId: globalAuthId
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Account deleted successfully - redirect to goodbye page or login
+        alert('Your account has been successfully deleted.');
+        // Clear any stored auth data
+        localStorage.removeItem('authId');
+        sessionStorage.removeItem('authId');
+        // Redirect to login/signup page
+        navigate('/loginorsignup');
+      } else {
+        setErrorMessage(data.message || 'Failed to delete account');
+        setShowDeleteModal(false);
+      }
+    } catch (error) {
+      setErrorMessage('Failed to delete account. Please try again.');
+      console.error('Delete account error:', error);
+      setShowDeleteModal(false);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -271,16 +302,6 @@ const CustomerProfilePage = ({ globalAuthId }) => {
                 </div>
 
                 <div className="formGroup">
-                  <label>Birth Date</label>
-                  <input
-                    type="date"
-                    name="birthDate"
-                    value={formData.birthDate}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="formGroup">
                   <label>Profile Picture URL</label>
                   <input
                     type="text"
@@ -351,10 +372,6 @@ const CustomerProfilePage = ({ globalAuthId }) => {
                 <div className="infoRow">
                   <span className="infoLabel">Name:</span>
                   <span className="infoValue">{customerData?.first_name} {customerData?.last_name}</span>
-                </div>
-                <div className="infoRow">
-                  <span className="infoLabel">Birth Date:</span>
-                  <span className="infoValue">{customerData?.birth_date ? new Date(customerData.birth_date).toLocaleDateString() : '—'}</span>
                 </div>
                 <div className="infoRow">
                   <span className="infoLabel">Address:</span>
@@ -437,7 +454,65 @@ const CustomerProfilePage = ({ globalAuthId }) => {
             )}
           </div>
         </div>
+
+        {/* Danger Zone Card */}
+        <div className="profileCard dangerZoneCard">
+          <div className="cardHeader">
+            <h2>Danger Zone</h2>
+          </div>
+          <div className="cardContent">
+            <div className="dangerZoneContent">
+              <div>
+                <h3>Delete Account</h3>
+                <p>
+                  Once you delete your account, there is no going back. This action cannot be undone.
+                  All your shipment history will be preserved for record-keeping, but you will no longer
+                  be able to access this account.
+                </p>
+              </div>
+              <button
+                className="deleteAccountButton"
+                onClick={() => setShowDeleteModal(true)}
+                disabled={editing}
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modalOverlay" onClick={() => setShowDeleteModal(false)}>
+          <div className="modalContent" onClick={(e) => e.stopPropagation()}>
+            <h2>Are you absolutely sure?</h2>
+            <p>
+              This action <strong>cannot be undone</strong>. This will permanently delete your account
+              and remove your access to all services.
+            </p>
+            <div className="confirmationText">
+              <p>Your shipment and transaction history will be preserved for record-keeping purposes.</p>
+            </div>
+            <div className="modalActions">
+              <button
+                className="confirmDeleteButton"
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Yes, Delete My Account'}
+              </button>
+              <button
+                className="cancelDeleteButton"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
