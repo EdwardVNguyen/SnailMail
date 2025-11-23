@@ -11,16 +11,43 @@ export const getPendingCourierRequestsController = async (req, res) => {
 
     // Parse query parameters
     const queryObject = url.parse(req.url, true).query;
-    const facilityId = queryObject.facility_id;
+    const authId = queryObject.authId;
     const page = Number(queryObject.page) || 1;
     const limit = Number(queryObject.limit) || 10;
     const offset = (page - 1) * limit;
 
+    // Verify authId is provided
+    if (!authId) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ success: false, message: 'authId is required' }));
+      return;
+    }
+
+    // Get clerk's facility_id to ensure they can only see packages from their facility
+    const [[clerk]] = await connection.execute(
+      `SELECT employee_id, facility_id, account_type
+       FROM employee
+       WHERE auth_id = ? AND account_type = 'clerk'`,
+      [authId]
+    );
+
+    if (!clerk) {
+      res.statusCode = 403;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ success: false, message: 'User is not a clerk' }));
+      return;
+    }
+
+    const clerkFacilityId = clerk.facility_id;
+
+    // Only show requests for packages from the clerk's facility
     let countQuery = `
       SELECT COUNT(*) AS total
       FROM courier_package_request cpr
       JOIN package p ON cpr.package_id = p.package_id
       WHERE cpr.request_status = 'pending'
+      AND p.facility_id = ?
     `;
 
     let query = `
@@ -60,16 +87,10 @@ export const getPendingCourierRequestsController = async (req, res) => {
       JOIN facility f ON p.facility_id = f.facility_id
 
       WHERE cpr.request_status = 'pending'
+      AND p.facility_id = ?
     `;
 
-    const params = [];
-
-    // Filter by facility if provided
-    if (facilityId) {
-      countQuery += ' AND p.facility_id = ?';
-      query += ' AND p.facility_id = ?';
-      params.push(facilityId);
-    }
+    const params = [clerkFacilityId];
 
     // Get total count
     const [countResult] = await connection.execute(countQuery, params);

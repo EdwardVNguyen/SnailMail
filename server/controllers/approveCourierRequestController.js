@@ -23,9 +23,9 @@ export const approveCourierRequestController = async (req, res) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // Get clerk info
+    // Get clerk info including facility_id
     const [[clerk]] = await connection.execute(
-      `SELECT employee_id, account_type
+      `SELECT employee_id, account_type, facility_id
        FROM employee
        WHERE auth_id = ? AND account_type = 'clerk'`,
       [authId]
@@ -67,6 +67,12 @@ export const approveCourierRequestController = async (req, res) => {
     if (!pkg) {
       await connection.rollback();
       return badClientRequest(res, { message: 'Package not found' });
+    }
+
+    // SECURITY: Verify the package belongs to the clerk's facility
+    if (pkg.facility_id !== clerk.facility_id) {
+      await connection.rollback();
+      return badClientRequest(res, { message: 'You can only approve requests for packages at your facility' });
     }
 
     // Package should not already have a courier assigned

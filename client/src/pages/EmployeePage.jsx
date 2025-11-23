@@ -11,7 +11,6 @@ const EmployeePage = ({ globalAuthId }) => {
   const navigate = useNavigate();
 
   const [packages, setPackages] = useState([]);
-  const [facilities, setFacilities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [facilityName, setFacilityName] = useState('');
   const [page, setPage] = useState(1);
@@ -26,7 +25,6 @@ const EmployeePage = ({ globalAuthId }) => {
 
   // Tracking event form
   const [eventType, setEventType] = useState('processing');
-  const [locationId, setLocationId] = useState('');
 
   // Package dimensions form
   const [editLength, setEditLength] = useState('');
@@ -55,22 +53,9 @@ const EmployeePage = ({ globalAuthId }) => {
   };
 
   useEffect(() => {
-    fetchFacilities();
     fetchPackages();
     fetchClerkFacility();
   }, []);
-
-  const fetchFacilities = async () => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/getFacilities?status=active`);
-      const data = await response.json();
-      if (data.success) {
-        setFacilities(data.facilities);
-      }
-    } catch (err) {
-      console.error('Error fetching facilities:', err);
-    }
-  };
 
   const fetchClerkFacility = async () => {
     try {
@@ -105,8 +90,7 @@ const EmployeePage = ({ globalAuthId }) => {
   const openTrackingModal = (pkg) => {
     setSelectedPackage(pkg);
     setShowTrackingModal(true);
-    setEventType('processing');
-    setLocationId(pkg.facility_address_id || '');
+    setEventType('pre-shipment');
   };
 
   const openHistoryModal = async (pkg) => {
@@ -184,7 +168,6 @@ const EmployeePage = ({ globalAuthId }) => {
         body: JSON.stringify({
           packageId: selectedPackage.package_id,
           eventType,
-          locationId: locationId || null,
           authId
         })
       });
@@ -295,7 +278,6 @@ const EmployeePage = ({ globalAuthId }) => {
           <div className="form-group">
             <label>Event Type:</label>
             <select value={eventType} onChange={(e) => setEventType(e.target.value)} required>
-              <option value="processing">Processing</option>
               <option value="pre-shipment">Pre-shipment</option>
               <option value="out-for-delivery">Out for Delivery</option>
               <option value="delivered">Delivered</option>
@@ -307,17 +289,8 @@ const EmployeePage = ({ globalAuthId }) => {
             </select>
           </div>
 
-          <div className="form-group">
-            <label>Location (Facility):</label>
-            <select value={locationId} onChange={(e) => setLocationId(e.target.value)}>
-              <option value="">-- Select Facility (Optional) --</option>
-              {facilities.map((facility) => (
-                <option key={facility.facility_id} value={facility.address_id}>
-                  {facility.facility_name}
-                </option>
-              ))}
-            </select>
-            <small>Leave empty if event has no specific facility</small>
+          <div className="form-info">
+            <p><strong>Location:</strong> {facilityName || 'Your Facility'}</p>
           </div>
 
           <div className="modal-actions">

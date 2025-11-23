@@ -23,9 +23,9 @@ export const rejectCourierRequestController = async (req, res) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // Get clerk info
+    // Get clerk info including facility_id
     const [[clerk]] = await connection.execute(
-      `SELECT employee_id, account_type
+      `SELECT employee_id, account_type, facility_id
        FROM employee
        WHERE auth_id = ? AND account_type = 'clerk'`,
       [authId]
@@ -36,11 +36,12 @@ export const rejectCourierRequestController = async (req, res) => {
       return badClientRequest(res, { message: 'User is not a clerk' });
     }
 
-    // Get request details
+    // Get request details and verify package facility
     const [[request]] = await connection.execute(
-      `SELECT request_id, package_id, courier_id, request_status
-       FROM courier_package_request
-       WHERE request_id = ?`,
+      `SELECT cpr.request_id, cpr.package_id, cpr.courier_id, cpr.request_status, p.facility_id
+       FROM courier_package_request cpr
+       JOIN package p ON cpr.package_id = p.package_id
+       WHERE cpr.request_id = ?`,
       [requestId]
     );
 
@@ -52,6 +53,12 @@ export const rejectCourierRequestController = async (req, res) => {
     if (request.request_status !== 'pending') {
       await connection.rollback();
       return badClientRequest(res, { message: 'Request already processed' });
+    }
+
+    // SECURITY: Verify the package belongs to the clerk's facility
+    if (request.facility_id !== clerk.facility_id) {
+      await connection.rollback();
+      return badClientRequest(res, { message: 'You can only reject requests for packages at your facility' });
     }
 
     // Update request status to rejected
