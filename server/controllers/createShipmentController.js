@@ -71,7 +71,8 @@ export const createShipmentController = async (req, res) => {
 
     // get sender_id and validate payment information
     const [[customerData] = []] = await connection.execute(
-      `SELECT customer_id, card_number, security_code, expiration_date FROM customer WHERE auth_id = ?`,
+      `SELECT customer_id, card_number, security_code, expiration_date FROM customer
+       WHERE auth_id = ?`,
       [authId]
     );
 

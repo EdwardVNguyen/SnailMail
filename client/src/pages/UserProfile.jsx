@@ -15,7 +15,6 @@ const UserProfile = ({ globalAuthId }) => {
   const [contactForm, setContactForm] = useState({
     firstName: '',
     lastName: '',
-    birthDate: '',
     streetName: '',
     cityName: '',
     stateName: '',
@@ -36,15 +35,9 @@ const UserProfile = ({ globalAuthId }) => {
         const data = await response.json();
         if (data.success) {
           setCustomerData(data.customer);
-          let formattedBirthDate = '';
-          if (data.customer.birth_date) {
-            const date = new Date(data.customer.birth_date);
-            formattedBirthDate = date.toISOString().split('T')[0];
-          }
           setContactForm({
             firstName: data.customer.first_name || '',
             lastName: data.customer.last_name || '',
-            birthDate: formattedBirthDate,
             streetName: data.customer.street_name || '',
             cityName: data.customer.city_name || '',
             stateName: data.customer.state_name || '',
@@ -86,7 +79,6 @@ const UserProfile = ({ globalAuthId }) => {
           authId: globalAuthId,
           firstName: contactForm.firstName,
           lastName: contactForm.lastName,
-          birthDate: contactForm.birthDate,
           streetName: contactForm.streetName,
           cityName: contactForm.cityName,
           stateName: contactForm.stateName,
@@ -172,18 +164,12 @@ const UserProfile = ({ globalAuthId }) => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/getCustomerData?authId=${globalAuthId}`);
       const data = await response.json();
-      
+
       if (data.success) {
         setCustomerData(data.customer);
-        let formattedBirthDate = '';
-          if (data.customer.birth_date) {
-            const date = new Date(data.customer.birth_date);
-            formattedBirthDate = date.toISOString().split('T')[0];
-          }
         setContactForm({
           firstName: data.customer.first_name || '',
           lastName: data.customer.last_name || '',
-          birthDate: formattedBirthDate,
           streetName: data.customer.street_name || '',
           cityName: data.customer.city_name || '',
           stateName: data.customer.state_name || '',
@@ -338,16 +324,6 @@ const UserProfile = ({ globalAuthId }) => {
                         required
                       />
                     </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Birth Date</label>
-                    <input
-                      type="date"
-                      name="birthDate"
-                      value={contactForm.birthDate}
-                      onChange={handleContactChange}
-                    />
                   </div>
                 </div>
 
