@@ -5,7 +5,7 @@ import pool from './config/database.js'
 import startEmailWorker from './workers/emailWorker.js'
 import { start } from 'node:repl'
 
-const PORT = process.env.PORT || 8000
+const PORT = process.env.SERVER_PORT || process.env.PORT || 8000
 
 const server = http.createServer( (req,res) => {
 

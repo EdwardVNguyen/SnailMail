@@ -41,7 +41,8 @@ export const loginController = async (req, res) => {
     let accountType = null;
 
     const [customerRows] = await connection.execute(
-      `SELECT customer_id FROM customer WHERE auth_id = ?`,
+      `SELECT customer_id FROM customer
+       WHERE auth_id = ? AND (is_deleted = FALSE OR is_deleted IS NULL)`,
       [authId]
     );
 

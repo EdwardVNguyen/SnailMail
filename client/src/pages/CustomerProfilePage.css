@@ -362,3 +362,199 @@
     width: 100%;
   }
 }
+
+/* Danger Zone */
+.dangerZoneCard {
+  grid-column: 1 / -1;
+  border: 2px solid #dc3545;
+}
+
+.dangerZoneCard .cardHeader {
+  background-color: #dc3545;
+}
+
+.dangerZoneContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+}
+
+.dangerZoneContent h3 {
+  margin: 0 0 10px 0;
+  color: #dc3545;
+  font-size: 20px;
+}
+
+.dangerZoneContent p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.deleteAccountButton {
+  padding: 12px 28px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.deleteAccountButton:hover:not(:disabled) {
+  background-color: #c82333;
+  transform: translateY(-2px);
+}
+
+.deleteAccountButton:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Delete Confirmation Modal */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.modalContent {
+  background: white;
+  padding: 35px;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+.modalContent h2 {
+  margin: 0 0 20px 0;
+  color: #dc3545;
+  font-size: 26px;
+}
+
+.modalContent p {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.confirmationText {
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+  padding: 15px;
+  margin: 20px 0;
+  border-radius: 4px;
+}
+
+.confirmationText p {
+  margin: 0;
+  color: #856404;
+  font-size: 14px;
+}
+
+.modalActions {
+  display: flex;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.confirmDeleteButton {
+  flex: 1;
+  padding: 14px 20px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.confirmDeleteButton:hover:not(:disabled) {
+  background-color: #c82333;
+}
+
+.confirmDeleteButton:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.cancelDeleteButton {
+  flex: 1;
+  padding: 14px 20px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancelDeleteButton:hover:not(:disabled) {
+  background-color: #5a6268;
+}
+
+.cancelDeleteButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive adjustments for danger zone */
+@media (max-width: 768px) {
+  .dangerZoneContent {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .deleteAccountButton {
+    width: 100%;
+  }
+
+  .modalContent {
+    padding: 25px;
+  }
+
+  .modalActions {
+    flex-direction: column;
+  }
+}

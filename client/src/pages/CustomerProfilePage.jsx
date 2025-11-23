@@ -12,6 +12,8 @@ const CustomerProfilePage = ({ globalAuthId }) => {
   const [editing, setEditing] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -177,6 +179,44 @@ const CustomerProfilePage = ({ globalAuthId }) => {
       console.error('Update error:', error);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    setErrorMessage('');
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/deleteCustomer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          authId: globalAuthId
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Account deleted successfully - redirect to goodbye page or login
+        alert('Your account has been successfully deleted.');
+        // Clear any stored auth data
+        localStorage.removeItem('authId');
+        sessionStorage.removeItem('authId');
+        // Redirect to login/signup page
+        navigate('/loginorsignup');
+      } else {
+        setErrorMessage(data.message || 'Failed to delete account');
+        setShowDeleteModal(false);
+      }
+    } catch (error) {
+      setErrorMessage('Failed to delete account. Please try again.');
+      console.error('Delete account error:', error);
+      setShowDeleteModal(false);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -437,7 +477,65 @@ const CustomerProfilePage = ({ globalAuthId }) => {
             )}
           </div>
         </div>
+
+        {/* Danger Zone Card */}
+        <div className="profileCard dangerZoneCard">
+          <div className="cardHeader">
+            <h2>Danger Zone</h2>
+          </div>
+          <div className="cardContent">
+            <div className="dangerZoneContent">
+              <div>
+                <h3>Delete Account</h3>
+                <p>
+                  Once you delete your account, there is no going back. This action cannot be undone.
+                  All your shipment history will be preserved for record-keeping, but you will no longer
+                  be able to access this account.
+                </p>
+              </div>
+              <button
+                className="deleteAccountButton"
+                onClick={() => setShowDeleteModal(true)}
+                disabled={editing}
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modalOverlay" onClick={() => setShowDeleteModal(false)}>
+          <div className="modalContent" onClick={(e) => e.stopPropagation()}>
+            <h2>Are you absolutely sure?</h2>
+            <p>
+              This action <strong>cannot be undone</strong>. This will permanently delete your account
+              and remove your access to all services.
+            </p>
+            <div className="confirmationText">
+              <p>Your shipment and transaction history will be preserved for record-keeping purposes.</p>
+            </div>
+            <div className="modalActions">
+              <button
+                className="confirmDeleteButton"
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Yes, Delete My Account'}
+              </button>
+              <button
+                className="cancelDeleteButton"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -25,6 +25,7 @@ import { updatePackageDimensionsController } from '../controllers/updatePackageD
 import { updateCustomerController } from '../controllers/updateCustomerController.js'
 import { updateSecurityController } from '../controllers/updateSecurityController.js'
 import { markNotificationReadController } from '../controllers/markNotificationReadController.js'
+import { deleteCustomerController } from '../controllers/deleteCustomerController.js'
 
 export const handlePostRequest= (req, res) => {
 
@@ -67,6 +68,10 @@ export const handlePostRequest= (req, res) => {
   // delete facility
   else if ( req.url.startsWith('/deleteFacility') ) {
     return deleteFacilityController(req, res)
+  }
+  // delete customer
+  else if ( req.url.startsWith('/deleteCustomer') ) {
+    return deleteCustomerController(req, res)
   }
   // create new shipment
   else if (req.url.startsWith('/createShipment')) {
