@@ -6,15 +6,15 @@ export const createTrackingEventController = async (req, res) => {
   let connection;
   try {
     const body = await getJSONRequestBody(req);
-    const { packageId, eventType, locationId, authId } = body;
+    const { packageId, eventType, authId } = body;
 
     // Validate required fields
-    if (!packageId || !eventType) {
+    if (!packageId || !eventType || !authId) {
       res.statusCode = 400;
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify({
         success: false,
-        message: 'Package ID and event type are required'
+        message: 'Package ID, event type, and authId are required'
       }));
       return;
     }
@@ -44,12 +44,63 @@ export const createTrackingEventController = async (req, res) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // Create tracking event
+    // Get clerk's facility information
+    const [[clerk]] = await connection.execute(
+      `SELECT e.employee_id, e.facility_id, f.address_id AS facility_address_id
+       FROM employee e
+       JOIN facility f ON e.facility_id = f.facility_id
+       WHERE e.auth_id = ? AND e.account_type = 'clerk'`,
+      [authId]
+    );
+
+    if (!clerk) {
+      await connection.rollback();
+      res.statusCode = 403;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({
+        success: false,
+        message: 'User is not a clerk'
+      }));
+      return;
+    }
+
+    // Verify the package is at the clerk's facility
+    const [[pkg]] = await connection.execute(
+      `SELECT package_id, facility_id
+       FROM package
+       WHERE package_id = ?`,
+      [packageId]
+    );
+
+    if (!pkg) {
+      await connection.rollback();
+      res.statusCode = 404;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({
+        success: false,
+        message: 'Package not found'
+      }));
+      return;
+    }
+
+    // SECURITY: Verify package is at clerk's facility
+    if (pkg.facility_id !== clerk.facility_id) {
+      await connection.rollback();
+      res.statusCode = 403;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({
+        success: false,
+        message: 'You can only create events for packages at your facility'
+      }));
+      return;
+    }
+
+    // Create tracking event using clerk's facility address as location
     await connection.execute(
       `INSERT INTO tracking_event
        (package_id, event_type, location_id, event_time, created_by, updated_by)
        VALUES (?, ?, ?, NOW(), ?, ?)`,
-      [packageId, eventType, locationId || null, authId, authId]
+      [packageId, eventType, clerk.facility_address_id, authId, authId]
     );
 
     // Update package status based on event type

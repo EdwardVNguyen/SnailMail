@@ -46,15 +46,18 @@ const ClerkCourierApprovalPage = ({ globalAuthId }) => {
   const fetchRequests = async (pageNum = 1) => {
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/getPendingCourierRequests?page=${pageNum}&limit=${limit}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/getPendingCourierRequests?authId=${authId}&page=${pageNum}&limit=${limit}`);
       const data = await response.json();
       if (data.success) {
         setRequests(data.requests);
         setTotalPages(data.totalPages);
         setPage(pageNum);
+      } else {
+        showErrorToast(data.message || 'Failed to load courier requests');
       }
     } catch (err) {
       console.error('Error fetching courier requests:', err);
+      showErrorToast('Error loading courier requests');
     } finally {
       setLoading(false);
     }

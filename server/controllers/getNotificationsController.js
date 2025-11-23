@@ -21,9 +21,11 @@ export const getNotificationsController = async (req, res) => {
       `SELECT customer_id FROM customer WHERE auth_id = ?`,
       [authId]
     );
+
     if (customer) {
+      console.log(`Fetching notifications for customer ${customer.customer_id}`);
       const [notifications] = await connection.execute(
-        `SELECT 
+        `SELECT
           notification_id,
           notification_type,
           tracking_number,
@@ -57,13 +59,14 @@ export const getNotificationsController = async (req, res) => {
 
     if (employee) {
       if (employee.account_type === 'manager') {
+        console.log(`Fetching notifications for manager ${employee.employee_id}`);
         const [notifications] = await connection.execute(
-          `SELECT 
-            log_id as notification_id, 
-            manager_id, 
-            employee_name, 
-            package_number, 
-            type, 
+          `SELECT
+            log_id as notification_id,
+            manager_id,
+            employee_name,
+            package_number,
+            type,
             is_read
           FROM packages_log
           WHERE manager_id = ? AND is_read = FALSE
@@ -82,6 +85,7 @@ export const getNotificationsController = async (req, res) => {
 
       } else {
         // Clerk or Courier
+        console.log(`User is ${employee.account_type}, no notifications needed`);
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({
@@ -94,12 +98,14 @@ export const getNotificationsController = async (req, res) => {
     }
 
     // If neither customer nor employee
+    console.warn(`No customer or employee found for authId: ${authId}`);
     res.statusCode = 400;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({ success: false, message: 'User not found' }));
 
   } catch (error) {
-    console.error('Get notifications error:', error);
+    console.error('Get notifications error for authId', authId, ':', error);
+    console.error('Error stack:', error.stack);
     badServerRequest(res);
   } finally {
     if (connection) connection.release();
