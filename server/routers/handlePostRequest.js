@@ -5,9 +5,11 @@ import { createTrackingEventsController } from '../controllers/createTrackingEve
 import { addEmployeeController } from '../controllers/addEmployeeController.js'
 import { updateEmployeeFullController } from '../controllers/updateEmployeeFullController.js'
 import { deleteEmployeeController } from '../controllers/deleteEmployeeController.js'
+import { softDeleteEmployeeController } from '../controllers/softDeleteEmployeeController.js'
 import { addFacilityController } from '../controllers/addFacilityController.js'
 import { updateFacilityFullController } from '../controllers/updateFacilityFullController.js'
 import { deleteFacilityController } from '../controllers/deleteFacilityController.js'
+import { softDeleteFacilityController } from '../controllers/softDeleteFacilityController.js'
 import { toggleFacilityStatusController } from '../controllers/deactivateFacilityController.js'
 import { createShipmentController } from '../controllers/createShipmentController.js'
 import { createPackageController } from '../controllers/createPackageController.js'
@@ -26,6 +28,7 @@ import { updatePackageDimensionsController } from '../controllers/updatePackageD
 import { updateCustomerController } from '../controllers/updateCustomerController.js'
 import { updateSecurityController } from '../controllers/updateSecurityController.js'
 import { markNotificationReadController } from '../controllers/markNotificationReadController.js'
+import { deleteCustomerController } from '../controllers/deleteCustomerController.js'
 
 export const handlePostRequest= (req, res) => {
 
@@ -61,17 +64,21 @@ export const handlePostRequest= (req, res) => {
   else if ( req.url.startsWith('/updateFacilityFull') ) {
     return updateFacilityFullController(req, res)
   }
-  // delete employee
+  // delete employee (soft delete)
   else if ( req.url.startsWith('/deleteEmployee') ) {
-    return deleteEmployeeController(req, res)
+    return softDeleteEmployeeController(req, res)
   }
-  // delete facility
+  // delete facility (soft delete)
   else if ( req.url.startsWith('/deleteFacility') ) {
-    return deleteFacilityController(req, res)
+    return softDeleteFacilityController(req, res)
   }
   // toggle facility status (active/inactive)
   else if ( req.url.startsWith('/toggleFacilityStatus') ) {
     return toggleFacilityStatusController(req, res)
+  }
+  // delete customer
+  else if ( req.url.startsWith('/deleteCustomer') ) {
+    return deleteCustomerController(req, res)
   }
   // create new shipment
   else if (req.url.startsWith('/createShipment')) {

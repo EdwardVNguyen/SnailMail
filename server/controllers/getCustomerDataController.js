@@ -18,7 +18,7 @@ export const getCustomerDataController = async (req, res) => {
     const sql = `
       SELECT
         c.first_name, c.last_name, c.address_id,
-        c.auth_id, c.birth_date, c.customer_id,
+        c.auth_id, c.customer_id,
         c.card_number, c.security_code, c.expiration_date, c.profile_picture_url,
         a.street_name, a.city_name, a.state_name, a.zip_code,
         au.email, au.password

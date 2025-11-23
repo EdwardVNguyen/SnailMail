@@ -41,7 +41,8 @@ export const loginController = async (req, res) => {
     let accountType = null;
 
     const [customerRows] = await connection.execute(
-      `SELECT customer_id FROM customer WHERE auth_id = ?`,
+      `SELECT customer_id FROM customer
+       WHERE auth_id = ?`,
       [authId]
     );
 
@@ -52,7 +53,8 @@ export const loginController = async (req, res) => {
     // check if auth_id exists in employee relation
     else {
       const [employeeRows] = await connection.execute(
-        `SELECT account_type FROM employee WHERE auth_id = ?`,
+        `SELECT account_type FROM employee
+         WHERE auth_id = ?`,
         [authId]
       );
 

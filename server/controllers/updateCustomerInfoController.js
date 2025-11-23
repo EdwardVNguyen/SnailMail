@@ -21,7 +21,7 @@ export const updateCustomerInfoController = async (req, res) => {
     let connection;
     try {
         const body = await parseRequestBody(req);
-        const { authId, firstName, lastName, birthDate, streetName, cityName, stateName, zipCode, addressId, cardNumber, securityCode, expirationDate, profilePictureUrl } = body;
+        const { authId, firstName, lastName, streetName, cityName, stateName, zipCode, addressId, cardNumber, securityCode, expirationDate, profilePictureUrl } = body;
 
         connection = await pool.getConnection();
 
@@ -51,8 +51,6 @@ export const updateCustomerInfoController = async (req, res) => {
         await updateCustomer("first_name", firstName);
 
         await updateCustomer("last_name", lastName);
-
-        await updateCustomer("birth_date", birthDate);
 
         await updateCustomer("card_number", cardNumber);
 
