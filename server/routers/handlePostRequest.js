@@ -8,6 +8,7 @@ import { deleteEmployeeController } from '../controllers/deleteEmployeeControlle
 import { addFacilityController } from '../controllers/addFacilityController.js'
 import { updateFacilityFullController } from '../controllers/updateFacilityFullController.js'
 import { deleteFacilityController } from '../controllers/deleteFacilityController.js'
+import { toggleFacilityStatusController } from '../controllers/deactivateFacilityController.js'
 import { createShipmentController } from '../controllers/createShipmentController.js'
 import { createPackageController } from '../controllers/createPackageController.js'
 import { updateCustomerInfoController } from '../controllers/updateCustomerInfoController.js'
@@ -68,6 +69,10 @@ export const handlePostRequest= (req, res) => {
   // delete facility
   else if ( req.url.startsWith('/deleteFacility') ) {
     return deleteFacilityController(req, res)
+  }
+  // toggle facility status (active/inactive)
+  else if ( req.url.startsWith('/toggleFacilityStatus') ) {
+    return toggleFacilityStatusController(req, res)
   }
   // delete customer
   else if ( req.url.startsWith('/deleteCustomer') ) {

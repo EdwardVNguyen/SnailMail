@@ -31,6 +31,7 @@ export const getTransactionReportController = async (req, res) => {
         p.package_id,
         p.tracking_number,
         p.package_type,
+        p.package_status,
         c.customer_id,
         c.first_name as customer_first_name,
         c.last_name as customer_last_name

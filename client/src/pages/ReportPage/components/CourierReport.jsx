@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { sortData, getSortIndicator } from './reportUtils';
 
 const CourierReport = ({
@@ -12,10 +13,51 @@ const CourierReport = ({
   handleCourierSort,
   handleCourierRowClick
 }) => {
+  // Filter states
+  const [courierSearch, setCourierSearch] = useState('');
+  const [facilitySearch, setFacilitySearch] = useState('');
+  const [minClaimed, setMinClaimed] = useState('');
+  const [minLost, setMinLost] = useState('');
+
+  // Filter couriers based on selected filters
+  const filteredCouriers = useMemo(() => {
+    if (!reportData?.couriers) return [];
+    let filtered = reportData.couriers;
+
+    if (courierSearch) {
+      filtered = filtered.filter(c =>
+        c.courier_name.toLowerCase().includes(courierSearch.toLowerCase())
+      );
+    }
+
+    if (facilitySearch) {
+      filtered = filtered.filter(c =>
+        c.facility_name?.toLowerCase().includes(facilitySearch.toLowerCase())
+      );
+    }
+
+    if (minClaimed !== '') {
+      filtered = filtered.filter(c => c.packages_claimed >= parseInt(minClaimed));
+    }
+
+    if (minLost !== '') {
+      filtered = filtered.filter(c => c.packages_lost >= parseInt(minLost));
+    }
+
+    return filtered;
+  }, [reportData?.couriers, courierSearch, facilitySearch, minClaimed, minLost]);
+
   if (!reportData || !reportData.couriers) return <div>No data available</div>;
 
-  // Sort the couriers data
-  const sortedCouriers = sortData(reportData.couriers, courierSortField, courierSortDirection);
+  // Sort the filtered couriers data
+  const sortedCouriers = sortData(filteredCouriers, courierSortField, courierSortDirection);
+
+  const clearFilters = () => {
+    setCourierSearch('');
+    setFacilitySearch('');
+    setMinClaimed('');
+    setMinLost('');
+  };
 
   return (
     <div className="reportContent">
@@ -45,6 +87,62 @@ const CourierReport = ({
             <button onClick={() => setCourierDateRange('month')} className="presetButton">1 Month</button>
             <button onClick={() => setCourierDateRange('year')} className="presetButton">1 Year</button>
             <button onClick={() => setCourierDateRange('all')} className="presetButton">All Time</button>
+          </div>
+        </div>
+
+        {/* Filter Section */}
+        <div className="filterSection">
+          <h3>Filters</h3>
+          <div className="filterControls">
+            <div className="filterGroup">
+              <label>Courier Name:</label>
+              <input
+                type="text"
+                value={courierSearch}
+                onChange={(e) => setCourierSearch(e.target.value)}
+                placeholder="Search couriers..."
+                className="filterInput"
+              />
+            </div>
+
+            <div className="filterGroup">
+              <label>Facility:</label>
+              <input
+                type="text"
+                value={facilitySearch}
+                onChange={(e) => setFacilitySearch(e.target.value)}
+                placeholder="Search facilities..."
+                className="filterInput"
+              />
+            </div>
+
+            <div className="filterGroup">
+              <label>Min Claimed:</label>
+              <input
+                type="number"
+                value={minClaimed}
+                onChange={(e) => setMinClaimed(e.target.value)}
+                placeholder="0"
+                min="0"
+                className="filterInput"
+              />
+            </div>
+
+            <div className="filterGroup">
+              <label>Min Lost:</label>
+              <input
+                type="number"
+                value={minLost}
+                onChange={(e) => setMinLost(e.target.value)}
+                placeholder="0"
+                min="0"
+                className="filterInput"
+              />
+            </div>
+
+            <button onClick={clearFilters} className="clearFiltersButton">
+              Clear Filters
+            </button>
           </div>
         </div>
 
@@ -82,6 +180,9 @@ const CourierReport = ({
               <th className="sortable" onClick={() => handleCourierSort('courier_name')}>
                 Courier Name{getSortIndicator('courier_name', courierSortField, courierSortDirection)}
               </th>
+              <th className="sortable" onClick={() => handleCourierSort('facility_name')}>
+                Facility{getSortIndicator('facility_name', courierSortField, courierSortDirection)}
+              </th>
               <th className="sortable" onClick={() => handleCourierSort('packages_claimed')}>
                 Claimed{getSortIndicator('packages_claimed', courierSortField, courierSortDirection)}
               </th>
@@ -94,12 +195,6 @@ const CourierReport = ({
               <th className="sortable" onClick={() => handleCourierSort('facility_transfers')}>
                 Facility Transfers{getSortIndicator('facility_transfers', courierSortField, courierSortDirection)}
               </th>
-              <th className="sortable" onClick={() => handleCourierSort('currently_holding')}>
-                Currently Holding{getSortIndicator('currently_holding', courierSortField, courierSortDirection)}
-              </th>
-              <th className="sortable" onClick={() => handleCourierSort('request_approval_rate')}>
-                Request Approval Rate{getSortIndicator('request_approval_rate', courierSortField, courierSortDirection)}
-              </th>
             </tr>
           </thead>
           <tbody>
@@ -111,12 +206,11 @@ const CourierReport = ({
               >
                 <td>{courier.employee_id}</td>
                 <td>{courier.courier_name}</td>
+                <td>{courier.facility_name}</td>
                 <td>{courier.packages_claimed}</td>
                 <td>{courier.final_deliveries}</td>
                 <td>{courier.packages_lost}</td>
                 <td>{courier.facility_transfers}</td>
-                <td>{courier.currently_holding}</td>
-                <td><span className={courier.request_approval_rate >= 75 ? 'rate good' : 'rate needs-improvement'}>{courier.request_approval_rate}%</span></td>
               </tr>
             ))}
           </tbody>

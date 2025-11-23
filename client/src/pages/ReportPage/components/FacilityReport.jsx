@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { sortData, getSortIndicator } from './reportUtils';
 
 const FacilityReport = ({
@@ -12,10 +13,45 @@ const FacilityReport = ({
   handleFacilitySort,
   handleFacilityRowClick
 }) => {
+  // Filter states
+  const [facilitySearch, setFacilitySearch] = useState('');
+  const [minReceivedPackages, setMinReceivedPackages] = useState('');
+  const [statusFilter, setStatusFilter] = useState('active');
+
+  // Filter facilities based on selected filters
+  const filteredFacilities = useMemo(() => {
+    if (!reportData?.facilities) return [];
+    let filtered = reportData.facilities;
+
+    if (statusFilter === 'active') {
+      filtered = filtered.filter(f => f.status === 'active');
+    } else if (statusFilter === 'inactive') {
+      filtered = filtered.filter(f => f.status === 'inactive');
+    }
+
+    if (facilitySearch) {
+      filtered = filtered.filter(f =>
+        f.facility_name.toLowerCase().includes(facilitySearch.toLowerCase())
+      );
+    }
+
+    if (minReceivedPackages !== '') {
+      filtered = filtered.filter(f => f.packages_received >= parseInt(minReceivedPackages));
+    }
+
+    return filtered;
+  }, [reportData?.facilities, facilitySearch, minReceivedPackages, statusFilter]);
+
   if (!reportData || !reportData.facilities) return <div>No data available</div>;
 
-  // Sort the facilities data
-  const sortedFacilities = sortData(reportData.facilities, facilitySortField, facilitySortDirection);
+  // Sort the filtered facilities data
+  const sortedFacilities = sortData(filteredFacilities, facilitySortField, facilitySortDirection);
+
+  const clearFilters = () => {
+    setFacilitySearch('');
+    setMinReceivedPackages('');
+    setStatusFilter('all');
+  };
 
   return (
     <div className="reportContent">
@@ -48,6 +84,52 @@ const FacilityReport = ({
           </div>
         </div>
 
+        {/* Filter Section */}
+        <div className="filterSection">
+          <h3 style={{ margin: '0 0 15px 0' }}>Filters</h3>
+          <div className="filterControls">
+            <div className="filterGroup">
+              <label>Facility Name:</label>
+              <input
+                type="text"
+                value={facilitySearch}
+                onChange={(e) => setFacilitySearch(e.target.value)}
+                placeholder="Search facilities..."
+                className="filterInput"
+              />
+            </div>
+
+            <div className="filterGroup">
+              <label>Status:</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="filterInput"
+              >
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+
+            <div className="filterGroup">
+              <label>Min Received:</label>
+              <input
+                type="number"
+                value={minReceivedPackages}
+                onChange={(e) => setMinReceivedPackages(e.target.value)}
+                placeholder="0"
+                min="0"
+                className="filterInput"
+              />
+            </div>
+
+            <button onClick={clearFilters} className="clearFiltersButton">
+              Clear Filters
+            </button>
+          </div>
+        </div>
+
         <div className="reportStats">
           <div className="statCard">
             <div className="statValue">{reportData.summary.total_received}</div>
@@ -64,10 +146,6 @@ const FacilityReport = ({
           <div className="statCard">
             <div className="statValue">{reportData.summary.total_lost}</div>
             <div className="statLabel">Lost Packages</div>
-          </div>
-          <div className="statCard">
-            <div className="statValue">{reportData.summary.total_backlog}</div>
-            <div className="statLabel">Backlog</div>
           </div>
         </div>
       </div>
@@ -95,9 +173,6 @@ const FacilityReport = ({
               <th className="sortable" onClick={() => handleFacilitySort('packages_lost')}>
                 Lost{getSortIndicator('packages_lost', facilitySortField, facilitySortDirection)}
               </th>
-              <th className="sortable" onClick={() => handleFacilitySort('backlog')}>
-                Processing{getSortIndicator('backlog', facilitySortField, facilitySortDirection)}
-              </th>
               <th className="sortable" onClick={() => handleFacilitySort('status_in_transit')}>
                 In Transit{getSortIndicator('status_in_transit', facilitySortField, facilitySortDirection)}
               </th>
@@ -110,6 +185,7 @@ const FacilityReport = ({
                 key={facility.facility_id}
                 onClick={() => handleFacilityRowClick(facility)}
                 className="clickable-row"
+                style={facility.status === 'inactive' ? { opacity: 0.5 } : {}}
               >
                 <td>{facility.facility_id}</td>
                 <td>{facility.facility_name}</td>
@@ -118,7 +194,6 @@ const FacilityReport = ({
                 <td>{facility.packages_sent}</td>
                 <td>{facility.packages_delivered}</td>
                 <td>{facility.packages_lost}</td>
-                <td>{facility.backlog}</td>
                 <td>{facility.status_in_transit}</td>
                 <td>
                   {(() => {

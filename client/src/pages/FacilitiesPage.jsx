@@ -399,16 +399,41 @@ const FacilitiesPage = ({ globalAuthId }) => {
       const data = await response.json();
 
       if (data.success) {
-        setShowDeleteModal(false);
-        setDeletingFacility(null);
         fetchFacilities();
         showSuccessToast('Facility deleted successfully!');
       } else {
-        showErrorToast('Error deleting facility: ' + data.message);
+        showErrorToast(data.message || 'Error deleting facility.');
       }
     } catch (err) {
       console.error('Error deleting facility:', err);
       showErrorToast('Error deleting facility.');
+    } finally {
+      setShowDeleteModal(false);
+      setDeletingFacility(null);
+    }
+  };
+
+  const handleToggleStatus = async (facility) => {
+    const newStatus = facility.status === 'active' ? 'inactive' : 'active';
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/toggleFacilityStatus`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          facilityId: facility.facility_id,
+          status: newStatus
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        fetchFacilities();
+      } else {
+        console.error('Error updating facility status:', data.message);
+      }
+    } catch (err) {
+      console.error('Error updating facility status:', err);
     }
   };
 
@@ -696,7 +721,15 @@ const FacilitiesPage = ({ globalAuthId }) => {
                         <td>{encodeFacilityId(facility.facility_id)}</td>
                         <td>{facility.facility_name}</td>
                         <td className="capitalize">{facility.facility_type?.replace('_', ' ')}</td>
-                        <td className="capitalize">{facility.status}</td>
+                        <td>
+                          <button
+                            onClick={() => handleToggleStatus(facility)}
+                            className="facility-toggle-btn"
+                            style={{ backgroundColor: facility.status === 'active' ? '#3C467B' : '#6b7280' }}
+                          >
+                            {facility.status === 'active' ? 'Active' : 'Inactive'}
+                          </button>
+                        </td>
                         <td>{facility.days_of_week?.split(',').map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ')}</td>
                         <td>{facility.opening_hours} - {facility.closing_hours}</td>
                         <td>{facility.manager_name || 'N/A'}</td>

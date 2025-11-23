@@ -349,6 +349,17 @@
   cursor: pointer;
 }
 
+.facility-toggle-btn {
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  min-width: 65px;
+}
+
 .facility-table-stats {
   margin-top: 15px;
   color: #666;

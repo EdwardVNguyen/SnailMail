@@ -25,6 +25,7 @@ export const getFacilityReportController = async (req, res) => {
       SELECT
         f.facility_id,
         f.facility_name,
+        f.status,
         CONCAT(a.street_name, ', ', a.city_name, ', ', a.state_name, ' ', a.zip_code) as facility_address,
 
         -- Packages received (tracking events at this facility in date range)
@@ -50,7 +51,6 @@ export const getFacilityReportController = async (req, res) => {
         IFNULL(packages_sent.count, 0) as packages_sent,
 
         -- Status distribution
-        IFNULL(status_processing.count, 0) as backlog,
         IFNULL(status_in_transit.count, 0) as status_in_transit,
         IFNULL(status_out_for_delivery.count, 0) as status_out_for_delivery
 
@@ -151,22 +151,6 @@ export const getFacilityReportController = async (req, res) => {
         GROUP BY f_from.facility_id
       ) packages_sent ON f.facility_id = packages_sent.from_facility_id
 
-      -- Status distribution: processing (packages whose latest tracking event at this facility is 'processing')
-      LEFT JOIN (
-        SELECT
-          f_inner.facility_id,
-          COUNT(DISTINCT te.package_id) as count
-        FROM tracking_event te
-        INNER JOIN facility f_inner ON te.location_id = f_inner.address_id
-        WHERE te.event_type = 'processing'
-          AND te.event_time = (
-            SELECT MAX(te2.event_time)
-            FROM tracking_event te2
-            WHERE te2.package_id = te.package_id
-          )
-        GROUP BY f_inner.facility_id
-      ) status_processing ON f.facility_id = status_processing.facility_id
-
       -- Status distribution: in-transit (packages whose latest tracking event at this facility is 'in-transit')
       LEFT JOIN (
         SELECT
@@ -214,7 +198,6 @@ export const getFacilityReportController = async (req, res) => {
     const totalSent = rows.reduce((sum, row) => sum + row.packages_sent, 0);
     const totalDelivered = rows.reduce((sum, row) => sum + row.packages_delivered, 0);
     const totalLost = rows.reduce((sum, row) => sum + row.packages_lost, 0);
-    const totalBacklog = rows.reduce((sum, row) => sum + row.backlog, 0);
     const totalInTransit = rows.reduce((sum, row) => sum + row.status_in_transit, 0);
     const totalOutForDelivery = rows.reduce((sum, row) => sum + row.status_out_for_delivery, 0);
     const rowsWithDeliveryTime = rows.filter(row => row.avg_delivery_days > 0);
@@ -233,7 +216,6 @@ export const getFacilityReportController = async (req, res) => {
         total_sent: totalSent,
         total_delivered: totalDelivered,
         total_lost: totalLost,
-        total_backlog: totalBacklog,
         total_in_transit: totalInTransit,
         total_out_for_delivery: totalOutForDelivery
       }

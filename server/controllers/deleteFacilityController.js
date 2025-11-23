@@ -30,6 +30,17 @@ export const deleteFacilityController = async (req, res) => {
   }
   catch (error) {
     console.error('Error deleting facility:', error);
+
+    // Check for foreign key constraint violation
+    if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.errno === 1451) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: false,
+        message: 'Cannot delete facility: it has packages or employees associated with it. Please reassign or remove them first.'
+      }));
+      return;
+    }
+
     badServerRequest(res, 'Error deleting facility');
   }
   finally {

@@ -19,7 +19,7 @@ const DetailSection = ({
   const isCollapsed = collapsedSections[sectionKey];
   const currentPage = detailPages[sectionKey] || 1;
   const itemsPerPage = 50;
-  const sortField = detailSortField[sectionKey] || 'tracking_number';
+  const sortField = detailSortField[sectionKey] || 'package_id';
   const sortDirection = detailSortDirection[sectionKey] || 'asc';
 
   // Support both single extraColumn object and array of extraColumns
@@ -48,8 +48,8 @@ const DetailSection = ({
             <table className="detailTable">
               <thead>
                 <tr>
-                  <th className="sortable" onClick={() => onDetailSort(sectionKey, 'tracking_number')}>
-                    Tracking #{getSortIndicator('tracking_number', sortField, sortDirection)}
+                  <th className="sortable" onClick={() => onDetailSort(sectionKey, 'package_id')}>
+                    Package ID{getSortIndicator('package_id', sortField, sortDirection)}
                   </th>
                   <th className="sortable" onClick={() => onDetailSort(sectionKey, 'sender_name')}>
                     Sender{getSortIndicator('sender_name', sortField, sortDirection)}
@@ -84,7 +84,7 @@ const DetailSection = ({
                   }
                   return (
                     <tr key={`${sectionKey}-${uniqueKey}`}>
-                      <td>{pkg.tracking_number}</td>
+                      <td>{pkg.package_id}</td>
                       <td>{pkg.sender_name}</td>
                       <td>{pkg.recipient_name}</td>
                       <td>{pkg.package_type}</td>

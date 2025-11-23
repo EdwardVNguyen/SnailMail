@@ -1,9 +1,8 @@
 import { NavLink } from "react-router-dom";
-import { useEffect, useState } from "react";
-import './NavBar.css';
-
 import homeLogo from '../assets/homeLogo.svg';
 import profileIcon from '../assets/profileIcon.svg'
+import './NavBar.css';
+import { useEffect, useState } from "react";
 
 const NavBar = () => {
   const [isTiny, setIsTiny] = useState(false);

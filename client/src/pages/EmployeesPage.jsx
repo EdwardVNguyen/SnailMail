@@ -380,16 +380,17 @@ const EmployeesPage = ({ globalAuthId }) => {
       const data = await response.json();
 
       if (data.success) {
-        setShowDeleteModal(false);
-        setDeletingEmployee(null);
         fetchEmployees();
         showSuccessToast('Employee deleted successfully!');
       } else {
-        showErrorToast('Error deleting employee: ' + data.message);
+        showErrorToast(data.message || 'Error deleting employee.');
       }
     } catch (err) {
       console.error('Error deleting employee:', err);
       showErrorToast('Error deleting employee.');
+    } finally {
+      setShowDeleteModal(false);
+      setDeletingEmployee(null);
     }
   };
 
