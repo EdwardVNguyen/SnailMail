@@ -27,3 +27,4 @@ dist-ssr
 .vercel
 db_ver5.sql
 db_ver18.sql
+*.sql
