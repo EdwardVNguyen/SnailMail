@@ -2,7 +2,6 @@ import http from 'node:http'
 import { handlePostRequest } from './routers/handlePostRequest.js'
 import { handleGetRequest } from './routers/handleGetRequest.js'
 import pool from './config/database.js'
-import startEmailWorker from './workers/emailWorker.js'
 import { start } from 'node:repl'
 
 const PORT = process.env.SERVER_PORT || process.env.PORT || 8000
@@ -40,6 +39,4 @@ const server = http.createServer( (req,res) => {
 
 server.listen(PORT, () => {
   console.log(`listening to port: ${PORT}`)
-
-  // startEmailWorker();
 })
