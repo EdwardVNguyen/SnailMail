@@ -5,6 +5,7 @@ const DetailSection = ({
   title,
   description = null,
   data,
+  dateField = null,
   extraColumn = null,
   collapsedSections,
   detailPages,
@@ -24,6 +25,19 @@ const DetailSection = ({
 
   // Support both single extraColumn object and array of extraColumns
   const extraColumns = extraColumn ? (Array.isArray(extraColumn) ? extraColumn : [extraColumn]) : [];
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   // Sort the data
   const sortedData = sortData(data, sortField, sortDirection);
@@ -51,6 +65,11 @@ const DetailSection = ({
                   <th className="sortable" onClick={() => onDetailSort(sectionKey, 'package_id')}>
                     Package ID{getSortIndicator('package_id', sortField, sortDirection)}
                   </th>
+                  {dateField && (
+                    <th className="sortable" onClick={() => onDetailSort(sectionKey, dateField)}>
+                      Date{getSortIndicator(dateField, sortField, sortDirection)}
+                    </th>
+                  )}
                   <th className="sortable" onClick={() => onDetailSort(sectionKey, 'sender_name')}>
                     Sender{getSortIndicator('sender_name', sortField, sortDirection)}
                   </th>
@@ -85,6 +104,7 @@ const DetailSection = ({
                   return (
                     <tr key={`${sectionKey}-${uniqueKey}`}>
                       <td>{pkg.package_id}</td>
+                      {dateField && <td>{formatDate(pkg[dateField])}</td>}
                       <td>{pkg.sender_name}</td>
                       <td>{pkg.recipient_name}</td>
                       <td>{pkg.package_type}</td>
