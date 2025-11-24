@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import LoginOrSignUp from './pages/LogInOrSignUp';
 import CustomerPage from './pages/CustomerPage';
 import EmployeePage from './pages/EmployeePage';
+import ClerkAllPackagesPage from './pages/ClerkAllPackagesPage';
 import CourierPage from './pages/CourierPage';
 import ManagerPage from './pages/ManagerPage';
 
@@ -111,6 +112,7 @@ const App = () => {
           <Route element={<PrivateRoutes auth={auth} />}>
             <Route path='/customerPage' element={<CustomerPage globalAuthId={globalAuthId}/>} />
             <Route path='/employeePage' element={<EmployeePage globalAuthId={globalAuthId}/>} />
+            <Route path='/clerkAllPackages' element={<ClerkAllPackagesPage globalAuthId={globalAuthId}/>} />
             <Route path='/courierPage' element={<CourierPage globalAuthId={globalAuthId}/>} />
             <Route path='/courierPackage' element={<CourierPackagePage globalAuthId={globalAuthId}/>} />
             <Route path='/clerkCourierApproval' element={<ClerkCourierApprovalPage globalAuthId={globalAuthId}/>} />

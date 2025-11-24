@@ -14,16 +14,18 @@ export const getEmployeeDataController = async (req, res) => {
       return badClientRequest(res, 'authId is required');
     }
 
-    // SQL to get employee info, address, and authentication info
+    // SQL to get employee info, address, facility, and authentication info
     const sql = `
       SELECT
         e.first_name, e.last_name, e.address_id,
-        e.auth_id, e.account_type, e.employee_id, e.employee_ssn, e.salary, e.profile_picture_url,
+        e.auth_id, e.account_type, e.employee_id, e.employee_ssn, e.salary, e.profile_picture_url, e.facility_id,
         a.street_name, a.city_name, a.state_name, a.zip_code,
-        au.email, au.password
+        au.email, au.password,
+        f.facility_name
       FROM employee e
       LEFT JOIN address a ON e.address_id = a.address_id
       LEFT JOIN authentication au ON e.auth_id = au.auth_id
+      LEFT JOIN facility f ON e.facility_id = f.facility_id
       WHERE e.auth_id = ?
     `;
 

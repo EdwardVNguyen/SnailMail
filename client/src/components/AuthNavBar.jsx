@@ -150,6 +150,9 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
           ) : globalAccountType === 'clerk' ? (
             <>
               <li>
+                <NavLink to="/clerkAllPackages">All Packages</NavLink>
+              </li>
+              <li>
                 <NavLink to="/clerkCourierApproval">Courier Requests</NavLink>
               </li>
             </>
