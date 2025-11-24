@@ -61,17 +61,23 @@ const TransactionReport = ({
 
     filteredTransactions.forEach(t => {
       const amount = parseFloat(t.transaction_amount);
+      const refundAmount = parseFloat(t.refund_amount || 0);
+
       if (ERROR_STATUSES.includes(t.package_status)) {
-        totalRefunded += amount;
+        totalRefunded += amount; // Full refund for error statuses
+      } else if (t.is_late_delivery) {
+        totalRevenue += (amount - refundAmount); // Net amount after 25% refund
+        totalRefunded += refundAmount; // 25% refund
       } else {
-        totalRevenue += amount;
+        totalRevenue += amount; // Full amount
       }
     });
 
     return {
       count: filteredTransactions.length,
       totalRevenue: totalRevenue,
-      totalRefunded: totalRefunded
+      totalRefunded: totalRefunded,
+      netRevenue: totalRevenue - totalRefunded
     };
   }, [filteredTransactions]);
 
@@ -220,7 +226,7 @@ const TransactionReport = ({
           </div>
           <div className="statCard">
             <div className="statValue">{formatCurrency(filteredSummary.totalRevenue)}</div>
-            <div className="statLabel">Total Revenue</div>
+            <div className="statLabel">Net Revenue</div>
           </div>
           <div className="statCard">
             <div className="statValue" style={{ color: '#dc2626' }}>{formatCurrency(filteredSummary.totalRefunded)}</div>
@@ -246,6 +252,9 @@ const TransactionReport = ({
                 Package Type{getSortIndicator('package_type', sortField, sortDirection)}
               </th>
               <th>Customer</th>
+              <th className="sortable" onClick={() => handleSort('package_status')}>
+                Status{getSortIndicator('package_status', sortField, sortDirection)}
+              </th>
               <th className="sortable" onClick={() => handleSort('transaction_amount')}>
                 Amount{getSortIndicator('transaction_amount', sortField, sortDirection)}
               </th>
@@ -253,24 +262,48 @@ const TransactionReport = ({
           </thead>
           <tbody>
             {sortedTransactions.length > 0 ? (
-              sortedTransactions.map((transaction) => (
-                <tr key={transaction.transaction_id}>
-                  <td>{transaction.package_id}</td>
-                  <td>{formatDate(transaction.transaction_date)}</td>
-                  <td>{transaction.facility_name}</td>
-                  <td>{transaction.package_type.charAt(0).toUpperCase() + transaction.package_type.slice(1)}</td>
-                  <td>{transaction.customer_first_name} {transaction.customer_last_name}</td>
-                  <td className="amount" style={ERROR_STATUSES.includes(transaction.package_status) ? { color: '#dc2626' } : {}}>
-                    {ERROR_STATUSES.includes(transaction.package_status)
-                      ? `-${formatCurrency(transaction.transaction_amount)}`
-                      : formatCurrency(transaction.transaction_amount)
-                    }
-                  </td>
-                </tr>
-              ))
+              sortedTransactions.map((transaction) => {
+                const isError = ERROR_STATUSES.includes(transaction.package_status);
+                const isLate = transaction.is_late_delivery;
+                const refundAmount = parseFloat(transaction.refund_amount || 0);
+
+                return (
+                  <tr key={transaction.transaction_id}>
+                    <td>{transaction.package_id}</td>
+                    <td>{formatDate(transaction.transaction_date)}</td>
+                    <td>{transaction.facility_name}</td>
+                    <td>{transaction.package_type.charAt(0).toUpperCase() + transaction.package_type.slice(1)}</td>
+                    <td>{transaction.customer_first_name} {transaction.customer_last_name}</td>
+                    <td>
+                      <span className={`status-badge status-${transaction.package_status}`}>
+                        {transaction.package_status}
+                      </span>
+                    </td>
+                    <td className="amount">
+                      {isError ? (
+                        <span style={{ color: '#dc2626' }}>
+                          -{formatCurrency(transaction.transaction_amount)}
+                        </span>
+                      ) : isLate ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.9em' }}>
+                          <span>Total: {formatCurrency(transaction.transaction_amount)}</span>
+                          <span style={{ color: '#dc2626' }}>
+                            Refunded: -{formatCurrency(refundAmount)}
+                          </span>
+                          <span style={{ fontWeight: '600', borderTop: '1px solid #e5e7eb', paddingTop: '2px' }}>
+                            Overall: {formatCurrency(transaction.final_amount)}
+                          </span>
+                        </div>
+                      ) : (
+                        formatCurrency(transaction.transaction_amount)
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '30px' }}>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '30px' }}>
                   No transactions match the selected filters
                 </td>
               </tr>

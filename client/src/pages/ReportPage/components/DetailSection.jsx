@@ -12,18 +12,38 @@ const DetailSection = ({
   detailSortDirection,
   onSectionToggle,
   onDetailSort,
-  onPageChange
+  onPageChange,
+  defaultSortField = 'package_id',
+  defaultSortDirection = 'asc'
 }) => {
   if (!data || data.length === 0) return null;
 
   const isCollapsed = collapsedSections[sectionKey];
   const currentPage = detailPages[sectionKey] || 1;
   const itemsPerPage = 50;
-  const sortField = detailSortField[sectionKey] || 'package_id';
-  const sortDirection = detailSortDirection[sectionKey] || 'asc';
+  const sortField = detailSortField[sectionKey] || defaultSortField;
+  const sortDirection = detailSortDirection[sectionKey] || defaultSortDirection;
 
   // Support both single extraColumn object and array of extraColumns
   const extraColumns = extraColumn ? (Array.isArray(extraColumn) ? extraColumn : [extraColumn]) : [];
+
+  // Helper function to format dates
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Helper function to check if a field is a date field
+  const isDateField = (fieldName) => {
+    return fieldName.includes('date') || fieldName.includes('time') || fieldName.includes('Date') || fieldName.includes('Time');
+  };
 
   // Sort the data
   const sortedData = sortData(data, sortField, sortDirection);
@@ -90,7 +110,9 @@ const DetailSection = ({
                       <td>{pkg.package_type}</td>
                       <td><span className={`status ${pkg.package_status}`}>{pkg.package_status}</span></td>
                       {extraColumns.map((col, idx) => (
-                        <td key={idx}>{pkg[col.field]}</td>
+                        <td key={idx}>
+                          {isDateField(col.field) ? formatDate(pkg[col.field]) : pkg[col.field]}
+                        </td>
                       ))}
                     </tr>
                   );
