@@ -11,6 +11,11 @@ export const getFacilityReportController = async (req, res) => {
     let endDate = queryObject.endDate;
     let startDate = queryObject.startDate;
 
+    // If startDate is empty/null/undefined, set to a far past date for "all time"
+    if (!startDate || startDate === '') {
+      startDate = '1970-01-01';
+    }
+
     // Ensure startDate is before endDate (swap if needed)
     if (startDate > endDate) {
       [startDate, endDate] = [endDate, startDate];

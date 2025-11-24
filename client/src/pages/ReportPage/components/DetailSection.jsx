@@ -5,6 +5,7 @@ const DetailSection = ({
   title,
   description = null,
   data,
+  dateField = null,
   extraColumn = null,
   collapsedSections,
   detailPages,
@@ -12,22 +13,21 @@ const DetailSection = ({
   detailSortDirection,
   onSectionToggle,
   onDetailSort,
-  onPageChange,
-  defaultSortField = 'package_id',
-  defaultSortDirection = 'asc'
+  onPageChange
 }) => {
   if (!data || data.length === 0) return null;
 
   const isCollapsed = collapsedSections[sectionKey];
   const currentPage = detailPages[sectionKey] || 1;
   const itemsPerPage = 50;
-  const sortField = detailSortField[sectionKey] || defaultSortField;
-  const sortDirection = detailSortDirection[sectionKey] || defaultSortDirection;
+  // If a dateField is provided and no sort is set, default to sorting by date descending (most recent first)
+  const sortField = detailSortField[sectionKey] || (dateField || 'package_id');
+  const sortDirection = detailSortDirection[sectionKey] || (dateField ? 'desc' : 'asc');
 
   // Support both single extraColumn object and array of extraColumns
   const extraColumns = extraColumn ? (Array.isArray(extraColumn) ? extraColumn : [extraColumn]) : [];
 
-  // Helper function to format dates
+  // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -38,11 +38,6 @@ const DetailSection = ({
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  // Helper function to check if a field is a date field
-  const isDateField = (fieldName) => {
-    return fieldName.includes('date') || fieldName.includes('time') || fieldName.includes('Date') || fieldName.includes('Time');
   };
 
   // Sort the data
@@ -71,6 +66,11 @@ const DetailSection = ({
                   <th className="sortable" onClick={() => onDetailSort(sectionKey, 'package_id')}>
                     Package ID{getSortIndicator('package_id', sortField, sortDirection)}
                   </th>
+                  {dateField && (
+                    <th className="sortable" onClick={() => onDetailSort(sectionKey, dateField)}>
+                      Date{getSortIndicator(dateField, sortField, sortDirection)}
+                    </th>
+                  )}
                   <th className="sortable" onClick={() => onDetailSort(sectionKey, 'sender_name')}>
                     Sender{getSortIndicator('sender_name', sortField, sortDirection)}
                   </th>
@@ -105,14 +105,13 @@ const DetailSection = ({
                   return (
                     <tr key={`${sectionKey}-${uniqueKey}`}>
                       <td>{pkg.package_id}</td>
+                      {dateField && <td>{formatDate(pkg[dateField])}</td>}
                       <td>{pkg.sender_name}</td>
                       <td>{pkg.recipient_name}</td>
                       <td>{pkg.package_type}</td>
                       <td><span className={`status ${pkg.package_status}`}>{pkg.package_status}</span></td>
                       {extraColumns.map((col, idx) => (
-                        <td key={idx}>
-                          {isDateField(col.field) ? formatDate(pkg[col.field]) : pkg[col.field]}
-                        </td>
+                        <td key={idx}>{pkg[col.field]}</td>
                       ))}
                     </tr>
                   );

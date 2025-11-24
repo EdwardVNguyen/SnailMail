@@ -12,6 +12,11 @@ export const getFacilityDetailsController = async (req, res) => {
     let endDate = queryObject.endDate;
     let startDate = queryObject.startDate;
 
+    // If startDate is empty/null/undefined, set to a far past date for "all time"
+    if (!startDate || startDate === '') {
+      startDate = '1970-01-01';
+    }
+
     // Ensure startDate is before endDate (swap if needed)
     if (startDate > endDate) {
       [startDate, endDate] = [endDate, startDate];
@@ -124,7 +129,7 @@ export const getFacilityDetailsController = async (req, res) => {
         CONCAT(recipient.first_name, ' ', recipient.last_name) as recipient_name,
         p.package_type,
         p.package_status,
-        p.last_updated as lost_date,
+        marked_by.event_time,
         CONCAT(marked_by.first_name, ' ', marked_by.last_name) as marked_by,
         CONCAT(last_courier.first_name, ' ', last_courier.last_name) as last_courier
       FROM package p
@@ -133,7 +138,7 @@ export const getFacilityDetailsController = async (req, res) => {
       INNER JOIN facility f ON f.facility_id = ?
       -- Employee who marked it as lost/damaged (created the problem event)
       LEFT JOIN (
-        SELECT te.package_id, e.first_name, e.last_name
+        SELECT te.package_id, e.first_name, e.last_name, te.event_time
         FROM tracking_event te
         INNER JOIN authentication auth ON te.created_by = auth.auth_id
         INNER JOIN employee e ON auth.auth_id = e.auth_id
@@ -186,12 +191,21 @@ export const getFacilityDetailsController = async (req, res) => {
         p.package_type,
         p.weight,
         p.package_status,
-        p.last_updated as status_date,
+        latest_event.event_time,
         CONCAT(courier.first_name, ' ', courier.last_name) as courier_name
       FROM package p
       INNER JOIN customer sender ON p.sender_id = sender.customer_id
       INNER JOIN customer recipient ON p.recipient_id = recipient.customer_id
       LEFT JOIN employee courier ON p.courier_id = courier.employee_id
+      LEFT JOIN (
+        SELECT te.package_id, te.event_time
+        FROM tracking_event te
+        WHERE te.event_time = (
+          SELECT MAX(te2.event_time)
+          FROM tracking_event te2
+          WHERE te2.package_id = te.package_id
+        )
+      ) latest_event ON p.package_id = latest_event.package_id
       WHERE p.package_status = 'in-transit'
         AND EXISTS (
           SELECT 1 FROM tracking_event te
@@ -204,7 +218,7 @@ export const getFacilityDetailsController = async (req, res) => {
               WHERE te2.package_id = p.package_id
             )
         )
-      ORDER BY p.last_updated DESC`,
+      ORDER BY latest_event.event_time DESC`,
       [facilityId]
     );
 
@@ -218,12 +232,21 @@ export const getFacilityDetailsController = async (req, res) => {
         p.package_type,
         p.weight,
         p.package_status,
-        p.last_updated as status_date,
+        latest_event.event_time,
         CONCAT(courier.first_name, ' ', courier.last_name) as courier_name
       FROM package p
       INNER JOIN customer sender ON p.sender_id = sender.customer_id
       INNER JOIN customer recipient ON p.recipient_id = recipient.customer_id
       LEFT JOIN employee courier ON p.courier_id = courier.employee_id
+      LEFT JOIN (
+        SELECT te.package_id, te.event_time
+        FROM tracking_event te
+        WHERE te.event_time = (
+          SELECT MAX(te2.event_time)
+          FROM tracking_event te2
+          WHERE te2.package_id = te.package_id
+        )
+      ) latest_event ON p.package_id = latest_event.package_id
       WHERE p.package_status = 'out-for-delivery'
         AND EXISTS (
           SELECT 1 FROM tracking_event te
@@ -236,7 +259,7 @@ export const getFacilityDetailsController = async (req, res) => {
               WHERE te2.package_id = p.package_id
             )
         )
-      ORDER BY p.last_updated DESC`,
+      ORDER BY latest_event.event_time DESC`,
       [facilityId]
     );
 
