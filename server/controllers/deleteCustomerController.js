@@ -49,7 +49,7 @@ export const deleteCustomerController = async (req, res) => {
 
     const customer = customerRows[0];
 
-    // Perform soft delete (BEFORE DELETE trigger will archive the record)
+    // Delete customer record
     const [result] = await connection.query(
       `DELETE FROM customer WHERE customer_id = ?`,
       [customer.customer_id]
