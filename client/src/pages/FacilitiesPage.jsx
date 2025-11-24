@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './UserShipping.css';
 import './FacilitiesPage.css';
-import './CreatePackage.css';
 import { isValidZipCode, isValidState } from '../utils/validation';
 import { Modal } from '../components/Modal';
 import { Toast } from '../components/Toast';

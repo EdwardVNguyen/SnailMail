@@ -11,10 +11,8 @@ import ManagerPage from './pages/ManagerPage';
 
 import CustomerProfilePage from './pages/CustomerProfilePage';
 import EmployeeProfilePage from './pages/EmployeeProfilePage';
-import UserProfile from './pages/UserProfile';
 import UserShipping from './pages/UserShipping';
 import UserTrackPackage from './pages/UserTrackPackage';
-import CreatePackage from './pages/CreatePackage';
 import UserCreateShipment from './pages/UserCreateShipment';
 import MovePackages from './pages/MovePackages';
 import ReportPage from './pages/ReportPage';
@@ -93,7 +91,6 @@ const App = () => {
         <Routes>
           {/* non-protected routes */}
           <Route path="/" element={<Home/>} />
-          <Route path="/createPackage" element={<CreatePackage />} />
           <Route path="/tracking" element={<Tracking/>} />
           <Route path="/about" element={<About/>} />
           <Route path="/support" element={<Support/>} />
