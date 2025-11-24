@@ -34,7 +34,7 @@ export const softDeleteEmployeeController = async (req, res) => {
 
     const employee = employeeRows[0];
 
-    // Perform soft delete (BEFORE DELETE trigger will archive the record)
+    // Delete employee record
     const [result] = await connection.query(
       `DELETE FROM employee WHERE employee_id = ?`,
       [employeeId]
