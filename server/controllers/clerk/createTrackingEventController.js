@@ -144,6 +144,20 @@ export const createTrackingEventController = async (req, res) => {
       [packageStatus, authId, packageId]
     );
 
+    // Auto-reject pending courier requests for error status events
+    const errorStatuses = ['lost', 'returned', 'undeliverable', 'failed-delivery', 'damaged'];
+    if (errorStatuses.includes(eventType)) {
+      await connection.execute(
+        `UPDATE courier_package_request
+         SET request_status = 'rejected',
+             reviewed_by = ?,
+             review_date = NOW(),
+             updated_by = ?
+         WHERE package_id = ? AND request_status = 'pending'`,
+        [clerk.employee_id, authId, packageId]
+      );
+    }
+
     await connection.commit();
 
     res.statusCode = 200;

@@ -237,24 +237,28 @@ const EmployeePage = ({ globalAuthId }) => {
                     <td>{pkg.courier_name || 'Not Assigned'}</td>
                     <td>{new Date(pkg.created_at).toLocaleDateString()}</td>
                     <td className="action-buttons">
-                      <button
-                        onClick={() => openTrackingModal(pkg)}
-                        className="btn-primary"
-                      >
-                        Add Event
-                      </button>
+                      {pkg.package_status !== 'delivered' && (
+                        <button
+                          onClick={() => openTrackingModal(pkg)}
+                          className="btn-primary"
+                        >
+                          Add Event
+                        </button>
+                      )}
                       <button
                         onClick={() => openHistoryModal(pkg)}
                         className="btn-secondary"
                       >
                         View History
                       </button>
-                      <button
-                        onClick={() => openDimensionsModal(pkg)}
-                        className="btn-primary"
-                      >
-                        Edit Dimensions
-                      </button>
+                      {pkg.package_status !== 'delivered' && (
+                        <button
+                          onClick={() => openDimensionsModal(pkg)}
+                          className="btn-primary"
+                        >
+                          Edit Dimensions
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
