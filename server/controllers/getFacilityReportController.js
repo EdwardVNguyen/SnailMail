@@ -76,31 +76,16 @@ export const getFacilityReportController = async (req, res) => {
         GROUP BY a.address_id
       ) packages_received ON f.address_id = packages_received.address_id
 
-      -- Packages delivered: packages whose LAST tracking event was 'delivered' at this facility
+      -- Packages delivered: packages with status='delivered' at this facility
       LEFT JOIN (
         SELECT
-          te_latest.location_id,
-          COUNT(DISTINCT te_latest.package_id) as count
-        FROM (
-          SELECT
-            te.package_id,
-            te.event_type,
-            te.location_id,
-            te.event_time
-          FROM tracking_event te
-          INNER JOIN (
-            SELECT
-              package_id,
-              MAX(event_time) as max_event_time
-            FROM tracking_event
-            WHERE event_time BETWEEN ? AND ?
-            GROUP BY package_id
-          ) latest ON te.package_id = latest.package_id
-                 AND te.event_time = latest.max_event_time
-        ) te_latest
-        WHERE te_latest.event_type = 'delivered'
-        GROUP BY te_latest.location_id
-      ) packages_delivered ON f.address_id = packages_delivered.location_id
+          p.facility_id,
+          COUNT(DISTINCT p.package_id) as count
+        FROM package p
+        WHERE p.package_status = 'delivered'
+          AND p.last_updated BETWEEN ? AND ?
+        GROUP BY p.facility_id
+      ) packages_delivered ON f.facility_id = packages_delivered.facility_id
 
       -- Problem packages: lost, undeliverable, failed-delivery, damaged where marked within date range
       LEFT JOIN (

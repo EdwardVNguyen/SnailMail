@@ -62,8 +62,7 @@ const ReportPage = ({ globalAuthId }) => {
     clerkCreatedEvents: true,
     packagesDelivered: true,
     packagesLost: true,
-    statusInTransit: true,
-    statusOutForDelivery: true
+    statusInTransit: true
   });
 
   // Sorting state for detail tables
@@ -192,8 +191,7 @@ const ReportPage = ({ globalAuthId }) => {
       packagesLost: true,
       packagesLateDelivery: true,
       packagesSent: true,
-      statusInTransit: true,
-      statusOutForDelivery: true
+      statusInTransit: true
     });
     setDetailPages({});
     setDetailSortField({});
@@ -514,7 +512,6 @@ const ReportPage = ({ globalAuthId }) => {
               <DetailSection sectionKey="packagesLateDelivery" title="Late Deliveries" description="Packages marked as delivered late" data={facilityDetails.details.packagesLateDelivery} dateField="late_date" extraColumn={{ field: 'delivered_by', label: 'Delivered By' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
               <DetailSection sectionKey="packagesSent" title="Packages Sent" description="Packages transferred to other facilities" data={facilityDetails.details.packagesSent} dateField="sent_time" extraColumn={{ field: 'destination_facility', label: 'Destination Facility' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
               <DetailSection sectionKey="statusInTransit" title="In Transit" description="Packages currently being held by couriers" data={facilityDetails.details.statusInTransit} dateField="status_date" extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
-              <DetailSection sectionKey="statusOutForDelivery" title="Out for Delivery" description="Packages currently out for delivery to recipients" data={facilityDetails.details.statusOutForDelivery} dateField="status_date" extraColumn={{ field: 'courier_name', label: 'Courier' }} collapsedSections={collapsedSections} detailPages={detailPages} detailSortField={detailSortField} detailSortDirection={detailSortDirection} onSectionToggle={handleSectionToggle} onDetailSort={handleDetailSort} onPageChange={handlePageChange} />
             </div>
           ) : (
             <div>No details available</div>

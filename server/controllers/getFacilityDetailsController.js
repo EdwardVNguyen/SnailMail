@@ -78,7 +78,7 @@ export const getFacilityDetailsController = async (req, res) => {
       [facilityId, startDate, endDate]
     );
 
-    // Packages Delivered: packages whose last tracking event was 'delivered' at this facility
+    // Packages Delivered: all packages with delivered status at this facility
     const [packagesDelivered] = await connection.execute(
       `SELECT
         p.package_id,
@@ -88,36 +88,17 @@ export const getFacilityDetailsController = async (req, res) => {
         p.package_type,
         p.weight,
         p.package_status,
-        te_latest.event_time as delivery_date,
+        p.last_updated as delivery_date,
         CONCAT(courier.first_name, ' ', courier.last_name) as delivered_by
       FROM package p
       INNER JOIN customer sender ON p.sender_id = sender.customer_id
       INNER JOIN customer recipient ON p.recipient_id = recipient.customer_id
-      INNER JOIN (
-        SELECT
-          te.package_id,
-          te.event_type,
-          te.location_id,
-          te.event_time,
-          te.created_by
-        FROM tracking_event te
-        INNER JOIN (
-          SELECT
-            package_id,
-            MAX(event_time) as max_event_time
-          FROM tracking_event
-          WHERE event_time BETWEEN ? AND ?
-          GROUP BY package_id
-        ) latest ON te.package_id = latest.package_id
-               AND te.event_time = latest.max_event_time
-      ) te_latest ON p.package_id = te_latest.package_id
-      INNER JOIN facility f ON te_latest.location_id = f.address_id
-      LEFT JOIN authentication ON te_latest.created_by = authentication.auth_id
-      LEFT JOIN employee courier ON authentication.auth_id = courier.auth_id
-      WHERE te_latest.event_type = 'delivered'
-        AND f.facility_id = ?
-      ORDER BY te_latest.event_time DESC`,
-      [startDate, endDate, facilityId]
+      LEFT JOIN employee courier ON p.courier_id = courier.employee_id
+      WHERE p.package_status = 'delivered'
+        AND p.facility_id = ?
+        AND p.last_updated BETWEEN ? AND ?
+      ORDER BY p.last_updated DESC`,
+      [facilityId, startDate, endDate]
     );
 
     // Problem Packages: all lost, undeliverable, failed-delivery, damaged packages at this facility
@@ -250,47 +231,6 @@ export const getFacilityDetailsController = async (req, res) => {
       [facilityId]
     );
 
-    // Status: Out-for-Delivery
-    const [statusOutForDelivery] = await connection.execute(
-      `SELECT
-        p.package_id,
-        p.tracking_number,
-        CONCAT(sender.first_name, ' ', sender.last_name) as sender_name,
-        CONCAT(recipient.first_name, ' ', recipient.last_name) as recipient_name,
-        p.package_type,
-        p.weight,
-        p.package_status,
-        latest_event.event_time,
-        CONCAT(courier.first_name, ' ', courier.last_name) as courier_name
-      FROM package p
-      INNER JOIN customer sender ON p.sender_id = sender.customer_id
-      INNER JOIN customer recipient ON p.recipient_id = recipient.customer_id
-      LEFT JOIN employee courier ON p.courier_id = courier.employee_id
-      LEFT JOIN (
-        SELECT te.package_id, te.event_time
-        FROM tracking_event te
-        WHERE te.event_time = (
-          SELECT MAX(te2.event_time)
-          FROM tracking_event te2
-          WHERE te2.package_id = te.package_id
-        )
-      ) latest_event ON p.package_id = latest_event.package_id
-      WHERE p.package_status = 'out-for-delivery'
-        AND EXISTS (
-          SELECT 1 FROM tracking_event te
-          INNER JOIN facility f ON te.location_id = f.address_id
-          WHERE te.package_id = p.package_id
-            AND f.facility_id = ?
-            AND te.event_time = (
-              SELECT MAX(te2.event_time)
-              FROM tracking_event te2
-              WHERE te2.package_id = p.package_id
-            )
-        )
-      ORDER BY latest_event.event_time DESC`,
-      [facilityId]
-    );
-
     // Packages Sent: packages that left this facility for another facility
     const [packagesSent] = await connection.execute(
       `SELECT DISTINCT
@@ -381,7 +321,6 @@ export const getFacilityDetailsController = async (req, res) => {
         packagesLateDelivery,
         packagesSent,
         statusInTransit,
-        statusOutForDelivery,
         clerkCreatedEvents
       }
     }));
