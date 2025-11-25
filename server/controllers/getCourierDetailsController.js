@@ -249,6 +249,7 @@ export const getCourierDetailsController = async (req, res) => {
         AND te.event_type = 'delivered'
         AND te.event_time BETWEEN ? AND ?
         AND f.facility_id IS NULL
+        AND p.package_status = 'delivered'
       ORDER BY te.event_time DESC`,
       [authId, startDate, endDate]
     );

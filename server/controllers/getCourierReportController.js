@@ -187,10 +187,12 @@ export const getCourierReportController = async (req, res) => {
           te.created_by,
           COUNT(DISTINCT te.package_id) as count
         FROM tracking_event te
+        INNER JOIN package p ON te.package_id = p.package_id
         LEFT JOIN facility f ON te.location_id = f.address_id
         WHERE te.event_type = 'delivered'
           AND te.event_time BETWEEN ? AND ?
           AND f.facility_id IS NULL
+          AND p.package_status = 'delivered'
         GROUP BY te.created_by
       ) final_deliveries ON auth.auth_id = final_deliveries.created_by
 

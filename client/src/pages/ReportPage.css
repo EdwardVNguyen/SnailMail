@@ -734,3 +734,9 @@
   color: var(--text-primary);
   font-weight: 500;
 }
+
+/* Late delivery status badge styling */
+.status.late-delivery {
+  background-color: var(--color-success-dark);
+  color: var(--text-inverse);
+}
