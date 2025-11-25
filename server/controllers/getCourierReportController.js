@@ -63,6 +63,9 @@ export const getCourierReportController = async (req, res) => {
         -- Lost packages (tracking events type='lost' created by courier)
         IFNULL(packages_lost.count, 0) as packages_lost,
 
+        -- Late delivery packages (packages where courier was last handler)
+        IFNULL(packages_late_delivery.count, 0) as packages_late_delivery,
+
         -- Lost package rate
         CASE
           WHEN IFNULL(packages_claimed.count, 0) > 0
@@ -209,6 +212,32 @@ export const getCourierReportController = async (req, res) => {
         GROUP BY last_courier.employee_id
       ) packages_lost ON e.employee_id = packages_lost.courier_id
 
+      -- Late delivery packages (packages where courier was last to handle)
+      LEFT JOIN (
+        SELECT
+          last_courier.employee_id as courier_id,
+          COUNT(DISTINCT p.package_id) as count
+        FROM package p
+        LEFT JOIN (
+          SELECT te.package_id, e.employee_id
+          FROM tracking_event te
+          INNER JOIN authentication auth ON te.created_by = auth.auth_id
+          INNER JOIN employee e ON auth.auth_id = e.auth_id
+          WHERE e.account_type = 'courier'
+            AND te.event_time = (
+              SELECT MAX(te2.event_time)
+              FROM tracking_event te2
+              INNER JOIN authentication auth2 ON te2.created_by = auth2.auth_id
+              INNER JOIN employee e2 ON auth2.auth_id = e2.auth_id
+              WHERE te2.package_id = te.package_id
+                AND e2.account_type = 'courier'
+            )
+        ) last_courier ON p.package_id = last_courier.package_id
+        WHERE p.package_status = 'late-delivery'
+          AND last_courier.employee_id IS NOT NULL
+        GROUP BY last_courier.employee_id
+      ) packages_late_delivery ON e.employee_id = packages_late_delivery.courier_id
+
       -- Average delivery time
       LEFT JOIN (
         SELECT
@@ -300,6 +329,7 @@ export const getCourierReportController = async (req, res) => {
     const totalDelivered = rows.reduce((sum, row) => sum + row.packages_delivered, 0);
     const totalInTransit = rows.reduce((sum, row) => sum + row.packages_in_transit, 0);
     const totalLost = rows.reduce((sum, row) => sum + row.packages_lost, 0);
+    const totalLateDelivery = rows.reduce((sum, row) => sum + row.packages_late_delivery, 0);
     const totalFacilityTransfers = rows.reduce((sum, row) => sum + row.facility_transfers, 0);
     const totalFinalDeliveries = rows.reduce((sum, row) => sum + row.final_deliveries, 0);
     const totalApproved = rows.reduce((sum, row) => sum + row.requests_approved, 0);
@@ -317,6 +347,7 @@ export const getCourierReportController = async (req, res) => {
         total_delivered: totalDelivered,
         total_in_transit: totalInTransit,
         total_lost: totalLost,
+        total_late_delivery: totalLateDelivery,
         total_facility_transfers: totalFacilityTransfers,
         total_final_deliveries: totalFinalDeliveries,
         overall_delivery_rate: totalClaimed > 0 ? ((totalDelivered / totalClaimed) * 100).toFixed(2) : '0',

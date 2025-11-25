@@ -160,6 +160,10 @@ const CourierReport = ({
             <div className="statLabel">Lost Packages</div>
           </div>
           <div className="statCard">
+            <div className="statValue">{reportData.summary.total_late_delivery}</div>
+            <div className="statLabel">Late Deliveries</div>
+          </div>
+          <div className="statCard">
             <div className="statValue">{reportData.summary.total_facility_transfers}</div>
             <div className="statLabel">Facility Transfers</div>
           </div>
@@ -192,6 +196,9 @@ const CourierReport = ({
               <th className="sortable" onClick={() => handleCourierSort('packages_lost')}>
                 Lost{getSortIndicator('packages_lost', courierSortField, courierSortDirection)}
               </th>
+              <th className="sortable" onClick={() => handleCourierSort('packages_late_delivery')}>
+                Late{getSortIndicator('packages_late_delivery', courierSortField, courierSortDirection)}
+              </th>
               <th className="sortable" onClick={() => handleCourierSort('facility_transfers')}>
                 Facility Transfers{getSortIndicator('facility_transfers', courierSortField, courierSortDirection)}
               </th>
@@ -210,6 +217,7 @@ const CourierReport = ({
                 <td>{courier.packages_claimed}</td>
                 <td>{courier.final_deliveries}</td>
                 <td>{courier.packages_lost}</td>
+                <td>{courier.packages_late_delivery}</td>
                 <td>{courier.facility_transfers}</td>
               </tr>
             ))}

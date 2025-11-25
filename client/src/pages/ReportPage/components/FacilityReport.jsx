@@ -147,6 +147,10 @@ const FacilityReport = ({
             <div className="statValue">{reportData.summary.total_lost}</div>
             <div className="statLabel">Lost Packages</div>
           </div>
+          <div className="statCard">
+            <div className="statValue">{reportData.summary.total_late_delivery}</div>
+            <div className="statLabel">Late Deliveries</div>
+          </div>
         </div>
       </div>
 
@@ -173,6 +177,9 @@ const FacilityReport = ({
               <th className="sortable" onClick={() => handleFacilitySort('packages_lost')}>
                 Lost{getSortIndicator('packages_lost', facilitySortField, facilitySortDirection)}
               </th>
+              <th className="sortable" onClick={() => handleFacilitySort('packages_late_delivery')}>
+                Late{getSortIndicator('packages_late_delivery', facilitySortField, facilitySortDirection)}
+              </th>
               <th className="sortable" onClick={() => handleFacilitySort('status_in_transit')}>
                 In Transit{getSortIndicator('status_in_transit', facilitySortField, facilitySortDirection)}
               </th>
@@ -194,6 +201,7 @@ const FacilityReport = ({
                 <td>{facility.packages_sent}</td>
                 <td>{facility.packages_delivered}</td>
                 <td>{facility.packages_lost}</td>
+                <td>{facility.packages_late_delivery}</td>
                 <td>{facility.status_in_transit}</td>
                 <td>
                   {(() => {

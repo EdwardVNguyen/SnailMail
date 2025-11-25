@@ -49,6 +49,9 @@ export const getFacilityReportController = async (req, res) => {
           ELSE 0
         END as lost_package_rate,
 
+        -- Late delivery packages
+        IFNULL(packages_late_delivery.count, 0) as packages_late_delivery,
+
         -- Average delivery time for packages delivered from this facility
         IFNULL(delivery_stats.avg_delivery_days, 0) as avg_delivery_days,
 
@@ -99,21 +102,35 @@ export const getFacilityReportController = async (req, res) => {
         GROUP BY te_latest.location_id
       ) packages_delivered ON f.address_id = packages_delivered.location_id
 
-      -- Problem packages: lost, undeliverable, failed-delivery, damaged where facility was last location
+      -- Problem packages: lost, undeliverable, failed-delivery, damaged where marked within date range
       LEFT JOIN (
         SELECT
-          te_last.location_id,
+          te_marked.location_id,
           COUNT(DISTINCT p.package_id) as count
         FROM package p
-        INNER JOIN tracking_event te_last ON te_last.package_id = p.package_id
+        INNER JOIN tracking_event te_marked ON te_marked.package_id = p.package_id
         WHERE p.package_status IN ('lost', 'undeliverable', 'failed-delivery', 'damaged')
-          AND te_last.event_time = (
+          AND te_marked.event_type IN ('lost', 'undeliverable', 'failed-delivery', 'damaged')
+          AND te_marked.event_time = (
             SELECT MAX(te2.event_time)
             FROM tracking_event te2
             WHERE te2.package_id = p.package_id
+              AND te2.event_type IN ('lost', 'undeliverable', 'failed-delivery', 'damaged')
           )
-        GROUP BY te_last.location_id
+          AND te_marked.event_time BETWEEN ? AND ?
+        GROUP BY te_marked.location_id
       ) packages_lost ON f.address_id = packages_lost.location_id
+
+      -- Late delivery packages: packages marked as late-delivery at this facility
+      LEFT JOIN (
+        SELECT
+          p.facility_id,
+          COUNT(DISTINCT p.package_id) as count
+        FROM package p
+        WHERE p.package_status = 'late-delivery'
+          AND p.last_updated BETWEEN ? AND ?
+        GROUP BY p.facility_id
+      ) packages_late_delivery ON f.facility_id = packages_late_delivery.facility_id
 
       -- Average delivery time for packages delivered from this facility
       LEFT JOIN (
@@ -194,6 +211,8 @@ export const getFacilityReportController = async (req, res) => {
     const [rows] = await connection.execute(sql, [
       startDate, endDate,  // packages_received
       startDate, endDate,  // packages_delivered (latest event)
+      startDate, endDate,  // packages_lost (marked event time)
+      startDate, endDate,  // packages_late_delivery (package.last_updated range)
       startDate, endDate,  // delivery_stats
       startDate, endDate   // packages_sent
     ]);
@@ -203,6 +222,7 @@ export const getFacilityReportController = async (req, res) => {
     const totalSent = rows.reduce((sum, row) => sum + row.packages_sent, 0);
     const totalDelivered = rows.reduce((sum, row) => sum + row.packages_delivered, 0);
     const totalLost = rows.reduce((sum, row) => sum + row.packages_lost, 0);
+    const totalLateDelivery = rows.reduce((sum, row) => sum + row.packages_late_delivery, 0);
     const totalInTransit = rows.reduce((sum, row) => sum + row.status_in_transit, 0);
     const totalOutForDelivery = rows.reduce((sum, row) => sum + row.status_out_for_delivery, 0);
     const rowsWithDeliveryTime = rows.filter(row => row.avg_delivery_days > 0);
@@ -221,6 +241,7 @@ export const getFacilityReportController = async (req, res) => {
         total_sent: totalSent,
         total_delivered: totalDelivered,
         total_lost: totalLost,
+        total_late_delivery: totalLateDelivery,
         total_in_transit: totalInTransit,
         total_out_for_delivery: totalOutForDelivery
       }

@@ -185,6 +185,41 @@ export const getCourierDetailsController = async (req, res) => {
       [employeeId]
     );
 
+    // Late Delivery Packages - find late-delivery packages where this courier was the last courier to handle them
+    const [packagesLateDelivery] = await connection.execute(
+      `SELECT
+        p.tracking_number,
+        p.package_id,
+        CONCAT(sender.first_name, ' ', sender.last_name) as sender_name,
+        CONCAT(recipient.first_name, ' ', recipient.last_name) as recipient_name,
+        p.package_type,
+        p.weight,
+        p.package_status,
+        p.last_updated as late_date
+      FROM package p
+      INNER JOIN customer sender ON p.sender_id = sender.customer_id
+      INNER JOIN customer recipient ON p.recipient_id = recipient.customer_id
+      LEFT JOIN (
+        SELECT te.package_id, e.employee_id
+        FROM tracking_event te
+        INNER JOIN authentication auth ON te.created_by = auth.auth_id
+        INNER JOIN employee e ON auth.auth_id = e.auth_id
+        WHERE e.account_type = 'courier'
+          AND te.event_time = (
+            SELECT MAX(te2.event_time)
+            FROM tracking_event te2
+            INNER JOIN authentication auth2 ON te2.created_by = auth2.auth_id
+            INNER JOIN employee e2 ON auth2.auth_id = e2.auth_id
+            WHERE te2.package_id = te.package_id
+              AND e2.account_type = 'courier'
+          )
+      ) last_courier ON p.package_id = last_courier.package_id
+      WHERE p.package_status = 'late-delivery'
+        AND last_courier.employee_id = ?
+      ORDER BY p.last_updated DESC`,
+      [employeeId]
+    );
+
     // Final Deliveries (deliveries to customers, not facilities)
     const [finalDeliveries] = await connection.execute(
       `SELECT DISTINCT
@@ -241,6 +276,7 @@ export const getCourierDetailsController = async (req, res) => {
         packagesDelivered,
         packagesInTransit,
         packagesLost,
+        packagesLateDelivery,
         facilityTransfers,
         finalDeliveries,
         allTrackingEvents

@@ -167,18 +167,46 @@ export const getFacilityDetailsController = async (req, res) => {
           )
       ) last_courier ON p.package_id = last_courier.package_id
       WHERE p.package_status IN ('lost', 'undeliverable', 'failed-delivery', 'damaged')
-        AND EXISTS (
-          SELECT 1 FROM tracking_event te
-          WHERE te.package_id = p.package_id
-            AND te.location_id = f.address_id
-            AND te.event_time = (
-              SELECT MAX(te2.event_time)
-              FROM tracking_event te2
-              WHERE te2.package_id = p.package_id
-            )
-        )
+        AND p.facility_id = f.facility_id
+        AND marked_by.event_time BETWEEN ? AND ?
+      ORDER BY marked_by.event_time DESC`,
+      [facilityId, startDate, endDate]
+    );
+
+    // Late Delivery Packages: packages delivered late at this facility
+    const [packagesLateDelivery] = await connection.execute(
+      `SELECT
+        p.package_id,
+        p.tracking_number,
+        CONCAT(sender.first_name, ' ', sender.last_name) as sender_name,
+        CONCAT(recipient.first_name, ' ', recipient.last_name) as recipient_name,
+        p.package_type,
+        p.weight,
+        p.package_status,
+        te_delivered.event_time as late_date,
+        CONCAT(courier.first_name, ' ', courier.last_name) as delivered_by
+      FROM package p
+      INNER JOIN customer sender ON p.sender_id = sender.customer_id
+      INNER JOIN customer recipient ON p.recipient_id = recipient.customer_id
+      INNER JOIN facility f ON f.facility_id = ?
+      LEFT JOIN (
+        SELECT te.package_id, te.event_time, te.created_by
+        FROM tracking_event te
+        WHERE te.event_type = 'delivered'
+          AND te.event_time = (
+            SELECT MAX(te2.event_time)
+            FROM tracking_event te2
+            WHERE te2.package_id = te.package_id
+              AND te2.event_type = 'delivered'
+          )
+      ) te_delivered ON p.package_id = te_delivered.package_id
+      LEFT JOIN authentication ON te_delivered.created_by = authentication.auth_id
+      LEFT JOIN employee courier ON authentication.auth_id = courier.auth_id
+      WHERE p.package_status = 'late-delivery'
+        AND p.facility_id = f.facility_id
+        AND p.last_updated BETWEEN ? AND ?
       ORDER BY p.last_updated DESC`,
-      [facilityId]
+      [facilityId, startDate, endDate]
     );
 
     // Status: In-Transit (packages with status 'in-transit' at this facility)
@@ -350,6 +378,7 @@ export const getFacilityDetailsController = async (req, res) => {
         packagesReceived,
         packagesDelivered,
         packagesLost,
+        packagesLateDelivery,
         packagesSent,
         statusInTransit,
         statusOutForDelivery,
