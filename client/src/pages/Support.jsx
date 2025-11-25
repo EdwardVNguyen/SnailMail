@@ -16,7 +16,7 @@ const Support = () => {
         <div className="question">
           <h3 className="qText">Q: What is the maximum weight allowed for a package?</h3>
           <p className="aText">
-            A: The maximum weight allowed is 100 lbs or more than 100 inches in length or 140 inches in girth. To avoid this issue, you can try to split the package into multiple packages. If this is not possible, we might have to use a different service.
+            A: The maximum weight allowed is 100 lbs or more than 100 inches in length or 140 inches in girth. To avoid this issue, you can try to split the package into multiple packages. If this is not possible, you might have to use a different service.
           </p>
         </div>
 
@@ -66,13 +66,6 @@ const Support = () => {
           <h3 className="qText">Q: How is undeliverable and misdelivered mail handled?</h3>
           <p className="aText">
             A: Mail and packages need to be addressed correctly. If we are not able to deliver the mail or package, we return it to the return address that is provided. If there is no return address, check your local store for the package.
-          </p>
-        </div>
-
-        <div className="question">
-          <h3 className="qText">Q: How do I file a claim?</h3>
-          <p className="aText">
-            A: To file a claim, you can go to our "File a Claim" page, and follow all the prompts on the screen.
           </p>
         </div>
       </div>

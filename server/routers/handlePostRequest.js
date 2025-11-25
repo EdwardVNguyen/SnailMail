@@ -1,4 +1,5 @@
 import { loginController } from '../controllers/loginController.js'
+import { checkEmailController } from '../controllers/checkEmailController.js'
 import { userSignUpController } from '../controllers/userSignUpController.js'
 import { createTrackingEventsController } from '../controllers/createTrackingEventsController.js'
 import { addEmployeeController } from '../controllers/addEmployeeController.js'
@@ -33,6 +34,10 @@ export const handlePostRequest= (req, res) => {
   // check login
   if ( req.url.startsWith('/login') ) {
     return loginController(req, res)
+  }
+  // check if email already exists
+  else if ( req.url.startsWith('/checkEmail') ) {
+    return checkEmailController(req, res)
   }
   // adds new tuple in address, authentication, and customer entities according to user sign up
   else if ( req.url.startsWith('/userSignUp') ) {
