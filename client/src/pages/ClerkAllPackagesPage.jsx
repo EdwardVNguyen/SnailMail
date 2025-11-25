@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './EmployeePage.css';
 import { Modal } from '../components/Modal';
 import { Toast } from '../components/Toast';
 import Pagination from '../utils/Pagination';
 import { encodePackageId, formatTrackingNumber } from '../utils/idEncoder';
+import { sortData, getSortIndicator } from './ReportPage/components/reportUtils';
 
 const ClerkAllPackagesPage = ({ globalAuthId }) => {
   const authId = globalAuthId;
@@ -16,6 +17,11 @@ const ClerkAllPackagesPage = ({ globalAuthId }) => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 10;
+
+  // Sorting and filtering states
+  const [sortField, setSortField] = useState('package_id');
+  const [sortDirection, setSortDirection] = useState('asc');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   // Modal states
   const [showTrackingModal, setShowTrackingModal] = useState(false);
@@ -86,6 +92,25 @@ const ClerkAllPackagesPage = ({ globalAuthId }) => {
       setLoading(false);
     }
   };
+
+  // Handle column sorting
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Filter packages by status
+  const filteredPackages = useMemo(() => {
+    if (statusFilter === 'all') return packages;
+    return packages.filter(pkg => pkg.package_status === statusFilter);
+  }, [packages, statusFilter]);
+
+  // Sort filtered packages
+  const sortedPackages = sortData(filteredPackages, sortField, sortDirection);
 
   const openTrackingModal = (pkg) => {
     setSelectedPackage(pkg);
@@ -197,6 +222,40 @@ const ClerkAllPackagesPage = ({ globalAuthId }) => {
           pageSize={limit}
           onPageChange={fetchPackages}
         />
+
+        {/* Filter Section */}
+        <div className="filterSection">
+          <h3>Filters</h3>
+          <div className="filterControls">
+            <div className="filterGroup">
+              <label>Package Status:</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="filterSelect"
+              >
+                <option value="all">All Statuses</option>
+                <option value="processing">Processing</option>
+                <option value="pre-shipment">Pre-shipment</option>
+                <option value="in-transit">In Transit</option>
+                <option value="out-for-delivery">Out for Delivery</option>
+                <option value="delivered">Delivered</option>
+                <option value="lost">Lost</option>
+                <option value="returned">Returned</option>
+                <option value="undeliverable">Undeliverable</option>
+                <option value="failed-delivery">Failed Delivery</option>
+                <option value="damaged">Damaged</option>
+                <option value="late-delivery">Late Delivery</option>
+              </select>
+            </div>
+            {statusFilter !== 'all' && (
+              <button onClick={() => setStatusFilter('all')} className="clearFiltersButton">
+                Clear Filter
+              </button>
+            )}
+          </div>
+        </div>
+
         {loading ? (
           <p>Loading packages...</p>
         ) : packages.length === 0 ? (
@@ -206,21 +265,41 @@ const ClerkAllPackagesPage = ({ globalAuthId }) => {
             <table className="packages-table">
               <thead>
                 <tr>
-                  <th>Package ID</th>
-                  <th>Tracking Number</th>
-                  <th>Type</th>
-                  <th>From</th>
-                  <th>To</th>
-                  <th>Current Location</th>
-                  <th>Status</th>
-                  <th>Weight (kg)</th>
-                  <th>Courier</th>
-                  <th>Date Created</th>
+                  <th className="sortable" onClick={() => handleSort('package_id')}>
+                    Package ID{getSortIndicator('package_id', sortField, sortDirection)}
+                  </th>
+                  <th className="sortable" onClick={() => handleSort('tracking_number')}>
+                    Tracking Number{getSortIndicator('tracking_number', sortField, sortDirection)}
+                  </th>
+                  <th className="sortable" onClick={() => handleSort('package_type')}>
+                    Type{getSortIndicator('package_type', sortField, sortDirection)}
+                  </th>
+                  <th className="sortable" onClick={() => handleSort('sender_name')}>
+                    From{getSortIndicator('sender_name', sortField, sortDirection)}
+                  </th>
+                  <th className="sortable" onClick={() => handleSort('recipient_name')}>
+                    To{getSortIndicator('recipient_name', sortField, sortDirection)}
+                  </th>
+                  <th className="sortable" onClick={() => handleSort('facility_name')}>
+                    Current Location{getSortIndicator('facility_name', sortField, sortDirection)}
+                  </th>
+                  <th className="sortable" onClick={() => handleSort('package_status')}>
+                    Status{getSortIndicator('package_status', sortField, sortDirection)}
+                  </th>
+                  <th className="sortable" onClick={() => handleSort('weight')}>
+                    Weight (kg){getSortIndicator('weight', sortField, sortDirection)}
+                  </th>
+                  <th className="sortable" onClick={() => handleSort('courier_name')}>
+                    Courier{getSortIndicator('courier_name', sortField, sortDirection)}
+                  </th>
+                  <th className="sortable" onClick={() => handleSort('created_at')}>
+                    Date Created{getSortIndicator('created_at', sortField, sortDirection)}
+                  </th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {packages.map((pkg) => (
+                {sortedPackages.map((pkg) => (
                   <tr key={pkg.package_id}>
                     <td>{encodePackageId(pkg.package_id)}</td>
                     <td className="tracking-number">{formatTrackingNumber(pkg.tracking_number)}</td>
