@@ -228,12 +228,12 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
                             <>
                               <div className="notification-subject">{notification.message}</div>
                               <div className="notification-body">
-                                {notification.tracking_number && (
-                                  <span>Tracking: {notification.tracking_number}</span>
-                                )}
                                 {notification.package_status && (
                                   <span>Status: {notification.package_status}</span>
                                 )}
+                              </div>
+                              <div className="notification-time">
+                                {formatTimeAgo(notification.created_at)}
                               </div>
                             </>
                           )}
@@ -243,13 +243,13 @@ const AuthNavBar = ( {globalAccountType, onLogout} ) => {
                               <div className="notification-subject">{notification.tracking_number}</div>
                               <div className="notification-body">
                                 {notification.employee_name && (
-                                  <span>Employee: {notification.employee_name}</span>
+                                  <div>Employee: {notification.employee_name}</div>
                                 )}
                                 {notification.package_number && (
-                                  <span>Package Number: {notification.package_number}</span>
+                                  <div>Package Number: {notification.package_number}</div>
                                 )}
-                                { notification.type && (
-                                  <span>Status: {notification.type}</span>
+                                {notification.type && (
+                                  <div>Status: {notification.type}</div>
                                 )}
                               </div>
                             </>
