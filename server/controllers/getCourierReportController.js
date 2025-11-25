@@ -161,16 +161,24 @@ export const getCourierReportController = async (req, res) => {
         GROUP BY created_by
       ) total_moves ON auth.auth_id = total_moves.created_by
 
-      -- Facility transfers (deliveries where location_id matches a facility address)
+      -- Facility transfers (packages moved from facility to facility by this courier)
       LEFT JOIN (
         SELECT
-          te.created_by,
-          COUNT(DISTINCT te.package_id) as count
-        FROM tracking_event te
-        INNER JOIN facility f ON te.location_id = f.address_id
-        WHERE te.event_type = 'delivered'
-          AND te.event_time BETWEEN ? AND ?
-        GROUP BY te.created_by
+          te_dest.created_by,
+          COUNT(DISTINCT te_dest.package_id) as count
+        FROM tracking_event te_dest
+        INNER JOIN facility f_to ON te_dest.location_id = f_to.address_id
+        INNER JOIN tracking_event te_prev ON te_dest.package_id = te_prev.package_id
+          AND te_prev.event_time = (
+            SELECT MAX(te_inner.event_time)
+            FROM tracking_event te_inner
+            WHERE te_inner.package_id = te_dest.package_id
+              AND te_inner.event_time < te_dest.event_time
+          )
+        INNER JOIN facility f_from ON te_prev.location_id = f_from.address_id
+        WHERE te_dest.event_time BETWEEN ? AND ?
+          AND f_from.facility_id != f_to.facility_id
+        GROUP BY te_dest.created_by
       ) facility_transfers ON auth.auth_id = facility_transfers.created_by
 
       -- Final deliveries (deliveries NOT to facilities)

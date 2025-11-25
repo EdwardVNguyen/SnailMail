@@ -97,7 +97,7 @@ export const getCourierDetailsController = async (req, res) => {
       [authId, startDate, endDate]
     );
 
-    // Facility Transfers (deliveries to facilities)
+    // Facility Transfers (deliveries from one facility to another facility by this courier)
     const [facilityTransfers] = await connection.execute(
       `SELECT DISTINCT
         p.tracking_number,
@@ -107,17 +107,26 @@ export const getCourierDetailsController = async (req, res) => {
         p.package_type,
         p.weight,
         p.package_status,
-        f.facility_name as destination_facility,
-        te.event_time as delivery_time
-      FROM tracking_event te
-      INNER JOIN package p ON te.package_id = p.package_id
+        f_to.facility_name as destination_facility,
+        f_from.facility_name as source_facility,
+        te_dest.event_time as delivery_time
+      FROM tracking_event te_dest
+      INNER JOIN package p ON te_dest.package_id = p.package_id
       INNER JOIN customer sender ON p.sender_id = sender.customer_id
       INNER JOIN customer recipient ON p.recipient_id = recipient.customer_id
-      INNER JOIN facility f ON te.location_id = f.address_id
-      WHERE te.created_by = ?
-        AND te.event_type = 'delivered'
-        AND te.event_time BETWEEN ? AND ?
-      ORDER BY te.event_time DESC`,
+      INNER JOIN facility f_to ON te_dest.location_id = f_to.address_id
+      INNER JOIN tracking_event te_prev ON te_dest.package_id = te_prev.package_id
+        AND te_prev.event_time = (
+          SELECT MAX(te_inner.event_time)
+          FROM tracking_event te_inner
+          WHERE te_inner.package_id = te_dest.package_id
+            AND te_inner.event_time < te_dest.event_time
+        )
+      INNER JOIN facility f_from ON te_prev.location_id = f_from.address_id
+      WHERE te_dest.created_by = ?
+        AND te_dest.event_time BETWEEN ? AND ?
+        AND f_from.facility_id != f_to.facility_id
+      ORDER BY te_dest.event_time DESC`,
       [authId, startDate, endDate]
     );
 
