@@ -140,14 +140,14 @@ export const getCourierReportController = async (req, res) => {
         GROUP BY courier_id
       ) packages_in_transit ON e.employee_id = packages_in_transit.courier_id
 
-      -- Currently holding (all non-completed packages)
+      -- Currently holding (packages actively with courier)
       LEFT JOIN (
         SELECT
           courier_id,
           COUNT(*) as count
         FROM package
         WHERE courier_id IS NOT NULL
-          AND package_status NOT IN ('delivered', 'returned', 'lost', 'undeliverable')
+          AND package_status IN ('pre-shipment', 'in-transit', 'out-for-delivery')
         GROUP BY courier_id
       ) currently_holding ON e.employee_id = currently_holding.courier_id
 
