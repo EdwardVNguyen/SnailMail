@@ -43,11 +43,12 @@ SnailMail/
 
 ### Backend (`/server/.env`)
 ```
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=mySQLpassword
-DB_NAME=postOfficeDatabase
+MYSQLHOST=localhost
+MYSQLPORT=3306
+MYSQLUSER=root
+MYSQLPASSWORD=<yourPassword>
+MYSQL_DATABASE=postOfficeDatabase
+PORT=8000
 ```
 ### Frontend (`/client/.env`)
 ```
@@ -73,7 +74,7 @@ npm install
 ### Run frontend and backend to run web application
 
 cd server
-node --env-file .env server.js
+npm run dev
 
 cd client
 npm run dev
