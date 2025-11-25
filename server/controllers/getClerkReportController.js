@@ -170,7 +170,6 @@ export const getClerkReportController = async (req, res) => {
       ) review_time ON e.employee_id = review_time.reviewed_by
 
       WHERE e.account_type = 'clerk'
-        AND (IFNULL(reviews_approved.count, 0) + IFNULL(reviews_rejected.count, 0) > 0 OR IFNULL(events_total.count, 0) > 0)
       ORDER BY activity_per_day DESC
     `;
 

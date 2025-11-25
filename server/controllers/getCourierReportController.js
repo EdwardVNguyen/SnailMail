@@ -305,7 +305,6 @@ export const getCourierReportController = async (req, res) => {
       ) requests_rejected ON e.employee_id = requests_rejected.courier_id
 
       WHERE e.account_type = 'courier'
-        AND (IFNULL(packages_claimed.count, 0) > 0 OR IFNULL(packages_delivered.count, 0) > 0 OR IFNULL(total_moves.count, 0) > 0)
       ORDER BY packages_delivered DESC
     `;
 
