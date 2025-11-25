@@ -28,6 +28,22 @@ const CustomerProfilePage = ({ globalAuthId }) => {
     profilePictureUrl: ''
   });
 
+  const [emailForm, setEmailForm] = useState({
+    currentPassword: '',
+    newEmail: ''
+  });
+
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [editingPassword, setEditingPassword] = useState(false);
+  const [isSavingEmail, setIsSavingEmail] = useState(false);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+
   // Helper: Get profile picture URL or default icon
   const getProfilePicture = (url) => {
     if (!url || url.trim() === '') {
@@ -117,6 +133,14 @@ const CustomerProfilePage = ({ globalAuthId }) => {
     setFormData({ ...formData, [e.target.name]: value });
   };
 
+  const handleEmailChange = (e) => {
+    setEmailForm({ ...emailForm, [e.target.name]: e.target.value });
+  };
+
+  const handlePasswordChange = (e) => {
+    setPasswordForm({ ...passwordForm, [e.target.name]: e.target.value });
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     setIsSaving(true);
@@ -170,6 +194,98 @@ const CustomerProfilePage = ({ globalAuthId }) => {
       console.error('Update error:', error);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveEmail = async (e) => {
+    e.preventDefault();
+    setIsSavingEmail(true);
+    setSuccessMessage('');
+    setErrorMessage('');
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/updateSecurity`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          authId: globalAuthId,
+          currentPassword: emailForm.currentPassword,
+          newEmail: emailForm.newEmail,
+          newPassword: null
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setSuccessMessage('Email updated successfully!');
+        setEditingEmail(false);
+        setEmailForm({
+          currentPassword: '',
+          newEmail: ''
+        });
+        // Refetch to get updated email
+        const refetchResponse = await fetch(`${import.meta.env.VITE_API_URL}/getCustomerData?authId=${globalAuthId}`);
+        const refetchData = await refetchResponse.json();
+        if (refetchData.success) {
+          setCustomerData(refetchData.customer);
+        }
+      } else {
+        setErrorMessage(data.message || 'Failed to update email');
+      }
+    } catch (error) {
+      setErrorMessage('Failed to update email');
+      console.error('Update email error:', error);
+    } finally {
+      setIsSavingEmail(false);
+    }
+  };
+
+  const handleSavePassword = async (e) => {
+    e.preventDefault();
+    setIsSavingPassword(true);
+    setSuccessMessage('');
+    setErrorMessage('');
+
+    // Validate password confirmation
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setErrorMessage('Passwords do not match');
+      setIsSavingPassword(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/updateSecurity`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          authId: globalAuthId,
+          currentPassword: passwordForm.currentPassword,
+          newEmail: null,
+          newPassword: passwordForm.newPassword
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setSuccessMessage('Password updated successfully!');
+        setEditingPassword(false);
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+      } else {
+        setErrorMessage(data.message || 'Failed to update password');
+      }
+    } catch (error) {
+      setErrorMessage('Failed to update password');
+      console.error('Update password error:', error);
+    } finally {
+      setIsSavingPassword(false);
     }
   };
 
@@ -452,6 +568,166 @@ const CustomerProfilePage = ({ globalAuthId }) => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Login & Security Card */}
+        <div className="profileCard" style={{ gridColumn: '1 / -1' }}>
+          <div className="cardHeader">
+            <h2>Login & Security</h2>
+          </div>
+          <div className="cardContent">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+              {/* Email Section */}
+              <div style={{
+                padding: '1.5rem',
+                border: '1px solid #e0e0e0',
+                borderRadius: '8px',
+                backgroundColor: '#fafafa'
+              }}>
+                <h3 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.1rem' }}>Email Address</h3>
+                {editingEmail ? (
+                  <form onSubmit={handleSaveEmail}>
+                    <div className="formGroup">
+                      <label>Current Email</label>
+                      <input
+                        type="email"
+                        value={customerData?.email || ''}
+                        disabled
+                        style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
+                      />
+                    </div>
+
+                    <div className="formGroup">
+                      <label>New Email Address *</label>
+                      <input
+                        type="email"
+                        name="newEmail"
+                        value={emailForm.newEmail}
+                        onChange={handleEmailChange}
+                        placeholder="Enter new email"
+                        required
+                      />
+                    </div>
+
+                    <div className="formGroup">
+                      <label>Current Password *</label>
+                      <input
+                        type="password"
+                        name="currentPassword"
+                        value={emailForm.currentPassword}
+                        onChange={handleEmailChange}
+                        placeholder="Enter password to confirm"
+                        required
+                      />
+                    </div>
+
+                    <div className="buttonRow">
+                      <button type="submit" className="saveButton" disabled={isSavingEmail}>
+                        {isSavingEmail ? 'Saving...' : 'Update Email'}
+                      </button>
+                      <button type="button" className="cancelButton" onClick={() => {
+                        setEditingEmail(false);
+                        setEmailForm({ currentPassword: '', newEmail: '' });
+                      }}>
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div>
+                    <div className="infoRow">
+                      <span className="infoLabel">Current Email:</span>
+                      <span className="infoValue">{customerData?.email || '—'}</span>
+                    </div>
+                    <button
+                      className="editButton"
+                      onClick={() => setEditingEmail(true)}
+                      disabled={editing || editingPassword}
+                      style={{ marginTop: '1rem' }}
+                    >
+                      Change Email
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Password Section */}
+              <div style={{
+                padding: '1.5rem',
+                border: '1px solid #e0e0e0',
+                borderRadius: '8px',
+                backgroundColor: '#fafafa'
+              }}>
+                <h3 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.1rem' }}>Password</h3>
+                {editingPassword ? (
+                  <form onSubmit={handleSavePassword}>
+                    <div className="formGroup">
+                      <label>Current Password *</label>
+                      <input
+                        type="password"
+                        name="currentPassword"
+                        value={passwordForm.currentPassword}
+                        onChange={handlePasswordChange}
+                        placeholder="Enter current password"
+                        required
+                      />
+                    </div>
+
+                    <div className="formGroup">
+                      <label>New Password *</label>
+                      <input
+                        type="password"
+                        name="newPassword"
+                        value={passwordForm.newPassword}
+                        onChange={handlePasswordChange}
+                        placeholder="Enter new password"
+                        required
+                      />
+                    </div>
+
+                    <div className="formGroup">
+                      <label>Confirm New Password *</label>
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        value={passwordForm.confirmPassword}
+                        onChange={handlePasswordChange}
+                        placeholder="Confirm new password"
+                        required
+                      />
+                    </div>
+
+                    <div className="buttonRow">
+                      <button type="submit" className="saveButton" disabled={isSavingPassword}>
+                        {isSavingPassword ? 'Saving...' : 'Update Password'}
+                      </button>
+                      <button type="button" className="cancelButton" onClick={() => {
+                        setEditingPassword(false);
+                        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                      }}>
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div>
+                    <div className="infoRow">
+                      <span className="infoLabel">Current Password:</span>
+                      <span className="infoValue">••••••••</span>
+                    </div>
+                    <button
+                      className="editButton"
+                      onClick={() => setEditingPassword(true)}
+                      disabled={editing || editingEmail}
+                      style={{ marginTop: '1rem' }}
+                    >
+                      Change Password
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
