@@ -53,8 +53,6 @@ PORT=8000
 ### Frontend (`/client/.env`)
 ```
 VITE_API_URL=http://localhost:8000
-
-Example: http://domain_name.com
 ```
 ---
 
