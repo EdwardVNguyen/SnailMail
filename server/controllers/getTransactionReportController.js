@@ -50,6 +50,24 @@ export const getTransactionReportController = async (req, res) => {
 
     const [transactions] = await connection.execute(transactionSql, [startDate, endDate]);
 
+    // Add refund information for late-delivery packages
+    const processedTransactions = transactions.map(transaction => {
+      const isLateDelivery = transaction.package_status === 'late-delivery';
+      const refundAmount = isLateDelivery ? transaction.transaction_amount * 0.25 : 0;
+      const finalAmount = transaction.transaction_amount - refundAmount;
+
+      return {
+        ...transaction,
+        is_late_delivery: isLateDelivery,
+        refund_amount: refundAmount,
+        refund_reason: isLateDelivery ? 'Late delivery - 25% refund applied' : null,
+        final_amount: finalAmount
+      };
+    });
+
+    // Calculate total refunds for late deliveries
+    const totalRefunds = processedTransactions.reduce((sum, t) => sum + t.refund_amount, 0);
+
     // Calculate summary statistics
     const summarySql = `
       SELECT
@@ -69,13 +87,16 @@ export const getTransactionReportController = async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({
       success: true,
-      transactions: transactions,
+      transactions: processedTransactions,
       summary: {
         total_transactions: summary.total_transactions,
         total_revenue: parseFloat(summary.total_revenue),
+        total_refunds: parseFloat(totalRefunds.toFixed(2)),
+        net_revenue: parseFloat((summary.total_revenue - totalRefunds).toFixed(2)),
         avg_transaction_amount: parseFloat(summary.avg_transaction_amount),
         facilities_involved: summary.facilities_involved,
-        unique_customers: summary.unique_customers
+        unique_customers: summary.unique_customers,
+        late_deliveries: processedTransactions.filter(t => t.is_late_delivery).length
       }
     }));
 

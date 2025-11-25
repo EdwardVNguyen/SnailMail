@@ -34,7 +34,7 @@ export const softDeleteFacilityController = async (req, res) => {
 
     const facility = facilityRows[0];
 
-    // Perform soft delete (BEFORE DELETE trigger will archive the record)
+    // Delete facility record
     const [result] = await connection.query(
       `DELETE FROM facility WHERE facility_id = ?`,
       [facilityId]

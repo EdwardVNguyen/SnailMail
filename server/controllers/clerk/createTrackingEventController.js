@@ -29,7 +29,8 @@ export const createTrackingEventController = async (req, res) => {
       'returned',
       'undeliverable',
       'failed-delivery',
-      'damaged'
+      'damaged',
+      'late-delivery'
     ];
     if (!validEventTypes.includes(eventType)) {
       res.statusCode = 400;
@@ -132,6 +133,9 @@ export const createTrackingEventController = async (req, res) => {
         break;
       case 'damaged':
         packageStatus = 'damaged';
+        break;
+      case 'late-delivery':
+        packageStatus = 'late-delivery';
         break;
       default:
         packageStatus = 'processing';

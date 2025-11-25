@@ -11,7 +11,6 @@ import { deleteFacilityController } from '../controllers/deleteFacilityControlle
 import { softDeleteFacilityController } from '../controllers/softDeleteFacilityController.js'
 import { toggleFacilityStatusController } from '../controllers/deactivateFacilityController.js'
 import { createShipmentController } from '../controllers/createShipmentController.js'
-import { createPackageController } from '../controllers/createPackageController.js'
 import { updateCustomerInfoController } from '../controllers/updateCustomerInfoController.js'
 import { updateEmployeeInfoController } from '../controllers/updateEmployeeInfoController.js'
 import { getMyCourierPackagesController } from '../controllers/getMyCourierPackagesController.js'
@@ -78,10 +77,6 @@ export const handlePostRequest= (req, res) => {
   // create new shipment
   else if (req.url.startsWith('/createShipment')) {
     return createShipmentController(req, res)
-  }
-  // create package for guest users
-  else if (req.url.startsWith('/createPackage')) {
-    return createPackageController(req, res)
   }
   // update customer information
   else if (req.url.startsWith('/updateCustomerInfo')) {

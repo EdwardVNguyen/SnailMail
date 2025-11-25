@@ -20,8 +20,9 @@ const DetailSection = ({
   const isCollapsed = collapsedSections[sectionKey];
   const currentPage = detailPages[sectionKey] || 1;
   const itemsPerPage = 50;
-  const sortField = detailSortField[sectionKey] || 'package_id';
-  const sortDirection = detailSortDirection[sectionKey] || 'asc';
+  // If a dateField is provided and no sort is set, default to sorting by date descending (most recent first)
+  const sortField = detailSortField[sectionKey] || (dateField || 'package_id');
+  const sortDirection = detailSortDirection[sectionKey] || (dateField ? 'desc' : 'asc');
 
   // Support both single extraColumn object and array of extraColumns
   const extraColumns = extraColumn ? (Array.isArray(extraColumn) ? extraColumn : [extraColumn]) : [];
